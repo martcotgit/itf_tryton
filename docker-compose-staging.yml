@@ -5,10 +5,19 @@ services:
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
       - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      - --certificatesresolvers.letsencrypt.acme.email=${TRAEFIK_ACME_EMAIL}
+      - --certificatesresolvers.letsencrypt.acme.storage=/etc/traefik/acme/acme.json
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_acme:/etc/traefik/acme
     restart: always
 
   db:
@@ -45,14 +54,15 @@ services:
       - ./tryton/modules:/opt/trytond/modules
       - tryton_filestore:/var/lib/trytond
     restart: always
-    ports:
-      - "8000:8000"
     labels:
       - traefik.enable=true
       - traefik.http.routers.tryton-staging.rule=Host(`erp.paletteitf.ca`)
-      - traefik.http.routers.tryton-staging.entrypoints=web
+      - traefik.http.routers.tryton-staging.entrypoints=websecure
+      - traefik.http.routers.tryton-staging.tls=true
+      - traefik.http.routers.tryton-staging.tls.certresolver=letsencrypt
       - traefik.http.services.tryton-staging.loadbalancer.server.port=8000
 
 volumes:
   db_data:
   tryton_filestore:
+  traefik_acme:
