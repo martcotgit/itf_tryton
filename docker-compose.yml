@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: tryton
+      POSTGRES_PASSWORD: tryton
+      POSTGRES_DB: tryton
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tryton"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  tryton:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      TRYTON_DATABASE_URI: postgresql://tryton:tryton@db:5432/
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./config/trytond.conf:/etc/tryton/trytond.conf:ro
+      - ./tryton/modules:/opt/trytond/modules
+      - tryton_filestore:/var/lib/trytond
+    restart: unless-stopped
+
+volumes:
+  db_data:
+  tryton_filestore:
