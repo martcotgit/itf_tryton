@@ -45,6 +45,8 @@ services:
       - ./tryton/modules:/opt/trytond/modules
       - tryton_filestore:/var/lib/trytond
     restart: always
+    ports:
+      - "8000:8000"
     labels:
       - traefik.enable=true
       - traefik.http.routers.tryton-staging.rule=Host(`erp.paletteitf.ca`)
