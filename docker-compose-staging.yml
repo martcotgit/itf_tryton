@@ -28,6 +28,8 @@ services:
     environment:
       TRYTON_DATABASE_URI: ${TRYTON_DATABASE_URI}
       TRYTON_ADMIN_PASSWORD: ${TRYTON_ADMIN_PASSWORD}
+    ports:
+      - "8000:8000"
     volumes:
       - ./config/trytond.conf:/etc/tryton/trytond.conf:ro
       - ./tryton/modules:/opt/trytond/modules
