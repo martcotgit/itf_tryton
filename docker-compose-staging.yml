@@ -1,4 +1,26 @@
 services:
+  traefik:
+    image: traefik:v2.11
+    restart: always
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.web.http.redirections.entrypoint.permanent=true
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.letsencrypt.acme.email=info@paletteitf.ca
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_letsencrypt:/letsencrypt
+
   db:
     image: postgres:15
     restart: always
@@ -24,8 +46,6 @@ services:
     environment:
       TRYTON_DATABASE_URI: postgresql://tryton:tryton@db:5432/
       TRYTON_ADMIN_PASSWORD: fMz1w652uRh1
-    ports:
-      - "8000:8000"
     volumes:
       - ./config/trytond.conf:/etc/tryton/trytond.conf:ro
       - ./tryton/modules:/opt/trytond/modules
@@ -42,3 +62,4 @@ services:
 volumes:
   db_data:
   tryton_filestore:
+  traefik_letsencrypt:
