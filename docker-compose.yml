@@ -32,7 +32,60 @@ services:
       - ./tryton/modules:/opt/trytond/modules
       - tryton_filestore:/var/lib/trytond
     restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.tryton.rule=Host(`tryton.localhost`)"
+      - "traefik.http.services.tryton.loadbalancer.server.port=8000"
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+
+  portal:
+    build:
+      context: ./portal
+    command: python manage.py runserver 0.0.0.0:8000
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      tryton:
+        condition: service_started
+    environment:
+      DJANGO_SETTINGS_MODULE: itf_portal.settings.local
+      DATABASE_URL: postgresql://tryton:tryton@db:5432/portal
+      REDIS_URL: redis://redis:6379/0
+      TRYTON_RPC_URL: http://tryton:8000/
+      PORTAL_ALLOWED_HOSTS: portal.localhost
+    volumes:
+      - ./portal:/app
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.portal.rule=Host(`portal.localhost`)"
+      - "traefik.http.services.portal.loadbalancer.server.port=8000"
+
+  traefik:
+    image: traefik:v3.1
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      portal:
+        condition: service_started
+      tryton:
+        condition: service_started
 
 volumes:
   db_data:
   tryton_filestore:
+  redis_data:

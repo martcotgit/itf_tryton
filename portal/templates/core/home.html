@@ -1,0 +1,222 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO Meta Tags -->
+    <title>Ilnu Transforme - Récupération de Palettes Neuves et Usagées | Mashteuiatsh, QC</title>
+    <meta name="description" content="Ilnu Transforme - Service de récupération et vente de palettes neuves et usagées à Mashteuiatsh, Québec. Recyclage écologique, collecte professionnelle. Contactez-nous au 418-671-2814.">
+    <meta name="keywords" content="palettes, recyclage palettes, palettes neuves, palettes usagées, Mashteuiatsh, Québec, Ilnu Transforme, récupération palettes, vente palettes, recyclage écologique">
+    <meta name="author" content="Ilnu Transforme">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="French">
+    <meta name="geo.region" content="CA-QC">
+    <meta name="geo.placename" content="Mashteuiatsh">
+    <meta name="geo.position" content="48.5667;-72.2333">
+    <meta name="ICBM" content="48.5667, -72.2333">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://ilnutransforme.ca/">
+    <meta property="og:title" content="Ilnu Transforme - Récupération de Palettes | Mashteuiatsh">
+    <meta property="og:description" content="Service de récupération et vente de palettes neuves et usagées à Mashteuiatsh. Recyclage écologique et professionnel.">
+    <meta property="og:image" content="https://ilnutransforme.ca/images/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:locale" content="fr_CA">
+    <meta property="og:site_name" content="Ilnu Transforme">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://ilnutransforme.ca/">
+    <meta property="twitter:title" content="Ilnu Transforme - Récupération de Palettes | Mashteuiatsh">
+    <meta property="twitter:description" content="Service de récupération et vente de palettes neuves et usagées à Mashteuiatsh. Recyclage écologique et professionnel.">
+    <meta property="twitter:image" content="https://ilnutransforme.ca/images/twitter-image.jpg">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://ilnutransforme.ca/">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    
+    <!-- Preconnect pour performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="//fonts.googleapis.com">
+    
+    <!-- CSS et Fonts -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Données structurées Schema.org -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "name": "Ilnu Transforme",
+        "description": "Service de récupération et vente de palettes neuves et usagées à Mashteuiatsh, Québec",
+        "url": "https://ilnutransforme.ca",
+        "telephone": "+1-418-671-2814",
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "1665, rue Nishk",
+            "addressLocality": "Mashteuiatsh",
+            "addressRegion": "QC",
+            "addressCountry": "CA"
+        },
+        "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": 48.5667,
+            "longitude": -72.2333
+        },
+        "openingHours": "Mo-Fr 08:00-17:00",
+        "priceRange": "$$",
+        "serviceType": "Récupération et vente de palettes",
+        "areaServed": {
+            "@type": "GeoCircle",
+            "geoMidpoint": {
+                "@type": "GeoCoordinates",
+                "latitude": 48.5667,
+                "longitude": -72.2333
+            },
+            "geoRadius": "50000"
+        },
+        "hasOfferCatalog": {
+            "@type": "OfferCatalog",
+            "name": "Services de palettes",
+            "itemListElement": [
+                {
+                    "@type": "Offer",
+                    "itemOffered": {
+                        "@type": "Service",
+                        "name": "Récupération de palettes usagées",
+                        "description": "Collecte de palettes usagées dans votre région"
+                    }
+                },
+                {
+                    "@type": "Offer",
+                    "itemOffered": {
+                        "@type": "Service",
+                        "name": "Vente de palettes neuves",
+                        "description": "Palettes neuves de qualité"
+                    }
+                },
+                {
+                    "@type": "Offer",
+                    "itemOffered": {
+                        "@type": "Service",
+                        "name": "Vente de palettes usagées",
+                        "description": "Palettes usagées remises à neuf"
+                    }
+                }
+            ]
+        }
+    }
+    </script>
+</head>
+<body>
+    <header class="header">
+        <nav class="nav" role="navigation" aria-label="Navigation principale">
+            <div class="logo-container">
+                <div class="logo" role="img" aria-label="Logo Ilnu Transforme - ITF avec symbole de recyclage">
+                    <div class="logo-text" aria-hidden="true">ITF</div>
+                    <div class="recycle-symbol" aria-hidden="true">
+                        <svg viewBox="0 0 100 100" class="recycle-svg" role="img" aria-label="Symbole de recyclage">
+                            <path d="M50 20 L70 40 L60 40 L60 60 L40 60 L40 40 L30 40 Z" class="recycle-arrow"></path>
+                            <path d="M50 80 L30 60 L40 60 L40 40 L60 40 L60 60 L70 60 Z" class="recycle-arrow"></path>
+                            <path d="M80 50 L60 30 L60 40 L40 40 L40 60 L60 60 L60 70 Z" class="recycle-arrow"></path>
+                        </svg>
+                        <div class="pallet-inside" aria-hidden="true"></div>
+                    </div>
+                </div>
+                <h1 class="company-name">Ilnu Transforme</h1>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main" role="main">
+        <section class="hero">
+            <div class="hero-content">
+                <h2 class="hero-title">Récupération de palettes neuves et usagées</h2>
+                <p class="hero-subtitle">Service écologique et professionnel pour vos besoins en palettes à Mashteuiatsh et la région du Saguenay-Lac-Saint-Jean</p>
+            </div>
+        </section>
+
+        <section class="services" id="services" aria-labelledby="services-title">
+            <div class="container">
+                <h2 class="section-title" id="services-title">Nos Services</h2>
+                <div class="services-grid">
+                    <article class="service-card">
+                        <div class="service-icon" aria-hidden="true">🔄</div>
+                        <h3>Récupération</h3>
+                        <p>Collecte de palettes usagées dans votre région. Service professionnel et écologique pour la récupération de vos palettes.</p>
+                    </article>
+                    <article class="service-card">
+                        <div class="service-icon" aria-hidden="true">🛒</div>
+                        <h3>Vente</h3>
+                        <p>Palettes neuves et usagées de qualité. Large gamme de palettes disponibles pour tous vos besoins.</p>
+                    </article>
+                    <article class="service-card">
+                        <div class="service-icon" aria-hidden="true">♻️</div>
+                        <h3>Recyclage</h3>
+                        <p>Transformation écologique des matériaux. Contribuez à la protection de l'environnement avec nos services de recyclage.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="contact" id="contact" aria-labelledby="contact-title">
+            <div class="container">
+                <h2 class="section-title" id="contact-title">Contactez-nous</h2>
+                <div class="contact-content">
+                    <div class="contact-info">
+                        <div class="contact-item address-item">
+                            <div class="contact-icon" aria-hidden="true">📍</div>
+                            <div class="contact-details">
+                                <h3>Adresse</h3>
+                                <address>
+                                    1665, rue Nishk<br>
+                                    Mashteuiatsh, QC G0W 2H0<br>
+                                    Canada
+                                </address>
+                            </div>
+                        </div>
+                        <div class="contact-item phone-item">
+                            <div class="contact-icon" aria-hidden="true">📞</div>
+                            <div class="contact-details">
+                                <h3>Téléphone</h3>
+                                <p><a href="tel:+1-418-671-2814" aria-label="Appeler le 418-671-2814">418-671-2814</a></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="contact-cta">
+                        <div class="contact-message">
+                            <h3>Prêt à commencer ?</h3>
+                            <p>Contactez-nous dès aujourd'hui pour tout vos besoins en palettes. Service rapide et professionnel dans la région du Saguenay-Lac-Saint-Jean.</p>
+                            <div class="cta-buttons">
+                                <a href="tel:+1-418-671-2814" class="btn btn-primary" aria-label="Appeler maintenant">
+                                    <span class="btn-icon">📞</span>
+                                    Appeler maintenant
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer" role="contentinfo">
+        <div class="container">
+            <p>&copy; 2025 Ilnu Transforme. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+    <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

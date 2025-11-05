@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://ilnutransforme.ca/sitemap.xml
+
+# Optimisations pour les moteurs de recherche
+Disallow: /admin/
+Disallow: /private/
+Disallow: /temp/
+
+# Permettre l'indexation des ressources importantes
+Allow: /css/
+Allow: /js/
+Allow: /images/
+
+# Crawl-delay pour éviter de surcharger le serveur
+Crawl-delay: 1 
