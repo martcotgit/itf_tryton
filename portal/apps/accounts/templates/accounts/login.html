@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Espace client ITF – Connexion{% endblock %}
+
+{% block content %}
+<main id="contenu-principal" class="main auth-main" role="main">
+    <section class="auth-section">
+        <div class="container auth-container">
+            <div class="auth-card" role="form">
+                <h1 class="auth-title">Espace client</h1>
+                <p class="auth-subtitle">Accédez à vos documents et suivez vos commandes en toute sécurité.</p>
+                <form method="post" action="" novalidate>
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                        <div class="form-errors" role="alert">
+                            {% for error in form.non_field_errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <div class="form-group">
+                        <label for="{{ form.username.id_for_label }}">Identifiant</label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                            <div class="field-error" role="alert">
+                                {% for error in form.username.errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.password.id_for_label }}">Mot de passe</label>
+                        {{ form.password }}
+                        {% if form.password.errors %}
+                            <div class="field-error" role="alert">
+                                {% for error in form.password.errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% if next %}
+                        <input type="hidden" name="next" value="{{ next }}">
+                    {% endif %}
+                    <button type="submit" class="btn btn-primary auth-submit">Se connecter</button>
+                </form>
+                <div class="auth-footer">
+                    <p>Nouveau client ?</p>
+                    <a href="{% url signup_url_name %}" class="btn btn-secondary">S’inscrire</a>
+                </div>
+            </div>
+            <aside class="auth-aside">
+                <h2>Pourquoi créer un compte ?</h2>
+                <ul>
+                    <li>Suivi de vos commandes et livraisons</li>
+                    <li>Accès à vos factures et devis</li>
+                    <li>Gestion de votre profil et de vos préférences</li>
+                </ul>
+            </aside>
+        </div>
+    </section>
+</main>
+{% endblock %}

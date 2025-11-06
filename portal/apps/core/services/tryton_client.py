@@ -163,6 +163,26 @@ class TrytonClient:
         self._auth_header = f"Session {token_value}"
         return self._auth_header
 
+    def login(self, *, force: bool = False) -> tuple[int, str]:
+        """Authenticate and return the Tryton user id along with the session token."""
+        self._authenticate(force=force)
+        if self._session_user_id is None or self._session_token is None:
+            raise TrytonAuthError("Tryton login did not return a valid session.")
+        return self._session_user_id, self._session_token
+
+    def get_session_context(self) -> dict[str, Any]:
+        """Expose current session metadata for storage in Django sessions."""
+        if self._session_user_id is None or self._session_token is None or self._auth_header is None:
+            raise TrytonAuthError("No active Tryton session to export.")
+        return {
+            "user_id": self._session_user_id,
+            "session": self._session_token,
+            "username": self.username,
+            "database": self.database,
+            "auth_header": self._auth_header,
+            "base_url": str(self.base_url),
+        }
+
     def call(
         self,
         service: str,

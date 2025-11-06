@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "apps.core",
+    "apps.accounts",
 ]
 
 MIDDLEWARE = [
@@ -107,6 +108,15 @@ STATICFILES_DIRS = [
 ]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+LOGIN_URL = "accounts:login"
+LOGIN_REDIRECT_URL = "accounts:dashboard"
+LOGOUT_REDIRECT_URL = "core:home"
+
+AUTHENTICATION_BACKENDS = [
+    "apps.accounts.auth_backend.TrytonBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
 
 LOGGING = {
     "version": 1,

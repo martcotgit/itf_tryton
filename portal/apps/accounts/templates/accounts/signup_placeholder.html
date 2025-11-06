@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Espace client ITF – Inscription{% endblock %}
+
+{% block content %}
+<main id="contenu-principal" class="main auth-main" role="main">
+    <section class="auth-section">
+        <div class="container auth-container">
+            <div class="auth-card">
+                <h1 class="auth-title">Inscription bientôt disponible</h1>
+                <p class="auth-subtitle">
+                    Nous préparons actuellement l’ouverture de l’espace client pour les nouvelles entreprises.
+                    L’équipe vous contactera dès que la fonctionnalité sera prête.
+                </p>
+                <div class="auth-footer">
+                    <a href="{% url 'accounts:login' %}" class="btn btn-secondary">Retour à la connexion</a>
+                    <a href="{% url 'core:home' %}#contact" class="btn btn-primary">Nous contacter</a>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+{% endblock %}

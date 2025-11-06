@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Espace client ITF – Tableau de bord{% endblock %}
+
+{% block content %}
+<main id="contenu-principal" class="main dashboard-main" role="main">
+    <section class="dashboard-section">
+        <div class="container dashboard-container">
+            <h1 class="dashboard-title">Bienvenue{% if request.user.first_name %}, {{ request.user.first_name }}{% endif %} !</h1>
+            <p class="dashboard-intro">
+                Retrouvez ici l’ensemble des services réservés à nos clients. Les sections suivantes seront activées au fur et à mesure des prochains sprints.
+            </p>
+            <div class="dashboard-panels">
+                <article class="dashboard-panel">
+                    <h2>Factures</h2>
+                    <p>Consultez et téléchargez vos factures.</p>
+                </article>
+                <article class="dashboard-panel">
+                    <h2>Devis</h2>
+                    <p>Visualisez vos devis en attente de validation.</p>
+                </article>
+                <article class="dashboard-panel">
+                    <h2>Commandes</h2>
+                    <p>Suivez le statut de vos commandes en cours.</p>
+                </article>
+                <article class="dashboard-panel">
+                    <h2>Profil</h2>
+                    <p>Mettez à jour vos informations d’entreprise et vos contacts.</p>
+                </article>
+            </div>
+            <div class="dashboard-actions">
+                <a href="{% url 'core:home' %}" class="btn btn-secondary">Retour au site</a>
+            </div>
+        </div>
+    </section>
+</main>
+{% endblock %}
