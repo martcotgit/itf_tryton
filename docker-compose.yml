@@ -24,7 +24,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      TRYTON_DATABASE_URI: postgresql://tryton:tryton@db:5432/
+      TRYTON_DATABASE_URI: postgresql://tryton:tryton@db:5432/tryton
     ports:
       - "8000:8000"
     volumes:
@@ -59,6 +59,12 @@ services:
       DATABASE_URL: postgresql://tryton:tryton@db:5432/portal
       REDIS_URL: redis://redis:6379/0
       TRYTON_RPC_URL: http://tryton:8000/
+      TRYTON_DATABASE: tryton
+      TRYTON_USER: admin
+      TRYTON_PASSWORD: admin
+      TRYTON_SESSION_TTL: "300"
+      TRYTON_TIMEOUT: "10"
+      TRYTON_RETRY_ATTEMPTS: "3"
       PORTAL_ALLOWED_HOSTS: portal.localhost
     volumes:
       - ./portal:/app

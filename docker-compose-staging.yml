@@ -44,7 +44,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      TRYTON_DATABASE_URI: postgresql://tryton:tryton@db:5432/
+      TRYTON_DATABASE_URI: postgresql://tryton:tryton@db:5432/tryton
       TRYTON_ADMIN_PASSWORD: fMz1w652uRh1
     volumes:
       - ./config/trytond.conf:/etc/tryton/trytond.conf:ro

@@ -9,6 +9,13 @@ env = environ.Env(
     DEBUG=(bool, False),
     SECRET_KEY=(str, "dev-secret-key"),
     PORTAL_ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1"]),
+    TRYTON_RPC_URL=(str, "http://tryton:8000/"),
+    TRYTON_DATABASE=(str, "tryton"),
+    TRYTON_USER=(str, None),
+    TRYTON_PASSWORD=(str, None),
+    TRYTON_SESSION_TTL=(int, 300),
+    TRYTON_TIMEOUT=(float, 10.0),
+    TRYTON_RETRY_ATTEMPTS=(int, 3),
 )
 
 ENV_FILE_VAR = env("DJANGO_ENV_FILE", default=None)
@@ -114,3 +121,11 @@ LOGGING = {
         "level": "INFO",
     },
 }
+
+TRYTON_RPC_URL = env("TRYTON_RPC_URL")
+TRYTON_DATABASE = env("TRYTON_DATABASE")
+TRYTON_USER = env("TRYTON_USER")
+TRYTON_PASSWORD = env("TRYTON_PASSWORD")
+TRYTON_SESSION_TTL = env.int("TRYTON_SESSION_TTL")
+TRYTON_TIMEOUT = env.float("TRYTON_TIMEOUT")
+TRYTON_RETRY_ATTEMPTS = env.int("TRYTON_RETRY_ATTEMPTS")

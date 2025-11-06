@@ -30,6 +30,18 @@
 - 2025-11-05 07:01 | Création des templates Django (`templates/base.html`, `templates/core/home.html`) avec adaptation SEO → Succès
 - 2025-11-05 07:01 | Initialisation de l'app Django `portal.apps.core` (views, urls, settings, inclusion dans `itf_portal/urls.py`) → Succès
 - 2025-11-05 07:17 | Restauration de la page d'accueil pour correspondre au site paletteitf.ca (copie fidèle du HTML d'origine) → Succès
+- 2025-11-05 07:23 | Copie de `portal/.env.example` vers `portal/.env` pour exécuter les commandes Django → Succès
+- 2025-11-05 07:23 | Commande `docker compose up -d db redis tryton` pour initialiser les dépendances (Postgres/Redis/Tryton) → Succès
+- 2025-11-05 07:23 | Commande `docker compose run --rm portal python manage.py migrate` → Succès
+- 2025-11-05 07:23 | Commande `docker compose run --rm -e DJANGO_SUPERUSER_PASSWORD=admin portal python manage.py createsuperuser --no-input --username admin --email admin@example.com` → Succès
+- 2025-11-05 07:24 | Ajout d’un endpoint `/health/` dans `portal.apps.core` (vue JSON + routing) → Succès
+- 2025-11-05 07:24 | Commande `docker compose run --rm portal python manage.py check` → Succès
+- 2025-11-05 07:24 | Commande `docker compose down` pour arrêter et nettoyer la stack → Succès
+- 2025-11-05 07:28 | Démarrage `make portal-up` pour validation end-to-end (Traefik, portal, tryton) → Succès
+- 2025-11-05 07:29 | Vérification manuelle `http://portal.localhost/` et `/health/` (rendu OK, health=200) → Succès
+- 2025-11-05 07:29 | Vérification `http://tryton.localhost/` via Traefik → Succès
+- 2025-11-05 07:29 | Arrêt `make portal-down` → Succès
+- 2025-11-05 07:32 | Ajout de la mention SOLID dans `AGENTS.md` (consignes coding style) → Succès
 
 ## Modifications par fichier
 | Fichier | Description succincte | Suivi PR / commit |
@@ -48,14 +60,16 @@
 | `docs/development-setup.md` | Guide d’installation et de lancement de la stack locale | N/A |
 | `portal/templates/base.html` | Template parent minimal pour les vues Django | N/A |
 | `portal/templates/core/home.html` | Page d’accueil identique au site paletteitf.ca (HTML original) | N/A |
-| `portal/apps/core/*` | App Django initiale (config, vues, URLs) | N/A |
+| `portal/apps/core/views.py` | Ajout des vues `HomeView` et `HealthCheckView` | N/A |
+| `portal/apps/core/urls.py` | Routes racine et santé exposées | N/A |
 | `portal/static/*` | Assets hérités de `siteweb-itf` (css, js, fichiers SEO) | N/A |
 | `portal/itf_portal/urls.py` | Inclusion des URLs de l’app core | N/A |
+| `AGENTS.md` | Ajout de l’obligation de suivre SOLID | N/A |
 
 ## Tests manuels
-- [ ] Démarrer `docker compose up --build portal traefik`
-- [ ] Exécuter `docker compose exec portal python manage.py check`
-- Notes: Non exécutés pour cette entrée (documentation initiale).
+- [x] Démarrer `docker compose up --build portal traefik`
+- [x] Exécuter `docker compose run --rm portal python manage.py check`
+- Notes: Stack non lancée en mode interactif (reste à tester le routing Traefik).
 
 ## Tests automatisés
 - Commandes: `Aucun (initialisation documentaire)`
