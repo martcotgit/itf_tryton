@@ -49,6 +49,7 @@ services:
     volumes:
       - ./config/trytond.conf:/etc/tryton/trytond.conf:ro
       - ./tryton/modules:/opt/trytond/modules
+      - ./tryton/scripts:/opt/trytond/scripts:ro
       - tryton_filestore:/var/lib/trytond
     ports:
       - "8000:8000"

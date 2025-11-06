@@ -40,3 +40,8 @@
 ## Security & Configuration Tips
 - Rotate credentials set in `docker-compose-staging.yml` (e.g., `TRYTON_ADMIN_PASSWORD`) through your deployment secrets manager; never rely on committed defaults in production.
 - Keep production overrides in environment files managed outside the repository, and audit mounted volumes (`tryton_filestore`, `db_data`) when handling customer data.
+
+## Documentation Workflow
+- Se referer a `docs/documentation-plan.md` avant chaque tache pour identifier les sections cibles (developpement, guides utilisateurs, runbooks, qualite).
+- Initialiser ou completer les journaux de tache dans `docs/taches/<ID>/` a l'aide des gabarits du dossier `docs/templates/`.
+- Noter dans le journal d'implementation et la note finale de tache quelles pieces de documentation ont ete mises a jour ou restent a produire.

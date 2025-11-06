@@ -33,15 +33,18 @@ class TrytonBackend(BaseBackend):
         try:
             client.login(force=True)
             session_context = client.get_session_context()
+            full_name = username
+            email = username
             try:
-                user_payload = client.call(
+                preferences = client.call(
                     "model.res.user",
-                    "read",
-                    [[session_context["user_id"]], ["name", "email"]],
-                )
+                    "get_preferences",
+                    [False],
+                ) or {}
+                full_name = preferences.get("name") or full_name
+                email = preferences.get("email") or email
             except TrytonRPCError as exc:
-                logger.error("Unable to fetch Tryton user data for %s: %s", username, exc)
-                user_payload = []
+                logger.info("Unable to fetch Tryton preferences for %s: %s", username, exc)
         except TrytonAuthError:
             logger.info("Tryton authentication failed for username=%s", username)
             return None
@@ -49,9 +52,6 @@ class TrytonBackend(BaseBackend):
             logger.error("Tryton RPC error during authentication for %s: %s", username, exc)
             return None
         else:
-            user_info = user_payload[0] if user_payload else {}
-            full_name = user_info.get("name") or username
-            email = user_info.get("email") or username
             first_name, last_name = self._split_name(full_name)
 
             user, _ = UserModel.objects.get_or_create(

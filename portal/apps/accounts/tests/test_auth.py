@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from apps.core.services import TrytonAuthError
+from apps.core.services import TrytonAuthError, TrytonRPCError
 
 
 class ClientAuthTests(TestCase):
@@ -32,7 +32,10 @@ class ClientAuthTests(TestCase):
             "auth_header": "Session token",
             "base_url": "http://tryton:8000/",
         }
-        mock_client.call.return_value = [{"name": "Client Demo", "email": "client@example.com"}]
+        mock_client.call.return_value = {
+            "name": "Client Demo",
+            "email": "client@example.com",
+        }
 
         response = self.client.post(
             self.login_url,
@@ -46,6 +49,11 @@ class ClientAuthTests(TestCase):
         self.assertIsNotNone(session_payload)
         self.assertEqual(session_payload["session"], "session-token")
         mock_client.close.assert_called_once()
+        mock_client.call.assert_called_once_with(
+            "model.res.user",
+            "get_preferences",
+            [False],
+        )
 
     @patch("apps.accounts.auth_backend.TrytonClient")
     def test_login_failure_shows_errors(self, mock_client_cls):
@@ -60,7 +68,32 @@ class ClientAuthTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context["form"].errors)
         self.assertFalse(self.UserModel.objects.filter(username="client@example.com").exists())
+        mock_client.call.assert_not_called()
 
+    @patch("apps.accounts.auth_backend.TrytonClient")
+    def test_login_success_without_preferences_fallbacks(self, mock_client_cls):
+        mock_client = mock_client_cls.return_value
+        mock_client.login.return_value = (42, "session-token")
+        mock_client.get_session_context.return_value = {
+            "user_id": 42,
+            "session": "session-token",
+            "username": "client@example.com",
+            "database": "tryton",
+            "auth_header": "Session token",
+            "base_url": "http://tryton:8000/",
+        }
+        mock_client.call.side_effect = TrytonRPCError("boom")
+
+        response = self.client.post(
+            self.login_url,
+            data={"username": "client@example.com", "password": "Motdepasse!123"},
+        )
+
+        self.assertRedirects(response, self.dashboard_url)
+        user = self.UserModel.objects.get(username="client@example.com")
+        self.assertEqual(user.email, "client@example.com")
+        self.assertEqual(user.first_name, "client@example.com")
+        self.assertEqual(user.last_name, "")
     def test_dashboard_requires_authentication(self):
         response = self.client.get(self.dashboard_url)
 

@@ -20,6 +20,8 @@
 - 2025-11-06 11:32 | Implémentation backend d’auth Tryton + mise à jour du flux de connexion → succès
 - 2025-11-06 11:36 | Adaptation des tests Django avec mocks Tryton → succès
 - 2025-11-06 13:49 | Création utilisateur Tryton `portal.client` + attribution groupe Administration → succès
+- 2025-11-06 14:39 | Remplacement `res.user.read` par `get_preferences` + ajout script bootstrap Tryton → succès
+- 2025-11-06 14:46 | Exécution script `setup_portal_group.py` (création groupe Portail + assignation user) → succès
 
 ## Modifications par fichier
 | Fichier | Description succincte | Suivi PR / commit |
@@ -31,6 +33,10 @@
 | `portal/templates/core/home.html` | Refactor en héritage `base.html` avec SEO conservé | À intégrer |
 | `portal/static/css/style.css` | Styles de navigation, formulaires et dashboard | À intégrer |
 | `portal/apps/accounts/*` | App Django (config, vues, formulaires, urls, templates, tests, backend Tryton) | À intégrer |
+| `docker-compose.yml` | Montage scripts Tryton pour exécution des utilitaires | À intégrer |
+| `docker-compose-staging.yml` | Idem environnement de staging | À intégrer |
+| `tryton/scripts/setup_portal_group.py` | Script de création du groupe/utilisateur Portail côté Tryton | À intégrer |
+| `docs/deployment-checklist.md` | Runbook déploiement portail client | À intégrer |
 | `docs/taches/03/03-analyse.md` | Analyse préalable de la tâche | Référence |
 | `docs/taches/03/03-implementation.md` | Journal d’implémentation | Référence |
 
@@ -43,7 +49,8 @@
 - Commandes: `docker compose run --rm portal python manage.py test apps.accounts`
 - Commandes: `docker compose run --rm portal python manage.py test apps.accounts` (vérification post-backend Tryton)
 - Commandes: `docker compose run --rm tryton python3 - <<'PY' ...` (création utilisateur Tryton `portal.client`)`
-- Résultats: Succès (5 tests, 0 échec)
+- Commandes: `docker compose run --rm tryton python3 tryton/scripts/setup_portal_group.py`
+- Résultats: Succès (6 tests, 0 échec)
 
 ## Audits sécurité / qualité
 - `npm audit`: Non applicable (pas de dépendances npm dans ce périmètre)
