@@ -66,9 +66,12 @@ services:
       TRYTON_SESSION_TTL: "300"
       TRYTON_TIMEOUT: "10"
       TRYTON_RETRY_ATTEMPTS: "3"
-      PORTAL_ALLOWED_HOSTS: portal.localhost
+      PORTAL_ALLOWED_HOSTS: portal.localhost,portal,host.docker.internal
+      PORTAL_ALLOW_ALL_HOSTS: "1"
     volumes:
       - ./portal:/app
+    ports:
+      - "8001:8000"
     restart: unless-stopped
     labels:
       - "traefik.enable=true"

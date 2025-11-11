@@ -2,10 +2,14 @@ from .base import *  # noqa
 
 DEBUG = env.bool("DEBUG", default=True)
 SECRET_KEY = env("SECRET_KEY", default="local-secret-key")
-ALLOWED_HOSTS = env.list(
-    "PORTAL_ALLOWED_HOSTS",
-    default=["localhost", "127.0.0.1", "portal", "portal.localhost"],
-)
+PORTAL_ALLOW_ALL_HOSTS = env.bool("PORTAL_ALLOW_ALL_HOSTS", default=True)
+if PORTAL_ALLOW_ALL_HOSTS:
+    ALLOWED_HOSTS = ["*"]
+else:
+    ALLOWED_HOSTS = env.list(
+        "PORTAL_ALLOWED_HOSTS",
+        default=["localhost", "127.0.0.1", "portal", "portal.localhost"],
+    )
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
@@ -17,4 +21,3 @@ if "DATABASE_URL" not in env.ENVIRON:
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",  # type: ignore[name-defined]
     }
-

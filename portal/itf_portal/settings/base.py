@@ -16,6 +16,7 @@ env = environ.Env(
     TRYTON_SESSION_TTL=(int, 300),
     TRYTON_TIMEOUT=(float, 10.0),
     TRYTON_RETRY_ATTEMPTS=(int, 3),
+    TRYTON_PORTAL_GROUP=(str, "Portail Clients"),
 )
 
 ENV_FILE_VAR = env("DJANGO_ENV_FILE", default=None)
@@ -94,6 +95,10 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
+    {
+        "NAME": "apps.accounts.password_validators.ComplexitePortailValidator",
+        "OPTIONS": {"required_categories": 3},
+    },
 ]
 
 LANGUAGE_CODE = "fr-fr"
@@ -139,3 +144,4 @@ TRYTON_PASSWORD = env("TRYTON_PASSWORD")
 TRYTON_SESSION_TTL = env.int("TRYTON_SESSION_TTL")
 TRYTON_TIMEOUT = env.float("TRYTON_TIMEOUT")
 TRYTON_RETRY_ATTEMPTS = env.int("TRYTON_RETRY_ATTEMPTS")
+TRYTON_PORTAL_GROUP = env("TRYTON_PORTAL_GROUP")

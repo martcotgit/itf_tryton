@@ -45,3 +45,6 @@
 - Se referer a `docs/documentation-plan.md` avant chaque tache pour identifier les sections cibles (developpement, guides utilisateurs, runbooks, qualite).
 - Initialiser ou completer les journaux de tache dans `docs/taches/<ID>/` a l'aide des gabarits du dossier `docs/templates/`.
 - Noter dans le journal d'implementation et la note finale de tache quelles pieces de documentation ont ete mises a jour ou restent a produire.
+
+## Exigences linguistiques
+- Employer du francais canadien pour toute interface, message utilisateur, conversation et documentation ajoutee ou modifiee (ex.: « courriel », « mot de passe », accents conformes).

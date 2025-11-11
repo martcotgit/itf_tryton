@@ -14,6 +14,15 @@
 </head>
 <body class="{% block body_class %}{% endblock %}">
 {% include "partials/header.html" %}
+{% if messages %}
+<div class="messages" role="status" aria-live="polite">
+    {% for message in messages %}
+        <div class="message message-{{ message.level_tag }}">
+            {{ message }}
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
 {% block content %}{% endblock %}
 <script src="{% static 'js/main.js' %}"></script>
 </body>

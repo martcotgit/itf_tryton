@@ -44,5 +44,4 @@
 ## Notes
 - Redis est utilisé comme cache partagé (configuration par défaut `redis://redis:6379/0`).
 - Le service Django charge `itf_portal.settings.local` ; modifier `portal/.env` pour tester d’autres configurations.
-- Adapter `PORTAL_ALLOWED_HOSTS` et `CSRF_TRUSTED_ORIGINS` si vous accédez au portail via un nom différent.
-
+- Par défaut, `PORTAL_ALLOW_ALL_HOSTS=1` autorise l'accès depuis n'importe quelle adresse IP sur le réseau local; mettez-le à `0` si vous devez restreindre les hôtes et ajustez ensuite `PORTAL_ALLOWED_HOSTS` et `CSRF_TRUSTED_ORIGINS` en conséquence.

@@ -4,7 +4,8 @@ from .views import (
     ClientDashboardView,
     ClientLoginView,
     ClientLogoutView,
-    ClientSignupPlaceholderView,
+    ClientProfileView,
+    ClientSignupView,
 )
 
 app_name = "accounts"
@@ -13,5 +14,6 @@ urlpatterns = [
     path("", ClientLoginView.as_view(), name="login"),
     path("deconnexion/", ClientLogoutView.as_view(), name="logout"),
     path("tableau-de-bord/", ClientDashboardView.as_view(), name="dashboard"),
-    path("inscription/", ClientSignupPlaceholderView.as_view(), name="signup"),
+    path("profil/", ClientProfileView.as_view(), name="profile"),
+    path("inscription/", ClientSignupView.as_view(), name="signup"),
 ]
