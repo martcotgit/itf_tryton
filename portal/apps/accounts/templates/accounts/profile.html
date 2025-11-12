@@ -1,6 +1,12 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Espace client ITF – Profil{% endblock %}
+
+{% block extra_head %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'vendor/intl-tel-input/css/intlTelInput.min.css' %}">
+{% endblock %}
 
 {% block content %}
 <main id="contenu-principal" class="main profile-main" role="main">
@@ -59,7 +65,7 @@
                                 <label for="{{ profile_form.email.id_for_label }}">{{ profile_form.email.label }}</label>
                                 {{ profile_form.email }}
                             </div>
-                            <div class="form-group">
+                            <div class="form-group phone-field-group" data-phone-utils-url="{% static 'vendor/intl-tel-input/js/utils.js' %}">
                                 <label for="{{ profile_form.phone.id_for_label }}">{{ profile_form.phone.label }}</label>
                                 {{ profile_form.phone }}
                                 {% if profile_form.phone.errors %}
@@ -67,6 +73,7 @@
                                         {% for error in profile_form.phone.errors %}<p>{{ error }}</p>{% endfor %}
                                     </div>
                                 {% endif %}
+                                <div id="phone-client-error" class="field-error is-hidden" role="alert" aria-live="polite"></div>
                             </div>
                         </div>
                         <div class="form-row">
@@ -150,4 +157,112 @@
         </div>
     </section>
 </main>
+{% endblock %}
+
+{% block extra_scripts %}
+    {{ block.super }}
+    <script src="{% static 'vendor/intl-tel-input/js/intlTelInput.min.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const phoneInput = document.getElementById('id_phone');
+            if (!phoneInput || !window.intlTelInput) {
+                return;
+            }
+            const phoneGroup = document.querySelector('.phone-field-group');
+            const utilsScriptUrl = phoneGroup ? phoneGroup.dataset.phoneUtilsUrl : undefined;
+            const errorContainer = document.getElementById('phone-client-error');
+            const form = phoneInput.form;
+
+            const iti = window.intlTelInput(phoneInput, {
+                initialCountry: 'ca',
+                preferredCountries: ['ca', 'us'],
+                autoPlaceholder: 'polite',
+                nationalMode: false,
+                formatOnDisplay: true,
+                utilsScript: utilsScriptUrl,
+            });
+
+            const errorMessages = {
+                0: "Numéro de téléphone invalide.",
+                1: "L’indicatif du pays est invalide.",
+                2: "Le numéro est trop court pour ce pays.",
+                3: "Le numéro est trop long pour ce pays.",
+                4: "Numéro de téléphone invalide.",
+            };
+
+            function showError(message) {
+                if (!errorContainer) {
+                    return;
+                }
+                errorContainer.textContent = message;
+                errorContainer.classList.remove('is-hidden');
+            }
+
+            function clearError() {
+                if (!errorContainer) {
+                    return;
+                }
+                errorContainer.textContent = "";
+                errorContainer.classList.add('is-hidden');
+            }
+
+            function validateNumber() {
+                const value = phoneInput.value.trim();
+                if (value === "") {
+                    clearError();
+                    return true;
+                }
+                if (typeof iti.isValidNumber !== "function") {
+                    return true;
+                }
+                if (iti.isValidNumber()) {
+                    clearError();
+                    return true;
+                }
+                const code = iti.getValidationError();
+                showError(errorMessages[code] || "Numéro de téléphone invalide.");
+                return false;
+            }
+
+            function normalizeNumber() {
+                if (!phoneInput.value.trim()) {
+                    return;
+                }
+                try {
+                    if (window.intlTelInputUtils) {
+                        phoneInput.value = iti.getNumber(window.intlTelInputUtils.numberFormat.E164);
+                    } else {
+                        phoneInput.value = iti.getNumber();
+                    }
+                } catch (error) {
+                    console.warn("Normalisation du numéro impossible", error);
+                }
+            }
+
+            function attachHandlers() {
+                phoneInput.addEventListener('input', validateNumber);
+                phoneInput.addEventListener('blur', () => {
+                    if (validateNumber()) {
+                        normalizeNumber();
+                    }
+                });
+                if (form) {
+                    form.addEventListener('submit', (event) => {
+                        if (!validateNumber()) {
+                            event.preventDefault();
+                            phoneInput.focus();
+                            return;
+                        }
+                        normalizeNumber();
+                    });
+                }
+            }
+
+            if (iti.promise) {
+                iti.promise.then(attachHandlers);
+            } else {
+                attachHandlers();
+            }
+        });
+    </script>
 {% endblock %}

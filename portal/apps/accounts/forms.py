@@ -1,7 +1,11 @@
+from decimal import Decimal
+
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.forms import BaseFormSet, formset_factory
+from django.forms.formsets import DELETION_FIELD_NAME
 
 from .services import (
     PortalAccountCreationResult,
@@ -217,7 +221,7 @@ class ClientProfileForm(forms.Form):
         required=False,
         widget=forms.TextInput(
             attrs={
-                "placeholder": "Ex.: 418 555-1234",
+                "placeholder": "Ex.: +1 418 555-1234",
                 "class": "form-input",
                 "autocomplete": "tel",
             }
@@ -355,3 +359,196 @@ class ClientPasswordForm(forms.Form):
             )
         except PortalAccountServiceError:
             raise
+
+
+class OrderDraftForm(forms.Form):
+    client_reference = forms.CharField(
+        label="Référence client",
+        max_length=64,
+        required=False,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-input",
+                "placeholder": "Numéro interne ou référence achat",
+            }
+        ),
+    )
+    requested_date = forms.DateField(
+        label="Date de livraison souhaitée",
+        widget=forms.DateInput(
+            attrs={
+                "type": "date",
+                "class": "form-input",
+            }
+        ),
+    )
+    shipping_address = forms.ChoiceField(
+        label="Adresse de livraison",
+        choices=(),
+        widget=forms.Select(attrs={"class": "form-input"}),
+    )
+    notes = forms.CharField(
+        label="Instructions supplémentaires",
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                "class": "form-input",
+                "rows": 3,
+                "placeholder": "Ajoutez des précisions utiles pour l’équipe ITF (options, fenêtre de livraison, etc.)",
+            }
+        ),
+    )
+
+    def __init__(self, *args, address_choices: list[tuple[int, str]] | None = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        choices = address_choices or []
+        self.fields["shipping_address"].choices = choices
+
+    def clean_client_reference(self):
+        value = (self.cleaned_data.get("client_reference") or "").strip()
+        return value or ""
+
+    def clean_notes(self):
+        value = (self.cleaned_data.get("notes") or "").strip()
+        return value or ""
+
+    def clean_shipping_address(self):
+        value = self.cleaned_data.get("shipping_address")
+        if value in ("", None):
+            raise forms.ValidationError("Sélectionnez une adresse de livraison.")
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            raise forms.ValidationError("Adresse de livraison invalide.")
+
+
+class OrderLineForm(forms.Form):
+    product = forms.ChoiceField(
+        label="Produit",
+        required=False,
+        choices=(),
+        widget=forms.Select(attrs={"class": "form-input"}),
+    )
+    quantity = forms.DecimalField(
+        label="Quantité",
+        required=False,
+        min_value=Decimal("0.01"),
+        max_digits=9,
+        decimal_places=2,
+        widget=forms.NumberInput(
+            attrs={
+                "class": "form-input",
+                "placeholder": "Ex.: 10",
+                "step": "0.01",
+            }
+        ),
+        help_text="Entrez un volume positif (unités selon le produit).",
+    )
+    notes = forms.CharField(
+        label="Notes pour cette ligne",
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                "class": "form-input",
+                "rows": 2,
+                "placeholder": "Précisions sur cette ligne (format, traitement, etc.)",
+            }
+        ),
+    )
+
+    def __init__(self, *args, product_choices: list[tuple[int, str]] | None = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        choices = product_choices or []
+        self.fields["product"].choices = [("", "Choisissez un produit")] + choices
+
+    def clean_product(self):
+        value = self.cleaned_data.get("product")
+        if value in ("", None):
+            return None
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            raise forms.ValidationError("Produit invalide.")
+
+    def clean_notes(self):
+        value = (self.cleaned_data.get("notes") or "").strip()
+        return value or ""
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data.get(DELETION_FIELD_NAME):
+            cleaned_data["is_empty"] = True
+            return cleaned_data
+        product = cleaned_data.get("product")
+        quantity = cleaned_data.get("quantity")
+        note = cleaned_data.get("notes")
+
+        has_input = any(
+            v not in (None, "")
+            for v in (
+                product,
+                quantity,
+                note,
+            )
+        )
+        if not has_input:
+            cleaned_data["is_empty"] = True
+            return cleaned_data
+
+        if product is None:
+            self.add_error("product", "Sélectionnez un produit.")
+        if quantity in (None, ""):
+            self.add_error("quantity", "Indiquez une quantité positive.")
+
+        cleaned_data["is_empty"] = False
+        return cleaned_data
+
+
+class BaseOrderLineFormSet(BaseFormSet):
+    def add_fields(self, form, index):
+        super().add_fields(form, index)
+        if self.can_delete:
+            delete_field = form.fields.get(DELETION_FIELD_NAME)
+            if delete_field:
+                delete_field.widget.attrs.update(
+                    {
+                        "class": "sr-only order-line-delete-input",
+                        "data-formset-delete-input": "true",
+                        "aria-hidden": "true",
+                        "tabindex": "-1",
+                    }
+                )
+
+    def clean(self):
+        super().clean()
+        if any(form.errors for form in self.forms):
+            return
+        filled = 0
+        for form in self.forms:
+            data = getattr(form, "cleaned_data", None) or {}
+            if data.get(DELETION_FIELD_NAME):
+                continue
+            if data.get("is_empty"):
+                continue
+            product = data.get("product")
+            quantity = data.get("quantity")
+            note = data.get("notes")
+            if product is None and quantity is None and not note:
+                continue
+            if product is None or quantity is None:
+                raise forms.ValidationError("Chaque ligne doit inclure un produit et une quantité.")
+            filled += 1
+        if filled == 0:
+            raise forms.ValidationError("Ajoutez au moins une ligne de commande.")
+
+
+OrderLineFormSet = formset_factory(
+    OrderLineForm,
+    formset=BaseOrderLineFormSet,
+    extra=1,
+    max_num=10,
+    can_delete=True,
+    validate_min=True,
+)
+
+ORDER_LINES_FORMSET_PREFIX = "order_lines"

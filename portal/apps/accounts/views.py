@@ -11,11 +11,17 @@ from .forms import (
     ClientProfileForm,
     ClientSignupForm,
     EmailAuthenticationForm,
+    OrderDraftForm,
+    OrderLineFormSet,
+    ORDER_LINES_FORMSET_PREFIX,
 )
 from .services import (
     PortalAccountService,
     PortalAccountServiceError,
     PortalClientProfile,
+    PortalOrderLineInput,
+    PortalOrderService,
+    PortalOrderServiceError,
 )
 
 
@@ -192,6 +198,131 @@ class ClientProfileView(LoginRequiredMixin, TemplateView):
             "postal_code": (address.postal_code if address else "") or "",
         }
         return ClientProfileForm(initial=initial)
+
+    def _current_login(self) -> str:
+        return (self.request.user.username or "").strip().lower()
+
+
+class OrderCreateView(LoginRequiredMixin, TemplateView):
+    template_name = "accounts/orders_form.html"
+    login_url = reverse_lazy("accounts:login")
+    form_class = OrderDraftForm
+    line_formset_class = OrderLineFormSet
+    service_class = PortalOrderService
+
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        self.order_service = self.service_class()
+        self._product_options: list[tuple[int, str]] | None = None
+        self._addresses_cache: list[tuple[int, str]] | None = None
+
+    def get(self, request, *args, **kwargs):
+        try:
+            form = self.form_class(address_choices=self._address_choices())
+            formset = self._build_line_formset()
+        except PortalOrderServiceError as exc:
+            messages.error(request, str(exc))
+            return redirect("accounts:dashboard")
+        return self.render_to_response(
+            self.get_context_data(
+                form=form,
+                line_formset=formset,
+                product_choices=self._product_choices(),
+                address_choices=self._address_choices(),
+            )
+        )
+
+    def post(self, request, *args, **kwargs):
+        try:
+            address_choices = self._address_choices()
+            product_choices = self._product_choices()
+        except PortalOrderServiceError as exc:
+            messages.error(request, str(exc))
+            return redirect("accounts:dashboard")
+
+        form = self.form_class(request.POST, address_choices=address_choices)
+        formset = self._build_line_formset(data=request.POST)
+
+        if form.is_valid() and formset.is_valid():
+            lines = self._prepare_lines(formset)
+            try:
+                result = self.order_service.create_draft_order(
+                    login=self._current_login(),
+                    client_reference=form.cleaned_data.get("client_reference"),
+                    requested_date=form.cleaned_data["requested_date"],
+                    shipping_address_id=form.cleaned_data["shipping_address"],
+                    lines=lines,
+                    instructions=form.cleaned_data.get("notes"),
+                )
+            except PortalOrderServiceError as exc:
+                messages.error(request, str(exc))
+            else:
+                success_message = "Votre commande a été transmise."
+                if result.portal_reference:
+                    success_message += f" Référence: {result.portal_reference}."
+                elif result.number:
+                    success_message += f" Numéro Tryton: {result.number}."
+                messages.success(request, success_message)
+                return redirect("accounts:dashboard")
+
+        return self.render_to_response(
+            self.get_context_data(
+                form=form,
+                line_formset=formset,
+                product_choices=self._product_choices(),
+                address_choices=self._address_choices(),
+            )
+        )
+
+    def _prepare_lines(self, formset: OrderLineFormSet) -> list[PortalOrderLineInput]:
+        lines: list[PortalOrderLineInput] = []
+        for form in formset:
+            if not hasattr(form, "cleaned_data"):
+                continue
+            data = form.cleaned_data
+            if data.get("DELETE"):
+                continue
+            if data.get("is_empty"):
+                continue
+            product_id = data.get("product")
+            quantity = data.get("quantity")
+            if product_id is None or quantity is None:
+                continue
+            lines.append(
+                PortalOrderLineInput(
+                    product_id=product_id,
+                    quantity=quantity,
+                    notes=data.get("notes"),
+                )
+            )
+        return lines
+
+    def _build_line_formset(self, data=None):
+        return self.line_formset_class(
+            data=data,
+            prefix=ORDER_LINES_FORMSET_PREFIX,
+            form_kwargs={"product_choices": self._product_choices()},
+        )
+
+    def _product_choices(self) -> list[tuple[int, str]]:
+        if self._product_options is None:
+            products = self.order_service.list_orderable_products()
+            if not products:
+                raise PortalOrderServiceError(
+                    "Aucun produit n’est disponible pour le portail. Contactez notre équipe pour activer le catalogue."
+                )
+            self._product_options = [(product.id, product.choice_label) for product in products]
+        return self._product_options
+
+    def _address_choices(self) -> list[tuple[int, str]]:
+        if self._addresses_cache is None:
+            _, addresses = self.order_service.list_shipment_addresses(login=self._current_login())
+            if not addresses:
+                raise PortalOrderServiceError(
+                    "Aucune adresse de livraison n’est configurée pour votre compte. Contactez notre équipe."
+                )
+            self._addresses_cache = [(addr.id, addr.label) for addr in addresses]
+        return self._addresses_cache
 
     def _current_login(self) -> str:
         return (self.request.user.username or "").strip().lower()

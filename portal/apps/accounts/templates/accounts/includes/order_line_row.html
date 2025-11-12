@@ -1,0 +1,41 @@
+<tr class="order-line-row" data-formset-row>
+    <td class="order-line-index">
+        <span class="order-line-index-label" data-line-label aria-live="polite">Ligne</span>
+    </td>
+    <td>
+        <label class="sr-only" for="{{ line_form.product.id_for_label }}">{{ line_form.product.label }}</label>
+        {{ line_form.product }}
+        {% if line_form.product.errors %}
+            <div class="field-error" role="alert">
+                {% for error in line_form.product.errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+        {% endif %}
+    </td>
+    <td class="order-line-quantity-cell">
+        <label class="sr-only" for="{{ line_form.quantity.id_for_label }}">{{ line_form.quantity.label }}</label>
+        {{ line_form.quantity }}
+        {% if line_form.quantity.errors %}
+            <div class="field-error" role="alert">
+                {% for error in line_form.quantity.errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+        {% endif %}
+        {% if line_form.quantity.help_text %}
+            <small class="form-help">{{ line_form.quantity.help_text }}</small>
+        {% endif %}
+    </td>
+    <td class="order-line-notes-cell">
+        <label class="sr-only" for="{{ line_form.notes.id_for_label }}">{{ line_form.notes.label }}</label>
+        {{ line_form.notes }}
+        {% if line_form.notes.errors %}
+            <div class="field-error" role="alert">
+                {% for error in line_form.notes.errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+        {% endif %}
+    </td>
+    <td class="order-line-actions">
+        <button type="button" class="order-line-remove" data-formset-remove>
+            Supprimer
+        </button>
+        {{ line_form.DELETE }}
+    </td>
+</tr>

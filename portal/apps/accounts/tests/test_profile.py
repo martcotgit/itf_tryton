@@ -21,6 +21,7 @@ class PortalAccountServiceProfileTests(TestCase):
         self.tryton_client = MagicMock()
         self.service = PortalAccountService(client=self.tryton_client)
         self.service._user_has_party_field = True
+        self.service._address_postal_field = "zip"
 
     def test_fetch_client_profile_returns_dataclass_snapshot(self):
         self.tryton_client.call.side_effect = [

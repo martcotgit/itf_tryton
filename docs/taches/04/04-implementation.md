@@ -21,6 +21,10 @@
 - 2025-11-10 15:42 | Alignement CSS (messages visibles sous le header) et fallback Tryton (contact_mechanism) validé par tests → Succès
 - 2025-11-11 06:19 | Ajout du flux de suppression/création téléphone (Tryton) + nouveaux tests → Succès
 - 2025-11-11 06:22 | Tests complets (11 cas) après correctifs Tryton 400 lors de la création de téléphone → Succès
+- 2025-11-11 06:32 | Ajustement final du payload Tryton (utilisation de `party.party.write`) + tests → Succès
+- 2025-11-11 11:45 | Intégration d’`intl-tel-input` (assets, CSS/JS, validation front et normalisation E.164) → Succès
+- 2025-11-11 13:45 | Correctif création d'adresse Tryton (suppression champ `name`) + rerun tests → Succès
+- 2025-11-11 15:15 | Détection dynamique du champ postal (`zip` vs `postal_code`) + nouveau test Tryton → Succès
 
 ## Modifications par fichier
 | Fichier | Description succincte | Suivi PR / commit |
@@ -36,15 +40,19 @@
 | `portal/apps/accounts/password_validators.py` | Ajout de la méthode `validate()` pour compatibilité Django. | N/A |
 | `portal/itf_portal/urls.py` | Inclusion des namespaces `core`/`accounts` (corrige NoReverseMatch). | N/A |
 | `portal/static/css/style.css` | Décalage du contenu pour afficher les messages sous le header fixe. | N/A |
+| `portal/apps/accounts/forms.py` | Placeholder téléphonique mis à jour (format international). | N/A |
+| `portal/apps/accounts/templates/accounts/profile.html` | Ajout du composant intl-tel-input + validation front. | N/A |
+| `portal/static/vendor/intl-tel-input/*` | Assets tiers (CSS/JS) nécessaires au composant. | N/A |
+| `portal/templates/base.html` | Bloc `extra_scripts` pour charger les JS spécifiques. | N/A |
 
 ## Tests manuels
 - [ ] Vérifier l’édition d’un profil client depuis le portail (sans changer le mot de passe)
 - [ ] Tester le changement de mot de passe avec message de confirmation et reconnection
-- Notes: À exécuter après implémentation des formulaires et services.
+- Notes: À exécuter après implémentation des formulaires et services (interface profil + intl-tel-input).
 
 ## Tests automatisés
 - Commandes: `docker compose run --rm portal python manage.py test apps.accounts.tests.test_profile`
-- Résultats: Échecs initiaux (mocks/validateur, champ party, suppression/création téléphone) puis réussite (11 tests verts).
+- Résultats: Échecs initiaux (mocks/validateur, champ party, suppression/création téléphone, champ postal) puis réussite (11 tests verts). Commande relancée après les correctifs (`docker compose run --rm portal python manage.py test apps.accounts.tests.test_profile`).
 
 ## Audits sécurité / qualité
 - `npm audit`: Non applicable (portail Django).

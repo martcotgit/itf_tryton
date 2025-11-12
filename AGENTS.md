@@ -11,6 +11,7 @@
 - Update modules or run admin tasks: `docker compose run --rm tryton trytond-admin -c /etc/tryton/trytond.conf --update=<module>`.
 - Open an interactive shell for debugging: `docker compose exec tryton bash`.
 - Reset the database for a clean slate: `docker compose down -v` (drops volumes; use with care).
+- Toujours exécuter les commandes applicatives (tests, migrations, shells ponctuels) via `docker compose run --rm <service> …` afin de rester fidèle à l'environnement conteneurisé; éviter les `pip install` ou `python manage.py` locaux hors conteneur.
 
 ## Coding Style & Naming Conventions
 - Write Python with 4-space indents, descriptive snake_case names, and docstrings where business rules are non-obvious.

@@ -22,11 +22,12 @@
                 <article class="dashboard-panel">
                     <h2>Commandes</h2>
                     <p>Suivez le statut de vos commandes en cours.</p>
+                    <a href="{% url 'accounts:orders-new' %}" class="btn btn-primary">Nouvelle commande</a>
                 </article>
                 <article class="dashboard-panel">
                     <h2>Profil</h2>
                     <p>Mettez à jour vos renseignements d’entreprise et vos contacts.</p>
-                    <a href="{% url 'accounts:profile' %}" class="btn btn-link">Gérer mon profil</a>
+                    <a href="{% url 'accounts:profile' %}" class="btn btn-primary">Gérer mon profil</a>
                 </article>
             </div>
             <div class="dashboard-actions">

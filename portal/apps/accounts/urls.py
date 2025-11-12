@@ -6,6 +6,7 @@ from .views import (
     ClientLogoutView,
     ClientProfileView,
     ClientSignupView,
+    OrderCreateView,
 )
 
 app_name = "accounts"
@@ -16,4 +17,5 @@ urlpatterns = [
     path("tableau-de-bord/", ClientDashboardView.as_view(), name="dashboard"),
     path("profil/", ClientProfileView.as_view(), name="profile"),
     path("inscription/", ClientSignupView.as_view(), name="signup"),
+    path("commandes/nouvelle/", OrderCreateView.as_view(), name="orders-new"),
 ]

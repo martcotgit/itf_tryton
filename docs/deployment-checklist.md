@@ -4,7 +4,8 @@ Ce runbook couvre les opérations à exécuter pour livrer la nouvelle zone clie
 
 ## Préparation (local ou CI)
 - [ ] Vérifier que la branche est à jour avec `origin/master` et que les tests passent :  
-      `docker compose run --rm portal python manage.py test apps.accounts`
+      `docker compose run --rm -e DJANGO_SETTINGS_MODULE=itf_portal.settings.base -e DATABASE_URL=sqlite:////tmp/test-db.sqlite3 portal pytest --maxfail=1 --disable-warnings -q`
+- [ ] Confirmer que le workflow GitHub Actions « Tests automatisés portail » est vert sur la branche cible (onglet *Actions*).
 - [ ] (Optionnel) Lancer les tests Tryton si des modules ont été modifiés :  
       `docker compose run --rm tryton trytond-admin -c /etc/tryton/trytond.conf --all`
 - [ ] Construire les images pour anticiper les erreurs de build :  

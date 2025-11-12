@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from datetime import date
+from decimal import Decimal
 from html import unescape
 import re
-from typing import Any, Optional
+from typing import Any, Iterable, Optional, Sequence
 
 from django.conf import settings
 
@@ -15,6 +17,10 @@ logger = logging.getLogger(__name__)
 
 class PortalAccountServiceError(Exception):
     """Raised when client account provisioning fails."""
+
+
+class PortalOrderServiceError(Exception):
+    """Raised when creating portal-driven sales orders fails."""
 
 
 @dataclass
@@ -44,6 +50,47 @@ class PortalClientProfile:
     address: PortalClientAddress
 
 
+@dataclass
+class PortalOrderAddress:
+    id: int
+    label: str
+    street: Optional[str] = None
+    city: Optional[str] = None
+    postal_code: Optional[str] = None
+
+
+@dataclass
+class PortalOrderProduct:
+    id: int
+    name: str
+    code: Optional[str]
+    unit_id: Optional[int]
+    unit_name: Optional[str]
+
+    @property
+    def choice_label(self) -> str:
+        parts: list[str] = [self.name.strip()]
+        if self.code:
+            parts.append(f"({self.code.strip()})")
+        if self.unit_name:
+            parts.append(f"— {self.unit_name.strip()}")
+        return " ".join(part for part in parts if part)
+
+
+@dataclass
+class PortalOrderLineInput:
+    product_id: int
+    quantity: Decimal
+    notes: Optional[str] = None
+
+
+@dataclass
+class PortalOrderSubmissionResult:
+    order_id: int
+    number: Optional[str] = None
+    portal_reference: Optional[str] = None
+
+
 class PortalAccountService:
     """Service layer orchestrating Tryton calls for portal client accounts."""
 
@@ -58,6 +105,7 @@ class PortalAccountService:
         self._portal_group_id: Optional[int] = None
         self._base_context: dict[str, Any] = {}
         self._user_has_party_field: Optional[bool] = None
+        self._address_postal_field: Optional[str] = None
 
     def login_exists(self, login: str) -> bool:
         """Return True when a Tryton user already exists for the provided login."""
@@ -128,6 +176,7 @@ class PortalAccountService:
         party_record = self._get_party_record(party_id)
         phone_value = self._get_phone_number(party_id)
         address_record = self._get_primary_address(party_id)
+        postal_value = self._extract_postal_value(address_record)
         first_name, last_name = self._split_name(user_record.get("name") or "")
         email = (user_record.get("email") or login).strip()
 
@@ -143,7 +192,7 @@ class PortalAccountService:
             address=PortalClientAddress(
                 street=(address_record.get("street") or "").strip() or None,
                 city=(address_record.get("city") or "").strip() or None,
-                postal_code=(address_record.get("zip") or "").strip() or None,
+                postal_code=postal_value,
             ),
         )
 
@@ -561,20 +610,25 @@ class PortalAccountService:
                     [[contact_id], {"value": normalized}, context],
                 )
             else:
+                payload = {
+                    "contact_mechanisms": [("create", [{"type": "phone", "value": normalized}])],
+                }
                 self.client.call(
                     "model.party.party",
                     "write",
                     [
                         [party_id],
-                        {"contact_mechanisms": [("create", [{"type": "phone", "value": normalized}])]},
+                        payload,
                         context,
                     ],
                 )
         except TrytonRPCError as exc:
             logger.exception("Erreur lors de la mise à jour du téléphone pour party=%s", party_id)
-            raise PortalAccountServiceError(
-                "Impossible de mettre à jour le téléphone dans Tryton. Vérifiez le format et réessayez."
-            ) from exc
+            message = self._extract_tryton_error_message(
+                exc,
+                "Impossible de mettre à jour le téléphone dans Tryton. Vérifiez le format et réessayez.",
+            )
+            raise PortalAccountServiceError(message) from exc
 
     def _get_primary_address(self, party_id: int) -> dict[str, Any]:
         context = self._rpc_context()
@@ -590,11 +644,15 @@ class PortalAccountService:
         address_id = self._extract_id(address_ids[0]) if address_ids else None
         if address_id is None:
             return {}
+        postal_field = self._get_address_postal_field()
+        fields = ["id", "street", "city"]
+        if postal_field:
+            fields.append(postal_field)
         try:
             records = self.client.call(
                 "model.party.address",
                 "read",
-                [[address_id], ["id", "street", "city", "zip"], context],
+                [[address_id], fields, context],
             )
         except TrytonRPCError as exc:
             logger.warning("Impossible de lire l'adresse %s: %s", address_id, exc)
@@ -625,8 +683,10 @@ class PortalAccountService:
         payload = {
             "street": street,
             "city": city,
-            "zip": postal_code,
         }
+        postal_field = self._get_address_postal_field()
+        if postal_field and postal_code:
+            payload[postal_field] = postal_code
         try:
             if address_id is not None:
                 self.client.call(
@@ -636,7 +696,6 @@ class PortalAccountService:
                 )
             elif has_content:
                 payload["party"] = party_id
-                payload.setdefault("name", "Adresse principale")
                 self.client.call(
                     "model.party.address",
                     "create",
@@ -645,6 +704,48 @@ class PortalAccountService:
         except TrytonRPCError as exc:
             logger.exception("Erreur lors de la mise à jour de l'adresse pour party=%s", party_id)
             raise PortalAccountServiceError("Impossible de mettre à jour l'adresse dans Tryton.") from exc
+
+    def _get_address_postal_field(self) -> Optional[str]:
+        if self._address_postal_field is not None:
+            return self._address_postal_field
+        context = self._rpc_context()
+        candidates = ("postal_code", "zip", "postcode")
+        try:
+            sample_ids = self.client.call(
+                "model.party.address",
+                "search",
+                [[], 0, 1, None, context],
+            )
+        except TrytonRPCError:
+            sample_ids = []
+        for candidate in candidates:
+            if not candidate:
+                continue
+            if sample_ids:
+                try:
+                    self.client.call(
+                        "model.party.address",
+                        "read",
+                        [[sample_ids[0]], [candidate], context],
+                    )
+                except TrytonRPCError:
+                    continue
+            self._address_postal_field = candidate
+            return self._address_postal_field
+        return None
+
+    def _extract_postal_value(self, address_record: dict[str, Any]) -> Optional[str]:
+        candidates = []
+        primary = self._get_address_postal_field()
+        if primary:
+            candidates.append(primary)
+        candidates.extend(field for field in ("postal_code", "zip", "postcode") if field not in candidates)
+        for field in candidates:
+            value = (address_record.get(field) or "").strip()
+            if value:
+                self._address_postal_field = field
+                return value
+        return None
 
     @staticmethod
     def _split_name(full_name: str) -> tuple[str, str]:
@@ -669,3 +770,270 @@ class PortalAccountService:
             return int(value)
         except (TypeError, ValueError):
             return None
+
+
+class PortalOrderService:
+    """Service dédié au formulaire de commandes du portail client."""
+
+    def __init__(
+        self,
+        *,
+        client: Optional[TrytonClient] = None,
+        account_service: Optional[PortalAccountService] = None,
+    ) -> None:
+        self.client = client or get_tryton_client()
+        self.account_service = account_service or PortalAccountService(client=self.client)
+        self._base_context: dict[str, Any] = {}
+        self._product_cache: dict[int, PortalOrderProduct] | None = None
+
+    def list_orderable_products(self, *, force_refresh: bool = False) -> list[PortalOrderProduct]:
+        """Retourne la liste des produits commandables."""
+        if self._product_cache is not None and not force_refresh:
+            return list(self._product_cache.values())
+
+        context = self._rpc_context()
+        domain = [
+            ("salable", "=", True),
+            ("active", "=", True),
+        ]
+        try:
+            product_ids = self.client.call(
+                "model.product.product",
+                "search",
+                [domain, 0, None, [("name", "ASC")], context],
+            )
+        except TrytonRPCError as exc:
+            logger.exception("Impossible de charger les produits vendables pour le portail.")
+            raise PortalOrderServiceError("Impossible de charger la liste des produits. Réessayez plus tard.") from exc
+
+        if not product_ids:
+            self._product_cache = {}
+            return []
+
+        try:
+            records = self.client.call(
+                "model.product.product",
+                "read",
+                [product_ids, ["id", "name", "code", "default_uom"], context],
+            )
+        except TrytonRPCError as exc:
+            logger.exception("Impossible de lire les produits %s.", product_ids)
+            raise PortalOrderServiceError("Lecture des produits impossible. Réessayez plus tard.") from exc
+
+        catalog: dict[int, PortalOrderProduct] = {}
+        for record in records or []:
+            product_id = PortalAccountService._extract_id(record.get("id"))
+            if product_id is None:
+                continue
+            uom = record.get("default_uom")
+            unit_id = PortalAccountService._extract_id(uom)
+            unit_name = None
+            if isinstance(uom, (list, tuple)) and len(uom) > 1:
+                unit_name = str(uom[1])
+            elif isinstance(uom, dict) and uom.get("rec_name"):
+                unit_name = str(uom["rec_name"])
+            catalog[product_id] = PortalOrderProduct(
+                id=product_id,
+                name=str(record.get("name") or f"Produit #{product_id}"),
+                code=(record.get("code") or None),
+                unit_id=unit_id,
+                unit_name=unit_name,
+            )
+
+        self._product_cache = catalog
+        return list(catalog.values())
+
+    def list_shipment_addresses(self, *, login: str) -> tuple[int, list[PortalOrderAddress]]:
+        """Retourne le party Tryton associé au compte et ses adresses de livraison actives."""
+        profile = self.account_service.fetch_client_profile(login=login)
+        addresses = self._fetch_party_addresses(profile.party_id)
+        return profile.party_id, addresses
+
+    def create_draft_order(
+        self,
+        *,
+        login: str,
+        client_reference: Optional[str],
+        requested_date: date,
+        shipping_address_id: int,
+        lines: Sequence[PortalOrderLineInput],
+        instructions: Optional[str] = None,
+    ) -> PortalOrderSubmissionResult:
+        if not lines:
+            raise PortalOrderServiceError("Ajoutez au moins une ligne de commande.")
+
+        profile = self.account_service.fetch_client_profile(login=login)
+        party_id = profile.party_id
+        addresses = self._fetch_party_addresses(party_id)
+        address_ids = {address.id for address in addresses}
+        if shipping_address_id not in address_ids:
+            raise PortalOrderServiceError("Adresse de livraison invalide. Rechargez la page pour actualiser la liste.")
+
+        product_ids = {line.product_id for line in lines}
+        products = self._read_products(product_ids)
+        missing = product_ids - set(products.keys())
+        if missing:
+            raise PortalOrderServiceError("Un produit sélectionné n'est plus disponible. Rechargez la page.")
+
+        payload_lines = []
+        for line in lines:
+            product = products[line.product_id]
+            line_payload: dict[str, Any] = {
+                "product": product.id,
+                "quantity": float(line.quantity),
+            }
+            if product.unit_id is not None:
+                line_payload["unit"] = product.unit_id
+            description = (line.notes or "").strip() or product.name
+            if description:
+                line_payload["description"] = description
+            payload_lines.append(line_payload)
+
+        order_payload: dict[str, Any] = {
+            "party": party_id,
+            "shipment_address": shipping_address_id,
+            "lines": [("create", payload_lines)],
+            "state": "draft",
+        }
+        if client_reference:
+            order_payload["reference"] = client_reference.strip()
+        if instructions:
+            order_payload["comment"] = instructions.strip()
+        if requested_date:
+            order_payload["requested_date"] = requested_date.isoformat()
+
+        context = self._rpc_context()
+        try:
+            order_ids = self.client.call("model.sale.sale", "create", [[order_payload], context])
+        except TrytonRPCError as exc:
+            logger.exception("Impossible de créer la commande pour party=%s.", party_id)
+            message = PortalAccountService._extract_tryton_error_message(
+                exc,
+                "Impossible de créer la commande dans Tryton. Réessayez plus tard.",
+            )
+            raise PortalOrderServiceError(message) from exc
+
+        order_id = PortalAccountService._extract_id(order_ids[0]) if order_ids else None
+        if order_id is None:
+            raise PortalOrderServiceError("Tryton n'a pas retourné d'identifiant pour la commande.")
+
+        number = self._read_order_number(order_id, context)
+        return PortalOrderSubmissionResult(
+            order_id=order_id,
+            number=number,
+            portal_reference=client_reference.strip() if client_reference else None,
+        )
+
+    def _resolve_postal_field(self) -> Optional[str]:
+        getter = getattr(self.account_service, "_get_address_postal_field", None)
+        if callable(getter):
+            return getter()
+        return None
+
+    def _fetch_party_addresses(self, party_id: int) -> list[PortalOrderAddress]:
+        context = self._rpc_context()
+        domain = [
+            ("party", "=", party_id),
+            ("active", "=", True),
+        ]
+        try:
+            address_ids = self.client.call(
+                "model.party.address",
+                "search",
+                [domain, 0, None, [("id", "ASC")], context],
+            )
+        except TrytonRPCError as exc:
+            logger.exception("Impossible de charger les adresses pour party=%s", party_id)
+            raise PortalOrderServiceError("Impossible de charger vos adresses de livraison.") from exc
+
+        if not address_ids:
+            return []
+
+        postal_field = self._resolve_postal_field()
+        address_fields = ["id", "street", "city", "rec_name"]
+        if postal_field and postal_field not in address_fields:
+            address_fields.append(postal_field)
+        try:
+            records = self.client.call(
+                "model.party.address",
+                "read",
+                [address_ids, address_fields, context],
+            )
+        except TrytonRPCError as exc:
+            logger.exception("Impossible de lire les adresses %s.", address_ids)
+            raise PortalOrderServiceError("Lecture des adresses impossible. Réessayez plus tard.") from exc
+
+        addresses: list[PortalOrderAddress] = []
+        for record in records or []:
+            address_id = PortalAccountService._extract_id(record.get("id"))
+            if address_id is None:
+                continue
+            street = (record.get("street") or "").strip() or None
+            city = (record.get("city") or "").strip() or None
+            postal_code = None
+            if postal_field:
+                postal_code = (record.get(postal_field) or "").strip() or None
+            label_parts = [record.get("rec_name") or "Adresse"]
+            line_parts = [part for part in [street, city, postal_code] if part]
+            if line_parts:
+                label_parts.append(" – ".join(line_parts))
+            addresses.append(
+                PortalOrderAddress(
+                    id=address_id,
+                    label=" ".join(label_parts).strip(),
+                    street=street,
+                    city=city,
+                    postal_code=postal_code,
+                )
+            )
+        return addresses
+
+    def _read_products(self, product_ids: Iterable[int]) -> dict[int, PortalOrderProduct]:
+        ids_list = sorted({int(pid) for pid in product_ids if pid is not None})
+        if not ids_list:
+            return {}
+        context = self._rpc_context()
+        try:
+            records = self.client.call(
+                "model.product.product",
+                "read",
+                [ids_list, ["id", "name", "code", "default_uom"], context],
+            )
+        except TrytonRPCError as exc:
+            logger.exception("Impossible de lire les produits %s.", ids_list)
+            raise PortalOrderServiceError("Impossible de vérifier les produits sélectionnés.") from exc
+
+        products: dict[int, PortalOrderProduct] = {}
+        for record in records or []:
+            product_id = PortalAccountService._extract_id(record.get("id"))
+            if product_id is None:
+                continue
+            uom = record.get("default_uom")
+            unit_id = PortalAccountService._extract_id(uom)
+            unit_name = None
+            if isinstance(uom, (list, tuple)) and len(uom) > 1:
+                unit_name = str(uom[1])
+            elif isinstance(uom, dict) and uom.get("rec_name"):
+                unit_name = str(uom["rec_name"])
+            products[product_id] = PortalOrderProduct(
+                id=product_id,
+                name=str(record.get("name") or f"Produit #{product_id}"),
+                code=(record.get("code") or None),
+                unit_id=unit_id,
+                unit_name=unit_name,
+            )
+        return products
+
+    def _read_order_number(self, order_id: int, context: dict[str, Any]) -> Optional[str]:
+        try:
+            records = self.client.call("model.sale.sale", "read", [[order_id], ["number"], context])
+        except TrytonRPCError:
+            logger.warning("Impossible de lire le numéro de commande pour sale.sale %s.", order_id, exc_info=True)
+            return None
+        if not records:
+            return None
+        number = records[0].get("number")
+        return str(number) if number else None
+
+    def _rpc_context(self) -> dict[str, Any]:
+        return dict(self._base_context)
