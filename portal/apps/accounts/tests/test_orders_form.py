@@ -17,6 +17,7 @@ from apps.accounts.services import (
     PortalOrderLineInput,
     PortalOrderProduct,
     PortalOrderService,
+    PortalOrderServiceError,
     PortalOrderSubmissionResult,
 )
 
@@ -26,7 +27,7 @@ class OrderDraftFormTests(SimpleTestCase):
         form = OrderDraftForm(
             data={
                 "client_reference": " PO-100 ",
-                "requested_date": "2025-11-20",
+                "shipping_date": "2025-11-20",
                 "shipping_address": "42",
                 "notes": "  Livraison arrière ",
             },
@@ -99,13 +100,31 @@ class PortalOrderServiceTests(SimpleTestCase):
         )
         self.account_service.fetch_client_profile.return_value = self.profile
         self.account_service._get_address_postal_field = MagicMock(return_value="postal_code")
+        self.service._company_id = 42
+        self.service._company_currency_id = 5
+        self.service._resolve_company_id = MagicMock(return_value=42)
+        self.service._resolve_currency_id = MagicMock(return_value=5)
 
     def test_list_orderable_products_returns_catalog(self):
         self.tryton_client.call.side_effect = [
             [11, 22],
             [
-                {"id": 11, "name": "Palette standard", "code": "PAL-STD", "default_uom": [5, "palette"]},
-                {"id": 22, "name": "Bois recyclé", "code": None, "default_uom": [6, "lb"]},
+                {
+                    "id": 11,
+                    "name": "Palette standard",
+                    "code": "PAL-STD",
+                    "default_uom": [5, "palette"],
+                    "list_price": "10.00",
+                    "template": [101, "Palette standard"],
+                },
+                {
+                    "id": 22,
+                    "name": "Bois recyclé",
+                    "code": None,
+                    "default_uom": [6, "lb"],
+                    "list_price": "12.50",
+                    "template": [102, "Bois recyclé"],
+                },
             ],
         ]
 
@@ -114,12 +133,46 @@ class PortalOrderServiceTests(SimpleTestCase):
         self.assertEqual(len(products), 2)
         self.assertEqual(products[0].choice_label, "Palette standard (PAL-STD) — palette")
         self.assertEqual(products[1].choice_label, "Bois recyclé — lb")
+        self.assertEqual(products[0].unit_price, Decimal("10.00"))
+
+    def test_list_orderable_products_falls_back_to_template_price(self):
+        self.tryton_client.call.side_effect = [
+            [11],
+            [
+                {
+                    "id": 11,
+                    "name": "Palette standard",
+                    "code": "PAL-STD",
+                    "default_uom": [5, "palette"],
+                    "list_price": None,
+                    "template": [101, "Palette standard"],
+                }
+            ],
+            [
+                {
+                    "id": 101,
+                    "list_price": "19.99",
+                }
+            ],
+        ]
+
+        products = self.service.list_orderable_products(force_refresh=True)
+
+        self.assertEqual(len(products), 1)
+        self.assertEqual(products[0].unit_price, Decimal("19.99"))
 
     def test_create_draft_order_builds_payload_and_returns_result(self):
         self.service._fetch_party_addresses = MagicMock(
             return_value=[PortalOrderAddress(id=12, label="Entrepôt principal")]
         )
-        product = PortalOrderProduct(id=101, name="Palette 48x40", code="PAL-4840", unit_id=5, unit_name="palette")
+        product = PortalOrderProduct(
+            id=101,
+            name="Palette 48x40",
+            code="PAL-4840",
+            unit_id=5,
+            unit_name="palette",
+            unit_price=Decimal("25.00"),
+        )
         self.service._read_products = MagicMock(return_value={101: product})
         self.service._read_order_number = MagicMock(return_value="SO0009")
         self.tryton_client.call.return_value = [310]
@@ -127,7 +180,7 @@ class PortalOrderServiceTests(SimpleTestCase):
         result = self.service.create_draft_order(
             login="client@example.com",
             client_reference="PO-005",
-            requested_date=date(2025, 11, 15),
+            shipping_date=date(2025, 11, 15),
             shipping_address_id=12,
             lines=[PortalOrderLineInput(product_id=101, quantity=Decimal("5.00"), notes="Urgent")],
             instructions="Livraison avant midi",
@@ -140,10 +193,13 @@ class PortalOrderServiceTests(SimpleTestCase):
         self.assertEqual(payload["shipment_address"], 12)
         self.assertEqual(payload["reference"], "PO-005")
         self.assertEqual(payload["comment"], "Livraison avant midi")
-        self.assertEqual(payload["requested_date"], "2025-11-15")
+        self.assertEqual(payload["shipping_date"], "2025-11-15")
+        self.assertEqual(payload["company"], 42)
+        self.assertEqual(payload["currency"], 5)
         self.assertEqual(payload["lines"][0][0], "create")
         self.assertEqual(payload["lines"][0][1][0]["product"], 101)
         self.assertEqual(payload["lines"][0][1][0]["unit"], 5)
+        self.assertEqual(payload["lines"][0][1][0]["unit_price"], 25.0)
         self.assertEqual(result.order_id, 310)
         self.assertEqual(result.number, "SO0009")
         self.assertEqual(result.portal_reference, "PO-005")
@@ -223,7 +279,7 @@ class OrderCreateViewTests(TestCase):
 
         data = {
             "client_reference": "PO-88",
-            "requested_date": "2025-11-20",
+            "shipping_date": "2025-11-20",
             "shipping_address": "12",
             "notes": "Livraison arrière",
             f"{ORDER_LINES_FORMSET_PREFIX}-TOTAL_FORMS": "1",
@@ -242,7 +298,7 @@ class OrderCreateViewTests(TestCase):
         kwargs = service.create_draft_order.call_args.kwargs
         self.assertEqual(kwargs["client_reference"], "PO-88")
         self.assertEqual(kwargs["shipping_address_id"], 12)
-        self.assertEqual(kwargs["requested_date"].isoformat(), "2025-11-20")
+        self.assertEqual(kwargs["shipping_date"].isoformat(), "2025-11-20")
         self.assertEqual(len(kwargs["lines"]), 1)
         self.assertIsInstance(kwargs["lines"][0], PortalOrderLineInput)
         self.assertEqual(kwargs["lines"][0].product_id, 101)
@@ -267,7 +323,7 @@ class OrderCreateViewTests(TestCase):
 
         data = {
             "client_reference": "PO-90",
-            "requested_date": "2025-11-22",
+            "shipping_date": "2025-11-22",
             "shipping_address": "12",
             f"{ORDER_LINES_FORMSET_PREFIX}-TOTAL_FORMS": "2",
             f"{ORDER_LINES_FORMSET_PREFIX}-INITIAL_FORMS": "0",
@@ -288,3 +344,57 @@ class OrderCreateViewTests(TestCase):
         kwargs = service.create_draft_order.call_args.kwargs
         self.assertEqual(len(kwargs["lines"]), 1)
         self.assertEqual(kwargs["lines"][0].quantity, Decimal("4"))
+
+
+class OrderCatalogViewTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(username="catalog@example.com", password="demo")
+        self.client.force_login(self.user)
+        self.url = reverse("accounts:orders-catalog")
+
+    @patch("apps.accounts.views.OrderCatalogView.service_class")
+    def test_returns_paginated_results(self, service_cls):
+        service = service_cls.return_value
+        service.list_orderable_products.return_value = [
+            PortalOrderProduct(id=101, name="Palette A", code="PAL-A", unit_id=5, unit_name="palette"),
+            PortalOrderProduct(id=202, name="Planche B", code="PL-B", unit_id=7, unit_name="pied"),
+            PortalOrderProduct(id=303, name="Granule C", code="GR-C", unit_id=None, unit_name=None),
+        ]
+
+        response = self.client.get(self.url, {"page": "2", "page_size": "1"})
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["pagination"]["page"], 2)
+        self.assertEqual(payload["pagination"]["total"], 3)
+        self.assertEqual(len(payload["results"]), 1)
+        self.assertEqual(payload["results"][0]["id"], 202)
+        self.assertIn("filters", payload)
+        service.list_orderable_products.assert_called_once()
+
+    @patch("apps.accounts.views.OrderCatalogView.service_class")
+    def test_filters_by_query_and_unit(self, service_cls):
+        service = service_cls.return_value
+        service.list_orderable_products.return_value = [
+            PortalOrderProduct(id=101, name="Palette standard", code="PAL-STD", unit_id=5, unit_name="palette"),
+            PortalOrderProduct(id=202, name="Palette bleue", code="PAL-BLUE", unit_id=5, unit_name="palette"),
+            PortalOrderProduct(id=303, name="Bois recyclé", code="WOOD", unit_id=7, unit_name="lb"),
+        ]
+
+        response = self.client.get(self.url, {"q": "palette", "unit": "5"})
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["pagination"]["total"], 2)
+        self.assertTrue(all("Palette" in item["name"] for item in payload["results"]))
+
+    @patch("apps.accounts.views.OrderCatalogView.service_class")
+    def test_returns_error_when_service_fails(self, service_cls):
+        service = service_cls.return_value
+        service.list_orderable_products.side_effect = PortalOrderServiceError("Erreur Tryton")
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 503)
+        payload = response.json()
+        self.assertIn("error", payload)

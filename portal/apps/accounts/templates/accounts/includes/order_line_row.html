@@ -2,9 +2,17 @@
     <td class="order-line-index">
         <span class="order-line-index-label" data-line-label aria-live="polite">Ligne</span>
     </td>
-    <td>
+    <td class="order-line-product-cell" data-product-field>
         <label class="sr-only" for="{{ line_form.product.id_for_label }}">{{ line_form.product.label }}</label>
-        {{ line_form.product }}
+        <div class="product-picker">
+            {{ line_form.product }}
+            <p class="product-picker-selection" data-product-selection>Aucun produit n’est sélectionné.</p>
+            <div class="product-picker-actions">
+                <button type="button" class="btn btn-tertiary product-catalog-trigger" data-product-catalog-trigger>
+                    Rechercher dans le catalogue
+                </button>
+            </div>
+        </div>
         {% if line_form.product.errors %}
             <div class="field-error" role="alert">
                 {% for error in line_form.product.errors %}<p>{{ error }}</p>{% endfor %}

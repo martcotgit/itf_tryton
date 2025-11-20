@@ -1,10 +1,13 @@
+from math import ceil
+
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView
+from django.http import JsonResponse
 from django.shortcuts import redirect
-from django.urls import reverse_lazy
-from django.views.generic import FormView, TemplateView
+from django.urls import reverse, reverse_lazy
+from django.views.generic import FormView, TemplateView, View
 
 from .forms import (
     ClientPasswordForm,
@@ -20,6 +23,7 @@ from .services import (
     PortalAccountServiceError,
     PortalClientProfile,
     PortalOrderLineInput,
+    PortalOrderProduct,
     PortalOrderService,
     PortalOrderServiceError,
 )
@@ -232,6 +236,11 @@ class OrderCreateView(LoginRequiredMixin, TemplateView):
             )
         )
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.setdefault("catalog_url", reverse("accounts:orders-catalog"))
+        return context
+
     def post(self, request, *args, **kwargs):
         try:
             address_choices = self._address_choices()
@@ -249,7 +258,7 @@ class OrderCreateView(LoginRequiredMixin, TemplateView):
                 result = self.order_service.create_draft_order(
                     login=self._current_login(),
                     client_reference=form.cleaned_data.get("client_reference"),
-                    requested_date=form.cleaned_data["requested_date"],
+                    shipping_date=form.cleaned_data["shipping_date"],
                     shipping_address_id=form.cleaned_data["shipping_address"],
                     lines=lines,
                     instructions=form.cleaned_data.get("notes"),
@@ -326,3 +335,144 @@ class OrderCreateView(LoginRequiredMixin, TemplateView):
 
     def _current_login(self) -> str:
         return (self.request.user.username or "").strip().lower()
+
+
+class OrderCatalogView(LoginRequiredMixin, View):
+    """Retour JSON paginé pour le catalogue de produits."""
+
+    login_url = reverse_lazy("accounts:login")
+    service_class = PortalOrderService
+    http_method_names = ["get"]
+
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        self.order_service = self.service_class()
+
+    def get(self, request, *args, **kwargs):
+        try:
+            products = self.order_service.list_orderable_products()
+        except PortalOrderServiceError as exc:
+            return JsonResponse({"error": str(exc)}, status=503)
+
+        query = (request.GET.get("q") or "").strip()
+        matches = self._apply_query_filter(products, query)
+        unit_param = (request.GET.get("unit") or "").strip()
+        unit_filters = self._build_unit_filters(matches)
+        filtered = self._apply_unit_filter(matches, unit_param)
+        page = self._parse_positive_int(request.GET.get("page"), default=1)
+        page_size = self._sanitize_page_size(request.GET.get("page_size"))
+        page_slice, pagination = self._paginate(filtered, page, page_size)
+
+        payload = {
+            "results": [self._serialize_product(product) for product in page_slice],
+            "pagination": pagination,
+            "filters": {"unit": unit_filters},
+            "query": query,
+            "active_filters": {"unit": unit_param},
+        }
+        return JsonResponse(payload)
+
+    @staticmethod
+    def _serialize_product(product: PortalOrderProduct) -> dict[str, object]:
+        return {
+            "id": product.id,
+            "name": product.name,
+            "code": product.code,
+            "unit_id": product.unit_id,
+            "unit_name": product.unit_name,
+            "choice_label": product.choice_label,
+            "summary": product.choice_label,
+        }
+
+    @staticmethod
+    def _apply_query_filter(products: list[PortalOrderProduct], query: str) -> list[PortalOrderProduct]:
+        normalized = query.strip().lower()
+        if not normalized:
+            return list(products)
+        filtered: list[PortalOrderProduct] = []
+        for product in products:
+            haystack = " ".join(
+                part
+                for part in [product.name, product.code or "", product.unit_name or ""]
+                if part
+            ).lower()
+            if normalized in haystack:
+                filtered.append(product)
+        return filtered
+
+    @staticmethod
+    def _apply_unit_filter(
+        products: list[PortalOrderProduct],
+        unit_param: str,
+    ) -> list[PortalOrderProduct]:
+        if not unit_param:
+            return list(products)
+        if unit_param == "none":
+            return [product for product in products if product.unit_id is None]
+        try:
+            unit_id = int(unit_param)
+        except (TypeError, ValueError):
+            return list(products)
+        return [product for product in products if product.unit_id == unit_id]
+
+    @staticmethod
+    def _build_unit_filters(products: list[PortalOrderProduct]) -> list[dict[str, object]]:
+        counts: dict[str, dict[str, object]] = {}
+        for product in products:
+            key = "none" if product.unit_id is None else str(product.unit_id)
+            label = product.unit_name.strip() if product.unit_name else "Sans unité"
+            entry = counts.get(key)
+            if entry is None:
+                entry = {"value": key, "label": label, "count": 0}
+                counts[key] = entry
+            if not entry["label"] and label:
+                entry["label"] = label
+            entry["count"] += 1
+        options = list(counts.values())
+        options.sort(key=lambda item: str(item["label"]).lower())
+        return options
+
+    def _paginate(
+        self,
+        products: list[PortalOrderProduct],
+        page: int,
+        page_size: int,
+    ) -> tuple[list[PortalOrderProduct], dict[str, object]]:
+        total = len(products)
+        if total == 0:
+            pagination = {
+                "page": 1,
+                "pages": 1,
+                "page_size": page_size,
+                "total": 0,
+                "has_next": False,
+                "has_previous": False,
+            }
+            return [], pagination
+
+        pages = max(1, ceil(total / page_size))
+        current_page = max(1, min(page, pages))
+        start = (current_page - 1) * page_size
+        end = start + page_size
+        subset = products[start:end]
+        pagination = {
+            "page": current_page,
+            "pages": pages,
+            "page_size": page_size,
+            "total": total,
+            "has_next": current_page < pages,
+            "has_previous": current_page > 1,
+        }
+        return subset, pagination
+
+    @staticmethod
+    def _parse_positive_int(raw_value, *, default: int) -> int:
+        try:
+            value = int(raw_value)
+        except (TypeError, ValueError):
+            return default
+        return value if value > 0 else default
+
+    def _sanitize_page_size(self, raw_value) -> int:
+        value = self._parse_positive_int(raw_value, default=15)
+        return max(1, min(50, value))

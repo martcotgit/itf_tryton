@@ -6,6 +6,7 @@ from .views import (
     ClientLogoutView,
     ClientProfileView,
     ClientSignupView,
+    OrderCatalogView,
     OrderCreateView,
 )
 
@@ -18,4 +19,5 @@ urlpatterns = [
     path("profil/", ClientProfileView.as_view(), name="profile"),
     path("inscription/", ClientSignupView.as_view(), name="signup"),
     path("commandes/nouvelle/", OrderCreateView.as_view(), name="orders-new"),
+    path("commandes/catalogue/", OrderCatalogView.as_view(), name="orders-catalog"),
 ]

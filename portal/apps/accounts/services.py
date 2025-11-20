@@ -66,6 +66,7 @@ class PortalOrderProduct:
     code: Optional[str]
     unit_id: Optional[int]
     unit_name: Optional[str]
+    unit_price: Optional[Decimal] = None
 
     @property
     def choice_label(self) -> str:
@@ -785,9 +786,12 @@ class PortalOrderService:
         self.account_service = account_service or PortalAccountService(client=self.client)
         self._base_context: dict[str, Any] = {}
         self._product_cache: dict[int, PortalOrderProduct] | None = None
+        self._company_id: Optional[int] = None
+        self._company_currency_id: Optional[int] = None
 
     def list_orderable_products(self, *, force_refresh: bool = False) -> list[PortalOrderProduct]:
         """Retourne la liste des produits commandables."""
+        self._ensure_company_context()
         if self._product_cache is not None and not force_refresh:
             return list(self._product_cache.values())
 
@@ -814,32 +818,13 @@ class PortalOrderService:
             records = self.client.call(
                 "model.product.product",
                 "read",
-                [product_ids, ["id", "name", "code", "default_uom"], context],
+                [product_ids, ["id", "name", "code", "default_uom", "list_price", "template"], context],
             )
         except TrytonRPCError as exc:
             logger.exception("Impossible de lire les produits %s.", product_ids)
             raise PortalOrderServiceError("Lecture des produits impossible. Réessayez plus tard.") from exc
 
-        catalog: dict[int, PortalOrderProduct] = {}
-        for record in records or []:
-            product_id = PortalAccountService._extract_id(record.get("id"))
-            if product_id is None:
-                continue
-            uom = record.get("default_uom")
-            unit_id = PortalAccountService._extract_id(uom)
-            unit_name = None
-            if isinstance(uom, (list, tuple)) and len(uom) > 1:
-                unit_name = str(uom[1])
-            elif isinstance(uom, dict) and uom.get("rec_name"):
-                unit_name = str(uom["rec_name"])
-            catalog[product_id] = PortalOrderProduct(
-                id=product_id,
-                name=str(record.get("name") or f"Produit #{product_id}"),
-                code=(record.get("code") or None),
-                unit_id=unit_id,
-                unit_name=unit_name,
-            )
-
+        catalog = self._build_product_catalog(records or [])
         self._product_cache = catalog
         return list(catalog.values())
 
@@ -854,7 +839,7 @@ class PortalOrderService:
         *,
         login: str,
         client_reference: Optional[str],
-        requested_date: date,
+        shipping_date: date,
         shipping_address_id: int,
         lines: Sequence[PortalOrderLineInput],
         instructions: Optional[str] = None,
@@ -884,12 +869,20 @@ class PortalOrderService:
             }
             if product.unit_id is not None:
                 line_payload["unit"] = product.unit_id
+            unit_price = product.unit_price
+            if unit_price is None:
+                raise PortalOrderServiceError(
+                    f"Le produit « {product.name} » n’a pas de prix de vente configuré. Contactez notre équipe."
+                )
+            line_payload["unit_price"] = float(unit_price)
             description = (line.notes or "").strip() or product.name
             if description:
                 line_payload["description"] = description
             payload_lines.append(line_payload)
 
         order_payload: dict[str, Any] = {
+            "company": self._resolve_company_id(),
+            "currency": self._resolve_currency_id(),
             "party": party_id,
             "shipment_address": shipping_address_id,
             "lines": [("create", payload_lines)],
@@ -899,8 +892,8 @@ class PortalOrderService:
             order_payload["reference"] = client_reference.strip()
         if instructions:
             order_payload["comment"] = instructions.strip()
-        if requested_date:
-            order_payload["requested_date"] = requested_date.isoformat()
+        if shipping_date:
+            order_payload["shipping_date"] = shipping_date.isoformat()
 
         context = self._rpc_context()
         try:
@@ -924,6 +917,53 @@ class PortalOrderService:
             portal_reference=client_reference.strip() if client_reference else None,
         )
 
+    def _resolve_company_defaults(self) -> tuple[int, int]:
+        if self._company_id is not None and self._company_currency_id is not None:
+            return self._company_id, self._company_currency_id
+        context = self._rpc_context()
+        try:
+            company_ids = self.client.call(
+                "model.company.company",
+                "search",
+                [[], 0, 1, [("id", "ASC")], context],
+            )
+        except TrytonRPCError as exc:
+            logger.exception("Impossible de déterminer l'entreprise par défaut pour le portail.")
+            raise PortalOrderServiceError(
+                "Impossible de déterminer l'entreprise Tryton configurée pour le portail."
+            ) from exc
+        if not company_ids:
+            raise PortalOrderServiceError("Aucune entreprise n'est configurée dans Tryton.")
+        company_id = PortalAccountService._extract_id(company_ids[0])
+        if company_id is None:
+            raise PortalOrderServiceError("Tryton n'a pas retourné d'identifiant d'entreprise.")
+        try:
+            records = self.client.call(
+                "model.company.company",
+                "read",
+                [[company_id], ["currency"], context],
+            )
+        except TrytonRPCError as exc:
+            logger.exception("Impossible de lire la devise de l'entreprise %s.", company_id)
+            raise PortalOrderServiceError("Impossible de lire la configuration de l'entreprise dans Tryton.") from exc
+        currency_id = None
+        if records:
+            currency_id = PortalAccountService._extract_id(records[0].get("currency"))
+        if currency_id is None:
+            raise PortalOrderServiceError("L'entreprise configurée pour le portail n'a pas de devise.")
+        self._company_id = company_id
+        self._company_currency_id = currency_id
+        self._base_context.setdefault("company", company_id)
+        return company_id, currency_id
+
+    def _resolve_company_id(self) -> int:
+        company_id, _ = self._resolve_company_defaults()
+        return company_id
+
+    def _resolve_currency_id(self) -> int:
+        _, currency_id = self._resolve_company_defaults()
+        return currency_id
+
     def _resolve_postal_field(self) -> Optional[str]:
         getter = getattr(self.account_service, "_get_address_postal_field", None)
         if callable(getter):
@@ -931,6 +971,7 @@ class PortalOrderService:
         return None
 
     def _fetch_party_addresses(self, party_id: int) -> list[PortalOrderAddress]:
+        self._ensure_company_context()
         context = self._rpc_context()
         domain = [
             ("party", "=", party_id),
@@ -989,6 +1030,7 @@ class PortalOrderService:
         return addresses
 
     def _read_products(self, product_ids: Iterable[int]) -> dict[int, PortalOrderProduct]:
+        self._ensure_company_context()
         ids_list = sorted({int(pid) for pid in product_ids if pid is not None})
         if not ids_list:
             return {}
@@ -997,32 +1039,13 @@ class PortalOrderService:
             records = self.client.call(
                 "model.product.product",
                 "read",
-                [ids_list, ["id", "name", "code", "default_uom"], context],
+                [ids_list, ["id", "name", "code", "default_uom", "list_price"], context],
             )
         except TrytonRPCError as exc:
             logger.exception("Impossible de lire les produits %s.", ids_list)
             raise PortalOrderServiceError("Impossible de vérifier les produits sélectionnés.") from exc
 
-        products: dict[int, PortalOrderProduct] = {}
-        for record in records or []:
-            product_id = PortalAccountService._extract_id(record.get("id"))
-            if product_id is None:
-                continue
-            uom = record.get("default_uom")
-            unit_id = PortalAccountService._extract_id(uom)
-            unit_name = None
-            if isinstance(uom, (list, tuple)) and len(uom) > 1:
-                unit_name = str(uom[1])
-            elif isinstance(uom, dict) and uom.get("rec_name"):
-                unit_name = str(uom["rec_name"])
-            products[product_id] = PortalOrderProduct(
-                id=product_id,
-                name=str(record.get("name") or f"Produit #{product_id}"),
-                code=(record.get("code") or None),
-                unit_id=unit_id,
-                unit_name=unit_name,
-            )
-        return products
+        return self._build_product_catalog(records or [])
 
     def _read_order_number(self, order_id: int, context: dict[str, Any]) -> Optional[str]:
         try:
@@ -1037,3 +1060,87 @@ class PortalOrderService:
 
     def _rpc_context(self) -> dict[str, Any]:
         return dict(self._base_context)
+
+    @staticmethod
+    def _to_decimal(value: Any) -> Optional[Decimal]:
+        if value in (None, ""):
+            return None
+        if isinstance(value, dict) and value.get("__class__") == "Decimal":
+            value = value.get("decimal")
+        try:
+            return Decimal(str(value))
+        except (ArithmeticError, ValueError, TypeError):
+            return None
+
+    def _build_product_catalog(self, records: list[dict[str, Any]]) -> dict[int, PortalOrderProduct]:
+        parsed: list[dict[str, Any]] = []
+        missing_templates: set[int] = set()
+        for record in records:
+            product_id = PortalAccountService._extract_id(record.get("id"))
+            if product_id is None:
+                continue
+            uom = record.get("default_uom")
+            unit_id = PortalAccountService._extract_id(uom)
+            unit_name = None
+            if isinstance(uom, (list, tuple)) and len(uom) > 1:
+                unit_name = str(uom[1])
+            elif isinstance(uom, dict) and uom.get("rec_name"):
+                unit_name = str(uom["rec_name"])
+            template_id = PortalAccountService._extract_id(record.get("template"))
+            unit_price = self._to_decimal(record.get("list_price"))
+            if unit_price is None and template_id is not None:
+                missing_templates.add(template_id)
+            parsed.append(
+                {
+                    "id": product_id,
+                    "name": str(record.get("name") or f"Produit #{product_id}"),
+                    "code": (record.get("code") or None),
+                    "unit_id": unit_id,
+                    "unit_name": unit_name,
+                    "template_id": template_id,
+                    "unit_price": unit_price,
+                }
+            )
+
+        template_prices = self._fetch_template_prices(missing_templates) if missing_templates else {}
+        catalog: dict[int, PortalOrderProduct] = {}
+        for entry in parsed:
+            unit_price = entry["unit_price"]
+            if unit_price is None and entry["template_id"] is not None:
+                unit_price = template_prices.get(entry["template_id"])
+            catalog[entry["id"]] = PortalOrderProduct(
+                id=entry["id"],
+                name=entry["name"],
+                code=entry["code"],
+                unit_id=entry["unit_id"],
+                unit_name=entry["unit_name"],
+                unit_price=unit_price,
+            )
+        return catalog
+
+    def _fetch_template_prices(self, template_ids: Iterable[int]) -> dict[int, Optional[Decimal]]:
+        ids_list = sorted({int(tid) for tid in template_ids if tid is not None})
+        if not ids_list:
+            return {}
+        context = self._rpc_context()
+        try:
+            records = self.client.call(
+                "model.product.template",
+                "read",
+                [ids_list, ["list_price"], context],
+            )
+        except TrytonRPCError as exc:
+            logger.exception("Impossible de lire les gabarits produits %s.", ids_list)
+            raise PortalOrderServiceError("Impossible de charger les prix des produits.") from exc
+        prices: dict[int, Optional[Decimal]] = {}
+        for record in records or []:
+            template_id = PortalAccountService._extract_id(record.get("id"))
+            if template_id is None:
+                continue
+            prices[template_id] = self._to_decimal(record.get("list_price"))
+        return prices
+
+    def _ensure_company_context(self) -> None:
+        if "company" not in self._base_context:
+            company_id, _ = self._resolve_company_defaults()
+            self._base_context["company"] = company_id

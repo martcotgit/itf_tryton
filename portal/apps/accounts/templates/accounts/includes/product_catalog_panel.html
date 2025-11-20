@@ -1,0 +1,50 @@
+<div class="catalog-overlay" data-product-catalog data-catalog-url="{{ catalog_url }}" aria-hidden="true">
+    <div class="catalog-panel" role="dialog" aria-modal="true" aria-labelledby="catalog-title" tabindex="-1">
+        <header class="catalog-panel-header">
+            <div>
+                <p class="catalog-panel-kicker">Recherche guidée</p>
+                <h2 id="catalog-title">Catalogue des produits</h2>
+                <p class="catalog-panel-intro">Filtrez par code, nom ou unité et ajoutez rapidement vos favoris aux lignes de commande.</p>
+            </div>
+            <button type="button" class="catalog-close" data-catalog-close aria-label="Fermer le catalogue">
+                Fermer
+            </button>
+        </header>
+        <div class="catalog-controls">
+            <div class="catalog-search">
+                <label for="catalog-search-input">Recherchez un produit</label>
+                <div class="catalog-search-input">
+                    <input type="search" id="catalog-search-input" placeholder="Nom, code ou unité" data-catalog-search>
+                </div>
+            </div>
+            <div class="catalog-filter">
+                <label for="catalog-unit-filter">Filtrer par unité</label>
+                <select id="catalog-unit-filter" data-catalog-unit-filter>
+                    <option value="">Toutes les unités</option>
+                </select>
+                <button type="button" class="catalog-reset" data-catalog-reset>Réinitialiser</button>
+            </div>
+        </div>
+        <div class="catalog-status" data-catalog-status hidden></div>
+        <div class="catalog-results" data-catalog-results role="listbox" aria-live="polite"></div>
+        <div class="catalog-empty" data-catalog-empty hidden>
+            <p>Aucun produit ne correspond aux critères. Adaptez la recherche ou les filtres pour parcourir davantage le catalogue.</p>
+        </div>
+        <div class="catalog-pagination" data-catalog-pagination></div>
+        <template data-catalog-item-template>
+            <article class="catalog-card" data-catalog-result>
+                <div class="catalog-card-header">
+                    <div>
+                        <h3 data-product-name></h3>
+                        <p data-product-code></p>
+                    </div>
+                    <span class="catalog-card-unit" data-product-unit></span>
+                </div>
+                <p class="catalog-card-summary" data-product-summary></p>
+                <div class="catalog-card-actions">
+                    <button type="button" class="btn btn-primary" data-catalog-select>Choisir ce produit</button>
+                </div>
+            </article>
+        </template>
+    </div>
+</div>

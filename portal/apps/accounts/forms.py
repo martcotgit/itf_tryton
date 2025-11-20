@@ -373,7 +373,7 @@ class OrderDraftForm(forms.Form):
             }
         ),
     )
-    requested_date = forms.DateField(
+    shipping_date = forms.DateField(
         label="Date de livraison souhaitée",
         widget=forms.DateInput(
             attrs={
@@ -427,7 +427,12 @@ class OrderLineForm(forms.Form):
         label="Produit",
         required=False,
         choices=(),
-        widget=forms.Select(attrs={"class": "form-input"}),
+        widget=forms.Select(
+            attrs={
+                "class": "form-input order-line-product-select",
+                "data-product-select": "true",
+            }
+        ),
     )
     quantity = forms.DecimalField(
         label="Quantité",
