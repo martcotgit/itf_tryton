@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block extra_head %}
+<style>
+.order-detail-shell {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 1.5rem 0 3rem;
+}
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+.order-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+.order-pill {
+    padding: 0.65rem 0.75rem;
+    background: #f8fbf8;
+    border: 1px solid #e6ece7;
+    border-radius: 12px;
+    box-shadow: var(--shadow-light);
+}
+.order-lines {
+    background: var(--white);
+    border: 1px solid #e6ece7;
+    border-radius: 14px;
+    box-shadow: var(--shadow-light);
+    padding: 1rem 1.2rem;
+}
+.order-lines table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.order-lines th,
+.order-lines td {
+    padding: 0.65rem 0.5rem;
+    text-align: left;
+}
+.order-lines thead th {
+    color: var(--text-light);
+    font-weight: 600;
+    border-bottom: 1px solid #e6ece7;
+}
+.order-lines tbody tr {
+    border-bottom: 1px solid #f0f3f1;
+}
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    background: #eef5ef;
+    color: var(--primary-color);
+}
+.state-cancelled { background: #fff2f2; color: #b00020; }
+.state-done { background: #e9f6ec; color: #1b6b3a; }
+.state-processing { background: #f3f6ff; color: #3451b2; }
+.state-quotation { background: #fdf4e5; color: #a35b00; }
+</style>
+{% endblock %}
+
+{% block content %}
+<main id="contenu-principal" class="main" role="main">
+    <div class="container order-detail-shell">
+        <a href="{% url 'accounts:orders-list' %}" class="back-link">&larr; Retour à mes commandes</a>
+        <div class="order-header">
+            <div>
+                <h1>Commande {{ order.number|default:"(sans numéro)" }}</h1>
+                <div class="status-badge state-{{ order.state|default:'indetermine' }}">{{ order.state_label }}</div>
+            </div>
+            <div>
+                {% if order.reference %}<div class="order-pill"><strong>Référence client :</strong> {{ order.reference }}</div>{% endif %}
+            </div>
+        </div>
+
+        <div class="order-meta">
+            <div class="order-pill"><strong>Date de création :</strong> {{ order.create_date|date:"Y-m-d"|default:"—" }}</div>
+            <div class="order-pill"><strong>Livraison prévue :</strong> {{ order.shipping_date|date:"Y-m-d"|default:"—" }}</div>
+            <div class="order-pill"><strong>Total TTC :</strong> {{ order.total_amount|default:"—" }} {% if order.currency_label %}{{ order.currency_label }}{% endif %}</div>
+            <div class="order-pill"><strong>Sous-total :</strong> {{ order.untaxed_amount|default:"—" }} {% if order.currency_label %}{{ order.currency_label }}{% endif %}</div>
+        </div>
+
+        <section class="order-lines">
+            <h2>Lignes</h2>
+            {% if order.lines %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Produit / description</th>
+                            <th scope="col">Quantité</th>
+                            <th scope="col">Prix unitaire</th>
+                            <th scope="col">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for line in order.lines %}
+                            <tr>
+                                <td>{{ line.description|default:line.product }}</td>
+                                <td>{{ line.quantity }}{% if line.unit %} {{ line.unit }}{% endif %}</td>
+                                <td>{% if line.unit_price %}{{ line.unit_price }}{% if order.currency_label %} {{ order.currency_label }}{% endif %}{% else %}—{% endif %}</td>
+                                <td>{% if line.total %}{{ line.total }}{% if order.currency_label %} {{ order.currency_label }}{% endif %}{% else %}—{% endif %}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>Aucune ligne disponible pour cette commande.</p>
+            {% endif %}
+        </section>
+    </div>
+</main>
+{% endblock %}

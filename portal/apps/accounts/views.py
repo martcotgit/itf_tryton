@@ -1,4 +1,5 @@
 from math import ceil
+from typing import Optional
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login
@@ -332,6 +333,133 @@ class OrderCreateView(LoginRequiredMixin, TemplateView):
                 )
             self._addresses_cache = [(addr.id, addr.label) for addr in addresses]
         return self._addresses_cache
+
+    def _current_login(self) -> str:
+        return (self.request.user.username or "").strip().lower()
+
+
+class OrderListView(LoginRequiredMixin, TemplateView):
+    template_name = "accounts/orders_list.html"
+    login_url = reverse_lazy("accounts:login")
+    service_class = PortalOrderService
+    default_page_size = PortalOrderService.DEFAULT_PAGE_SIZE
+    default_period_days = PortalOrderService.DEFAULT_PERIOD_DAYS
+
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        self.order_service = self.service_class()
+
+    def get(self, request, *args, **kwargs):
+        filters = self._parse_filters()
+        result = None
+        try:
+            result = self.order_service.list_orders(
+                login=self._current_login(),
+                statuses=filters["statuses"],
+                period_days=filters["period_days"],
+                search=filters["search"],
+                page=filters["page"],
+                page_size=filters["page_size"],
+            )
+        except PortalOrderServiceError as exc:
+            messages.error(request, str(exc))
+
+        orders = result.orders if result else []
+        pagination = result.pagination if result else None
+        return self.render_to_response(
+            self.get_context_data(
+                orders=orders,
+                pagination=pagination,
+                filters=filters,
+                status_options=self._build_status_options(filters["statuses"]),
+                period_options=self._build_period_options(filters["period_days"]),
+            )
+        )
+
+    def _parse_filters(self) -> dict[str, object]:
+        request = self.request
+        statuses = [value for value in request.GET.getlist("statut") if value]
+        period_raw = request.GET.get("periode")
+        period_days = (
+            self._safe_positive_int(period_raw, default=self.default_period_days)
+            if period_raw
+            else self.default_period_days
+        )
+        search = (request.GET.get("recherche") or "").strip()
+        page = self._safe_positive_int(request.GET.get("page"), default=1)
+        page_size = self.default_page_size
+        return {
+            "statuses": statuses,
+            "period_days": period_days,
+            "search": search,
+            "page": page,
+            "page_size": page_size,
+        }
+
+    def _build_status_options(self, selected: list[str]) -> list[dict[str, object]]:
+        normalized_selected = {value.strip().lower() for value in selected}
+        options = []
+        for key, label in self.order_service.STATE_LABELS.items():
+            options.append(
+                {
+                    "value": key,
+                    "label": label,
+                    "selected": key in normalized_selected,
+                }
+            )
+        return options
+
+    def _build_period_options(self, selected_period: Optional[int]) -> list[dict[str, object]]:
+        selected = selected_period if selected_period is not None else self.default_period_days
+        candidates = [30, 90, 180]
+        options = []
+        for value in candidates:
+            options.append(
+                {
+                    "value": value,
+                    "label": f"Derniers {value} jours",
+                    "selected": value == selected,
+                }
+            )
+        return options
+
+    @staticmethod
+    def _safe_positive_int(raw_value, *, default: int = 1) -> int:
+        try:
+            value = int(raw_value)
+        except (TypeError, ValueError):
+            return default
+        return value if value > 0 else default
+
+    def _current_login(self) -> str:
+        return (self.request.user.username or "").strip().lower()
+
+
+class OrderDetailView(LoginRequiredMixin, TemplateView):
+    template_name = "accounts/order_detail.html"
+    login_url = reverse_lazy("accounts:login")
+    service_class = PortalOrderService
+
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        self.order_service = self.service_class()
+
+    def get(self, request, *args, **kwargs):
+        order_id = kwargs.get("order_id")
+        detail = None
+        try:
+            detail = self.order_service.get_order_detail(
+                login=self._current_login(),
+                order_id=order_id,
+            )
+        except PortalOrderServiceError as exc:
+            messages.error(request, str(exc))
+            return redirect("accounts:orders-list")
+        return self.render_to_response(
+            self.get_context_data(
+                order=detail,
+            )
+        )
 
     def _current_login(self) -> str:
         return (self.request.user.username or "").strip().lower()

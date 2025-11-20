@@ -17,8 +17,8 @@ Le tableau de bord actuel offre un bouton « Nouvelle commande » mais aucune vu
 - Offrir une navigation claire depuis le tableau de bord (section dédiée ou page) avec pagination ou limitation du nombre d’entrées pour préserver la performance.
 
 ## Travail à réaliser
-- [ ] Cartographier les données nécessaires et le périmètre d’affichage pour la liste des commandes (colonnes : numéro, référence client, statut FR-CA, date prévue, total TTC + devise, date de création; filtres : statut multi-choix, période 30/90/180 jours par défaut 90 j, recherche numéro/référence; pagination/tri date création décroissante).
-- [ ] Étendre `PortalOrderService` pour lire les commandes `sale.sale` filtrées par `party`, appliquer filtres/pagination, mapper les statuts et récupérer les totaux.
+- [ ] Cartographier les données nécessaires et le périmètre d’affichage pour la liste des commandes (colonnes : numéro, référence client, statut FR-CA, date prévue, total TTC + devise, date de création; filtres : statut multi-choix, période 30/90/180 jours par défaut 90 j, recherche numéro/référence; pagination fixe 20 et tri date création décroissante).
+- [ ] Étendre `PortalOrderService` pour lire les commandes `sale.sale` filtrées par `party`, appliquer filtres/pagination (20), mapper les statuts et récupérer les totaux.
 - [ ] Ajouter la vue/URL/template de liste dédiée (lien « Voir mes commandes » depuis le tableau de bord), plus les tests Django/Pytest couvrant service, vue et rendu.
 
 ## Périmètre
@@ -57,4 +57,4 @@ Le tableau de bord actuel offre un bouton « Nouvelle commande » mais aucune vu
 
 ## Questions ouvertes / suivi
 - Emplacement décidé : page dédiée accessible via un lien « Voir mes commandes » depuis le tableau de bord.
-- Filtres retenus : statut (multi-choix), période (30/90/180 jours, défaut 90 j), recherche numéro/référence; tri date création décroissante; pagination taille 10-20 (ajustable après retours).
+- Filtres retenus : statut (multi-choix), période (30/90/180 jours, défaut 90 j), recherche numéro/référence; tri date création décroissante; pagination fixe 20 (ajustable après retours).

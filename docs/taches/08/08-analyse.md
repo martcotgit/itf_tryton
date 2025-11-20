@@ -26,13 +26,13 @@
 - Décalage des libellés/états entre Tryton et le portail (traductions, codes couleurs) rendant la lecture confuse pour les clients et le support.
 
 ## Plan d'implémentation
-1. Cartographier la liste cible sur une page dédiée (« Voir mes commandes ») avec colonnes : numéro Tryton, référence client, statut (mappé FR-CA), date de livraison prévue, total TTC (devise compagnie), date de création ; filtres : statut multi-choix (Brouillon, En traitement, Expédiée, Facturée, Annulée), période (30/90/180 jours, défaut 90 j), recherche libre sur numéro/référence ; tri par date de création décroissante ; pagination (taille 10-20).
+1. Cartographier la liste cible sur une page dédiée (« Voir mes commandes ») avec colonnes : numéro Tryton, référence client, statut (mappé FR-CA), date de livraison prévue, total TTC (devise compagnie), date de création ; filtres : statut multi-choix (Brouillon, En traitement, Expédiée, Facturée, Annulée), période (30/90/180 jours, défaut 90 j), recherche libre sur numéro/référence ; tri par date de création décroissante ; pagination (taille fixe 20).
 2. Étendre `PortalOrderService` pour lire `sale.sale` filtré par `party` + filtres choisis, appliquer pagination/tri, calculer total TTC ou fallback sur champ disponible, et exposer un mapping clair des statuts pour le template.
 3. Créer la vue/URL/template de liste dédiée, lier le tableau de bord via un CTA, injecter filtres/état de pagination, gérer les messages utilisateur, puis couvrir service + vue + rendu par des tests Django/Pytest.
 
 ## Questions ouvertes / décisions
 - Emplacement : page dédiée accessible via un lien « Voir mes commandes » depuis le tableau de bord (décidé).
-- Filtres retenus : statut (multi-choix), période (30/90/180 jours, défaut 90 j), recherche sur numéro/référence ; tri date création décroissante ; pagination (taille 10-20). Ajustements possibles après premiers retours.
+- Filtres retenus : statut (multi-choix), période (30/90/180 jours, défaut 90 j), recherche sur numéro/référence ; tri date création décroissante ; pagination (taille fixe 20). Ajustements possibles après premiers retours.
 
 ## Journal (à compléter pendant l'exécution)
 - **Commandes lancées**:

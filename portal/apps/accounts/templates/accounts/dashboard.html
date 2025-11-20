@@ -22,7 +22,10 @@
                 <article class="dashboard-panel">
                     <h2>Commandes</h2>
                     <p>Suivez le statut de vos commandes en cours.</p>
-                    <a href="{% url 'accounts:orders-new' %}" class="btn btn-primary">Nouvelle commande</a>
+                    <div class="dashboard-actions-row">
+                        <a href="{% url 'accounts:orders-list' %}" class="btn btn-secondary">Voir mes commandes</a>
+                        <a href="{% url 'accounts:orders-new' %}" class="btn btn-primary">Nouvelle commande</a>
+                    </div>
                 </article>
                 <article class="dashboard-panel">
                     <h2>Profil</h2>

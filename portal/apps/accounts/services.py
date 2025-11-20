@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from html import unescape
 import re
@@ -91,6 +91,60 @@ class PortalOrderSubmissionResult:
     number: Optional[str] = None
     portal_reference: Optional[str] = None
 
+
+@dataclass
+class PortalOrderSummary:
+    id: int
+    number: Optional[str]
+    reference: Optional[str]
+    state: str
+    state_label: str
+    shipping_date: Optional[date]
+    total_amount: Optional[Decimal]
+    currency_id: Optional[int]
+    currency_label: Optional[str]
+    create_date: Optional[date]
+
+
+@dataclass
+class PortalOrderPagination:
+    page: int
+    pages: int
+    page_size: int
+    total: int
+    has_next: bool
+    has_previous: bool
+
+
+@dataclass
+class PortalOrderListResult:
+    orders: list[PortalOrderSummary]
+    pagination: PortalOrderPagination
+
+
+@dataclass
+class PortalOrderLineDetail:
+    product: str
+    quantity: Decimal
+    unit: Optional[str]
+    description: Optional[str]
+    unit_price: Optional[Decimal]
+    total: Optional[Decimal]
+
+
+@dataclass
+class PortalOrderDetail:
+    id: int
+    number: Optional[str]
+    reference: Optional[str]
+    state: str
+    state_label: str
+    shipping_date: Optional[date]
+    total_amount: Optional[Decimal]
+    untaxed_amount: Optional[Decimal]
+    currency_label: Optional[str]
+    create_date: Optional[date]
+    lines: list[PortalOrderLineDetail]
 
 class PortalAccountService:
     """Service layer orchestrating Tryton calls for portal client accounts."""
@@ -776,6 +830,18 @@ class PortalAccountService:
 class PortalOrderService:
     """Service dédié au formulaire de commandes du portail client."""
 
+    STATE_LABELS: dict[str, str] = {
+        "draft": "Brouillon",
+        "quotation": "Soumission",
+        "confirmed": "Confirmée",
+        "processing": "En traitement",
+        "done": "Terminée",
+        "cancelled": "Annulée",
+        "sent": "Envoyée",
+    }
+    DEFAULT_PAGE_SIZE = 20
+    DEFAULT_PERIOD_DAYS = 90
+
     def __init__(
         self,
         *,
@@ -915,6 +981,162 @@ class PortalOrderService:
             order_id=order_id,
             number=number,
             portal_reference=client_reference.strip() if client_reference else None,
+        )
+
+    def list_orders(
+        self,
+        *,
+        login: str,
+        statuses: Sequence[str] | None = None,
+        period_days: Optional[int] = None,
+        search: Optional[str] = None,
+        page: int = 1,
+        page_size: Optional[int] = None,
+    ) -> PortalOrderListResult:
+        """Retourne une liste paginée des commandes pour le party du client."""
+        self._ensure_company_context()
+        profile = self.account_service.fetch_client_profile(login=login)
+        context = self._rpc_context()
+
+        normalized_statuses = self._normalize_statuses(statuses)
+        normalized_period = self._normalize_period(period_days)
+        normalized_search = (search or "").strip()
+        size = self._sanitize_page_size(page_size)
+
+        domain: list[object] = [("party", "=", profile.party_id)]
+        if normalized_statuses:
+            domain.append(("state", "in", normalized_statuses))
+        if normalized_period is not None and normalized_period > 0:
+            start_date = date.today() - timedelta(days=normalized_period)
+            domain.append(("create_date", ">=", start_date.isoformat()))
+        if normalized_search:
+            pattern = f"%{normalized_search}%"
+            domain.append(["OR", ("number", "ilike", pattern), ("reference", "ilike", pattern)])
+
+        try:
+            total = int(
+                self.client.call(
+                    "model.sale.sale",
+                    "search_count",
+                    [domain, context],
+                )
+                or 0
+            )
+        except TrytonRPCError as exc:
+            logger.exception("Impossible de compter les commandes pour party=%s.", profile.party_id)
+            raise PortalOrderServiceError("Impossible de charger vos commandes pour le portail.") from exc
+
+        pages = max(1, (total + size - 1) // size)
+        current_page = min(max(page, 1), pages)
+        offset = (current_page - 1) * size
+
+        if total == 0:
+            pagination = PortalOrderPagination(
+                page=1,
+                pages=1,
+                page_size=size,
+                total=0,
+                has_next=False,
+                has_previous=False,
+            )
+            return PortalOrderListResult(orders=[], pagination=pagination)
+
+        try:
+            order_ids = self.client.call(
+                "model.sale.sale",
+                "search",
+                [domain, offset, size, [("create_date", "DESC"), ("id", "DESC")], context],
+            )
+        except TrytonRPCError as exc:
+            logger.exception("Impossible de lister les commandes pour party=%s.", profile.party_id)
+            raise PortalOrderServiceError("Impossible de charger vos commandes pour le portail.") from exc
+
+        if not order_ids:
+            pagination = PortalOrderPagination(
+                page=current_page,
+                pages=pages,
+                page_size=size,
+                total=total,
+                has_next=current_page < pages,
+                has_previous=current_page > 1,
+            )
+            return PortalOrderListResult(orders=[], pagination=pagination)
+
+        fields = [
+            "id",
+            "number",
+            "reference",
+            "state",
+            "shipping_date",
+            "total_amount",
+            "currency",
+            "create_date",
+        ]
+        try:
+            records = self.client.call(
+                "model.sale.sale",
+                "read",
+                [order_ids, fields, context],
+            )
+        except TrytonRPCError as exc:
+            logger.exception("Impossible de lire les commandes %s.", order_ids)
+            raise PortalOrderServiceError("Lecture des commandes impossible. Réessayez plus tard.") from exc
+
+        orders = [self._parse_order_record(record) for record in records or []]
+        pagination = PortalOrderPagination(
+            page=current_page,
+            pages=pages,
+            page_size=size,
+            total=total,
+            has_next=current_page < pages,
+            has_previous=current_page > 1,
+        )
+        return PortalOrderListResult(orders=orders, pagination=pagination)
+
+    def get_order_detail(self, *, login: str, order_id: int) -> PortalOrderDetail:
+        """Retourne le détail d'une commande, sécurisée par le party du client."""
+        self._ensure_company_context()
+        profile = self.account_service.fetch_client_profile(login=login)
+        context = self._rpc_context()
+        try:
+            records = self.client.call(
+                "model.sale.sale",
+                "read",
+                [[order_id], ["id", "number", "reference", "state", "shipping_date", "total_amount", "untaxed_amount", "currency", "create_date", "party", "lines"], context],
+            )
+        except TrytonRPCError as exc:
+            logger.exception("Impossible de lire la commande %s.", order_id)
+            raise PortalOrderServiceError("Impossible de charger la commande demandée.") from exc
+
+        if not records:
+            raise PortalOrderServiceError("Commande introuvable.")
+        record = records[0]
+        order_party_id = PortalAccountService._extract_id(record.get("party"))
+        if order_party_id != profile.party_id:
+            raise PortalOrderServiceError("Commande inaccessible pour ce compte.")
+
+        currency_label = None
+        currency_field = record.get("currency")
+        if isinstance(currency_field, (list, tuple)) and len(currency_field) > 1:
+            currency_label = str(currency_field[1])
+        elif isinstance(currency_field, dict) and currency_field.get("rec_name"):
+            currency_label = str(currency_field["rec_name"])
+
+        line_ids = self._normalize_ids(record.get("lines"))
+        lines = self._read_order_lines(line_ids, context)
+
+        return PortalOrderDetail(
+            id=PortalAccountService._extract_id(record.get("id")) or order_id,
+            number=str(record.get("number") or "") or None,
+            reference=str(record.get("reference") or "") or None,
+            state=str(record.get("state") or "").strip() or "unknown",
+            state_label=self._state_label(record.get("state")),
+            shipping_date=self._to_date(record.get("shipping_date")),
+            total_amount=self._to_decimal(record.get("total_amount")),
+            untaxed_amount=self._to_decimal(record.get("untaxed_amount")),
+            currency_label=currency_label,
+            create_date=self._to_date(record.get("create_date")),
+            lines=lines,
         )
 
     def _resolve_company_defaults(self) -> tuple[int, int]:
@@ -1072,6 +1294,35 @@ class PortalOrderService:
         except (ArithmeticError, ValueError, TypeError):
             return None
 
+    @staticmethod
+    def _to_date(value: Any) -> Optional[date]:
+        if value is None:
+            return None
+        if isinstance(value, date):
+            return value
+        if isinstance(value, str):
+            try:
+                return date.fromisoformat(value.split("T", 1)[0])
+            except (TypeError, ValueError):
+                return None
+        return None
+
+    @staticmethod
+    def _normalize_ids(value: Any) -> list[int]:
+        if value is None:
+            return []
+        if isinstance(value, int):
+            return [value]
+        if isinstance(value, (list, tuple, set)):
+            ids: list[int] = []
+            for item in value:
+                try:
+                    ids.append(int(item))
+                except (TypeError, ValueError):
+                    continue
+            return ids
+        return []
+
     def _build_product_catalog(self, records: list[dict[str, Any]]) -> dict[int, PortalOrderProduct]:
         parsed: list[dict[str, Any]] = []
         missing_templates: set[int] = set()
@@ -1139,6 +1390,107 @@ class PortalOrderService:
                 continue
             prices[template_id] = self._to_decimal(record.get("list_price"))
         return prices
+
+    def _read_order_lines(self, line_ids: Iterable[int], context: dict[str, Any]) -> list[PortalOrderLineDetail]:
+        normalized = self._normalize_ids(line_ids)
+        ids_list = sorted({int(lid) for lid in normalized if lid is not None})
+        if not ids_list:
+            return []
+        try:
+            records = self.client.call(
+                "model.sale.line",
+                "read",
+                [ids_list, ["description", "quantity", "unit", "unit_price", "amount"], context],
+            )
+        except TrytonRPCError as exc:
+            logger.exception("Impossible de lire les lignes de commande %s.", ids_list)
+            raise PortalOrderServiceError("Impossible de charger les lignes de la commande.") from exc
+        details: list[PortalOrderLineDetail] = []
+        for record in records or []:
+            unit_field = record.get("unit")
+            unit_label = None
+            if isinstance(unit_field, (list, tuple)) and len(unit_field) > 1:
+                unit_label = str(unit_field[1])
+            elif isinstance(unit_field, dict) and unit_field.get("rec_name"):
+                unit_label = str(unit_field["rec_name"])
+            details.append(
+                PortalOrderLineDetail(
+                    product=str(record.get("description") or "Ligne"),
+                    quantity=self._to_decimal(record.get("quantity")) or Decimal("0"),
+                    unit=unit_label,
+                    description=str(record.get("description") or "") or None,
+                    unit_price=self._to_decimal(record.get("unit_price")),
+                    total=self._to_decimal(record.get("amount")),
+                )
+            )
+        return details
+
+    def _parse_order_record(self, record: dict[str, Any]) -> PortalOrderSummary:
+        order_id = PortalAccountService._extract_id(record.get("id")) or 0
+        currency_field = record.get("currency")
+        currency_id = PortalAccountService._extract_id(currency_field)
+        currency_label = None
+        if isinstance(currency_field, (list, tuple)) and len(currency_field) > 1:
+            currency_label = str(currency_field[1])
+        elif isinstance(currency_field, dict) and currency_field.get("rec_name"):
+            currency_label = str(currency_field["rec_name"])
+
+        return PortalOrderSummary(
+            id=order_id,
+            number=str(record.get("number") or "") or None,
+            reference=str(record.get("reference") or "") or None,
+            state=str(record.get("state") or "").strip() or "unknown",
+            state_label=self._state_label(record.get("state")),
+            shipping_date=self._to_date(record.get("shipping_date")),
+            total_amount=self._to_decimal(record.get("total_amount")),
+            currency_id=currency_id,
+            currency_label=currency_label,
+            create_date=self._to_date(record.get("create_date")),
+        )
+
+    def _state_label(self, state: Any) -> str:
+        key = str(state or "").strip().lower()
+        if not key:
+            return "Inconnu"
+        return self.STATE_LABELS.get(key, key.capitalize())
+
+    def _normalize_statuses(self, statuses: Sequence[str] | None) -> list[str]:
+        if not statuses:
+            return []
+        normalized = []
+        for status in statuses:
+            value = (status or "").strip().lower()
+            if not value:
+                continue
+            if value in self.STATE_LABELS:
+                normalized.append(value)
+        # Conserver l'ordre fourni pour respecter les filtres UI
+        seen = set()
+        unique = []
+        for value in normalized:
+            if value in seen:
+                continue
+            seen.add(value)
+            unique.append(value)
+        return unique
+
+    def _normalize_period(self, period_days: Optional[int]) -> Optional[int]:
+        if period_days is None:
+            return self.DEFAULT_PERIOD_DAYS
+        try:
+            days = int(period_days)
+        except (TypeError, ValueError):
+            return self.DEFAULT_PERIOD_DAYS
+        return days if days > 0 else None
+
+    def _sanitize_page_size(self, page_size: Optional[int]) -> int:
+        if page_size is None:
+            return self.DEFAULT_PAGE_SIZE
+        try:
+            size = int(page_size)
+        except (TypeError, ValueError):
+            return self.DEFAULT_PAGE_SIZE
+        return max(1, min(100, size))
 
     def _ensure_company_context(self) -> None:
         if "company" not in self._base_context:

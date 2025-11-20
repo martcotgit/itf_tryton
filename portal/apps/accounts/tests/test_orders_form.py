@@ -14,7 +14,10 @@ from apps.accounts.services import (
     PortalClientAddress,
     PortalClientProfile,
     PortalOrderAddress,
+    PortalOrderListResult,
+    PortalOrderPagination,
     PortalOrderLineInput,
+    PortalOrderSummary,
     PortalOrderProduct,
     PortalOrderService,
     PortalOrderServiceError,
@@ -232,6 +235,92 @@ class PortalOrderServiceTests(SimpleTestCase):
         self.assertIn("rec_name", address_fields)
         self.assertIn("postal_code", address_fields)
 
+    def test_get_order_detail_handles_single_line_id(self):
+        self.tryton_client.call.side_effect = [
+            [
+                {
+                    "id": 5,
+                    "number": "SO001",
+                    "reference": "PO-1",
+                    "state": "done",
+                    "shipping_date": "2025-11-25",
+                    "total_amount": "125.00",
+                    "untaxed_amount": "100.00",
+                    "currency": [5, "CAD"],
+                    "create_date": "2025-11-20",
+                    "party": self.profile.party_id,
+                    "lines": 501,
+                }
+            ],
+            [
+                {
+                    "id": 501,
+                    "description": "Palette",
+                    "quantity": "5",
+                    "unit": [6, "palette"],
+                    "unit_price": "20.00",
+                    "amount": "100.00",
+                }
+            ],
+        ]
+
+        detail = self.service.get_order_detail(login="client@example.com", order_id=5)
+
+        self.assertEqual(detail.id, 5)
+        self.assertEqual(detail.state_label, "Terminée")
+        self.assertEqual(len(detail.lines), 1)
+        self.assertEqual(detail.lines[0].unit, "palette")
+        self.assertEqual(detail.lines[0].quantity, Decimal("5"))
+
+    def test_list_orders_returns_paginated_results(self):
+        self.tryton_client.call.side_effect = [
+            2,  # search_count
+            [310, 311],  # search with pagination
+            [
+                {
+                    "id": 310,
+                    "number": "SO0001",
+                    "reference": "PO-88",
+                    "state": "processing",
+                    "shipping_date": "2025-11-25",
+                    "total_amount": {"__class__": "Decimal", "decimal": "100.00"},
+                    "currency": [5, "CAD"],
+                    "create_date": "2025-11-10",
+                },
+                {
+                    "id": 311,
+                    "number": "SO0002",
+                    "reference": "PO-90",
+                    "state": "done",
+                    "shipping_date": None,
+                    "total_amount": "150.50",
+                    "currency": [5, "CAD"],
+                    "create_date": "2025-11-11",
+                },
+            ],
+        ]
+
+        result = self.service.list_orders(
+            login="client@example.com",
+            statuses=["processing"],
+            period_days=90,
+            search="SO",
+            page=1,
+            page_size=20,
+        )
+
+        self.assertEqual(result.pagination.total, 2)
+        self.assertEqual(result.pagination.page_size, 20)
+        self.assertEqual(len(result.orders), 2)
+        self.assertEqual(result.orders[0].state_label, "En traitement")
+        self.assertEqual(result.orders[0].total_amount, Decimal("100.00"))
+        self.assertEqual(result.orders[0].currency_label, "CAD")
+        call_args = self.tryton_client.call.call_args_list[1]
+        domain = call_args.args[2][0]
+        self.assertIn(("state", "in", ["processing"]), domain)
+        self.assertIn(("party", "=", 77), domain)
+        self.assertTrue(any(isinstance(item, list) and item[0] == "OR" for item in domain))
+
 
 class OrderCreateViewTests(TestCase):
     def setUp(self):
@@ -344,6 +433,60 @@ class OrderCreateViewTests(TestCase):
         kwargs = service.create_draft_order.call_args.kwargs
         self.assertEqual(len(kwargs["lines"]), 1)
         self.assertEqual(kwargs["lines"][0].quantity, Decimal("4"))
+
+
+class OrderListViewTests(TestCase):
+    def setUp(self):
+        self.user_model = get_user_model()
+        self.user = self.user_model.objects.create_user(username="client@example.com", password="demo")
+        self.client.force_login(self.user)
+        self.url = reverse("accounts:orders-list")
+
+    @patch("apps.accounts.views.OrderListView.service_class")
+    def test_get_renders_orders_with_filters(self, service_cls):
+        pagination = PortalOrderPagination(page=1, pages=1, page_size=20, total=1, has_next=False, has_previous=False)
+        summary = PortalOrderSummary(
+            id=310,
+            number="SO0001",
+            reference="PO-88",
+            state="processing",
+            state_label="En traitement",
+            shipping_date=date(2025, 11, 25),
+            total_amount=Decimal("100.00"),
+            currency_id=5,
+            currency_label="CAD",
+            create_date=date(2025, 11, 10),
+        )
+        service = service_cls.return_value
+        service.list_orders.return_value = PortalOrderListResult(orders=[summary], pagination=pagination)
+
+        response = self.client.get(
+            self.url,
+            {"statut": ["processing"], "periode": "30", "recherche": "SO"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "accounts/orders_list.html")
+        service.list_orders.assert_called_once()
+        kwargs = service.list_orders.call_args.kwargs
+        self.assertEqual(kwargs["statuses"], ["processing"])
+        self.assertEqual(kwargs["period_days"], 30)
+        self.assertEqual(kwargs["search"], "SO")
+        self.assertEqual(kwargs["page"], 1)
+        self.assertEqual(kwargs["page_size"], PortalOrderService.DEFAULT_PAGE_SIZE)
+        self.assertIn("orders", response.context)
+        self.assertIn("pagination", response.context)
+
+    @patch("apps.accounts.views.OrderListView.service_class")
+    def test_get_handles_service_error(self, service_cls):
+        service = service_cls.return_value
+        service.list_orders.side_effect = PortalOrderServiceError("Erreur Tryton")
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        messages = list(get_messages(response.wsgi_request))
+        self.assertTrue(any("Erreur Tryton" in msg.message for msg in messages))
 
 
 class OrderCatalogViewTests(TestCase):
