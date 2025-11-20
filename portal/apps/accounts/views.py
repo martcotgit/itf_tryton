@@ -1,3 +1,5 @@
+from datetime import date
+from decimal import Decimal
 from math import ceil
 from typing import Optional
 
@@ -23,10 +25,16 @@ from .services import (
     PortalAccountService,
     PortalAccountServiceError,
     PortalClientProfile,
+    PortalInvoiceService,
+    PortalInvoiceServiceError,
+    PortalInvoiceSummary,
+    PortalInvoiceListResult,
     PortalOrderLineInput,
+    PortalOrderListResult,
     PortalOrderProduct,
     PortalOrderService,
     PortalOrderServiceError,
+    PortalOrderSummary,
 )
 
 
@@ -58,6 +66,235 @@ class ClientLogoutView(LogoutView):
 class ClientDashboardView(LoginRequiredMixin, TemplateView):
     template_name = "accounts/dashboard.html"
     login_url = reverse_lazy("accounts:login")
+    invoice_service_class = PortalInvoiceService
+    order_service_class = PortalOrderService
+    recent_limit = 5
+    order_period_days = PortalOrderService.DEFAULT_PERIOD_DAYS
+
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        self.invoice_service = self.invoice_service_class()
+        self.order_service = self.order_service_class()
+
+    def get(self, request, *args, **kwargs):
+        login = self._current_login()
+        invoices_result = self._safe_load_invoices(login)
+        orders_result = self._safe_load_orders(login)
+
+        summary = self._build_summary(invoices_result, login)
+        activity = self._build_activity_feed(
+            invoices=invoices_result.invoices if invoices_result else [],
+            orders=orders_result.orders if orders_result else [],
+        )
+
+        return self.render_to_response(
+            self.get_context_data(
+                summary=summary,
+                recent_invoices=invoices_result.invoices[: self.recent_limit] if invoices_result else [],
+                recent_orders=orders_result.orders if orders_result else [],
+                activity_items=activity,
+            )
+        )
+
+    def _safe_load_invoices(self, login: str) -> PortalInvoiceListResult | None:
+        try:
+            return self.invoice_service.list_invoices(
+                login=login,
+                page=1,
+                page_size=self.recent_limit,
+            )
+        except PortalInvoiceServiceError as exc:
+            messages.error(self.request, str(exc))
+            return None
+
+    def _safe_load_orders(self, login: str) -> PortalOrderListResult | None:
+        try:
+            return self.order_service.list_orders(
+                login=login,
+                period_days=self.order_period_days,
+                page=1,
+                page_size=self.recent_limit,
+            )
+        except PortalOrderServiceError as exc:
+            messages.error(self.request, str(exc))
+            return None
+
+    def _build_summary(self, invoices_result: PortalInvoiceListResult | None, login: str) -> dict[str, object]:
+        summary: dict[str, object] = {
+            "invoices_due_count": 0,
+            "invoices_due_total": None,
+            "invoices_currency": None,
+            "orders_active_count": 0,
+            "orders_to_complete_count": 0,
+        }
+
+        if invoices_result:
+            due_total = Decimal("0")
+            currency = None
+            due_count = 0
+            for invoice in invoices_result.invoices:
+                if invoice.amount_due is not None and invoice.amount_due > 0:
+                    due_total += invoice.amount_due
+                    due_count += 1
+                if not currency and invoice.currency_label:
+                    currency = invoice.currency_label
+            summary["invoices_due_count"] = due_count
+            summary["invoices_due_total"] = due_total if due_count else None
+            summary["invoices_currency"] = currency
+
+        summary["orders_to_complete_count"] = self._count_orders(
+            login=login,
+            statuses=("draft", "quotation"),
+        )
+        summary["orders_active_count"] = self._count_orders(
+            login=login,
+            statuses=("confirmed", "processing", "sent"),
+        )
+        return summary
+
+    def _count_orders(self, *, login: str, statuses: tuple[str, ...]) -> int:
+        try:
+            result = self.order_service.list_orders(
+                login=login,
+                statuses=statuses,
+                period_days=self.order_period_days,
+                page=1,
+                page_size=1,
+            )
+        except PortalOrderServiceError as exc:
+            messages.error(self.request, str(exc))
+            return 0
+        return result.pagination.total
+
+    def _build_activity_feed(
+        self,
+        *,
+        invoices: list[PortalInvoiceSummary],
+        orders: list[PortalOrderSummary],
+    ) -> list[dict[str, object]]:
+        items: list[dict[str, object]] = []
+
+        for invoice in invoices:
+            items.append(
+                {
+                    "type": "invoice",
+                    "title": invoice.number or "Facture",
+                    "date": invoice.issue_date or invoice.due_date,
+                    "amount": invoice.amount_due if invoice.amount_due is not None else invoice.total_amount,
+                    "currency": invoice.currency_label,
+                    "status_label": invoice.state_label,
+                    "status_style": self._status_style("invoice", invoice.state),
+                    "url": reverse("accounts:invoices-list"),
+                }
+            )
+
+        for order in orders:
+            items.append(
+                {
+                    "type": "order",
+                    "title": order.number or order.reference or "Commande",
+                    "date": order.create_date or order.shipping_date,
+                    "amount": order.total_amount,
+                    "currency": order.currency_label,
+                    "status_label": order.state_label,
+                    "status_style": self._status_style("order", order.state),
+                    "url": reverse("accounts:orders-detail", kwargs={"order_id": order.id}),
+                }
+            )
+
+        items.sort(key=lambda item: self._sort_date(item.get("date")), reverse=True)
+        return items[: self.recent_limit]
+
+    @staticmethod
+    def _sort_date(value: date | None) -> date:
+        if isinstance(value, date):
+            return value
+        return date.min
+
+    @staticmethod
+    def _status_style(kind: str, state: str | None) -> str:
+        normalized = (state or "").strip().lower()
+        if kind == "invoice":
+            if normalized in {"waiting_payment", "validated"}:
+                return "warning"
+            if normalized == "paid":
+                return "success"
+            if normalized in {"cancelled", "draft"}:
+                return "muted"
+            return "info"
+        # Orders
+        if normalized in {"draft", "quotation"}:
+            return "warning"
+        if normalized in {"confirmed", "processing", "sent"}:
+            return "info"
+        if normalized == "done":
+            return "success"
+        if normalized == "cancelled":
+            return "muted"
+        return "info"
+
+    def _current_login(self) -> str:
+        return (self.request.user.username or "").strip().lower()
+
+
+class InvoiceListView(LoginRequiredMixin, TemplateView):
+    template_name = "accounts/invoices_list.html"
+    login_url = reverse_lazy("accounts:login")
+    service_class = PortalInvoiceService
+    default_page_size = PortalInvoiceService.DEFAULT_PAGE_SIZE
+
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        self.invoice_service = self.service_class()
+
+    def get(self, request, *args, **kwargs):
+        page = self._safe_positive_int(request.GET.get("page"), default=1)
+        result = None
+        try:
+            result = self.invoice_service.list_invoices(
+                login=self._current_login(),
+                page=page,
+                page_size=self.default_page_size,
+            )
+        except PortalInvoiceServiceError as exc:
+            messages.error(request, str(exc))
+
+        invoices = result.invoices if result else []
+        pagination = result.pagination if result else None
+        summary = self._build_summary(invoices)
+        return self.render_to_response(
+            self.get_context_data(
+                invoices=invoices,
+                pagination=pagination,
+                summary=summary,
+            )
+        )
+
+    @staticmethod
+    def _safe_positive_int(raw_value, *, default: int = 1) -> int:
+        try:
+            value = int(raw_value)
+        except (TypeError, ValueError):
+            return default
+        return value if value > 0 else default
+
+    def _current_login(self) -> str:
+        return (self.request.user.username or "").strip().lower()
+
+    @staticmethod
+    def _build_summary(invoices: list) -> dict[str, object]:
+        due_total = Decimal("0")
+        currency = None
+        for invoice in invoices:
+            if invoice.amount_due:
+                due_total += invoice.amount_due
+            if not currency and invoice.currency_label:
+                currency = invoice.currency_label
+        return {
+            "count": len(invoices),
+            "due_total": due_total,
+            "currency": currency,
+        }
 
 
 class ClientSignupView(FormView):

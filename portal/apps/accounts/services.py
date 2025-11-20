@@ -23,6 +23,10 @@ class PortalOrderServiceError(Exception):
     """Raised when creating portal-driven sales orders fails."""
 
 
+class PortalInvoiceServiceError(Exception):
+    """Raised when fetching invoices for the portal fails."""
+
+
 @dataclass
 class PortalAccountCreationResult:
     login: str
@@ -145,6 +149,35 @@ class PortalOrderDetail:
     currency_label: Optional[str]
     create_date: Optional[date]
     lines: list[PortalOrderLineDetail]
+
+
+@dataclass
+class PortalInvoiceSummary:
+    id: int
+    number: Optional[str]
+    issue_date: Optional[date]
+    due_date: Optional[date]
+    state: str
+    state_label: str
+    total_amount: Optional[Decimal]
+    amount_due: Optional[Decimal]
+    currency_label: Optional[str]
+
+
+@dataclass
+class PortalInvoicePagination:
+    page: int
+    pages: int
+    page_size: int
+    total: int
+    has_next: bool
+    has_previous: bool
+
+
+@dataclass
+class PortalInvoiceListResult:
+    invoices: list[PortalInvoiceSummary]
+    pagination: PortalInvoicePagination
 
 class PortalAccountService:
     """Service layer orchestrating Tryton calls for portal client accounts."""
@@ -1496,3 +1529,191 @@ class PortalOrderService:
         if "company" not in self._base_context:
             company_id, _ = self._resolve_company_defaults()
             self._base_context["company"] = company_id
+
+
+class PortalInvoiceService:
+    """Service dédié à la consultation des factures client dans le portail."""
+
+    STATE_LABELS: dict[str, str] = {
+        "draft": "Brouillon",
+        "validated": "Validée",
+        "posted": "Comptabilisée",
+        "paid": "Payée",
+        "cancelled": "Annulée",
+        "waiting_payment": "En attente",
+    }
+    DEFAULT_PAGE_SIZE = 20
+
+    def __init__(
+        self,
+        *,
+        client: Optional[TrytonClient] = None,
+        account_service: Optional[PortalAccountService] = None,
+    ) -> None:
+        self.client = client or get_tryton_client()
+        self.account_service = account_service or PortalAccountService(client=self.client)
+        self._base_context: dict[str, Any] = {}
+
+    def list_invoices(
+        self,
+        *,
+        login: str,
+        page: int = 1,
+        page_size: Optional[int] = None,
+    ) -> PortalInvoiceListResult:
+        profile = self.account_service.fetch_client_profile(login=login)
+        context = self._rpc_context()
+        size = self._sanitize_page_size(page_size)
+        domain: list[object] = [
+            ("party", "=", profile.party_id),
+            ("type", "=", "out"),
+        ]
+
+        try:
+            total = int(
+                self.client.call(
+                    "model.account.invoice",
+                    "search_count",
+                    [domain, context],
+                )
+                or 0
+            )
+        except TrytonRPCError as exc:
+            logger.exception("Impossible de compter les factures pour party=%s.", profile.party_id)
+            raise PortalInvoiceServiceError("Impossible de charger vos factures pour le portail.") from exc
+
+        if total == 0:
+            pagination = PortalInvoicePagination(
+                page=1,
+                pages=1,
+                page_size=size,
+                total=0,
+                has_next=False,
+                has_previous=False,
+            )
+            return PortalInvoiceListResult(invoices=[], pagination=pagination)
+
+        pages = max(1, (total + size - 1) // size)
+        current_page = min(max(int(page or 1), 1), pages)
+        offset = (current_page - 1) * size
+
+        try:
+            invoice_ids = self.client.call(
+                "model.account.invoice",
+                "search",
+                [domain, offset, size, [("invoice_date", "DESC"), ("id", "DESC")], context],
+            )
+        except TrytonRPCError as exc:
+            logger.exception("Impossible de lister les factures pour party=%s.", profile.party_id)
+            raise PortalInvoiceServiceError("Impossible de charger vos factures pour le portail.") from exc
+
+        if not invoice_ids:
+            pagination = PortalInvoicePagination(
+                page=current_page,
+                pages=pages,
+                page_size=size,
+                total=total,
+                has_next=current_page < pages,
+                has_previous=current_page > 1,
+            )
+            return PortalInvoiceListResult(invoices=[], pagination=pagination)
+
+        fields = [
+            "id",
+            "number",
+            "invoice_date",
+            "payment_term_date",
+            "state",
+            "total_amount",
+            "amount_to_pay",
+            "currency",
+        ]
+        try:
+            records = self.client.call(
+                "model.account.invoice",
+                "read",
+                [invoice_ids, fields, context],
+            )
+        except TrytonRPCError as exc:
+            logger.exception("Impossible de lire les factures %s.", invoice_ids)
+            raise PortalInvoiceServiceError("Lecture des factures impossible. Réessayez plus tard.") from exc
+
+        invoices = [self._parse_invoice_record(record) for record in records or []]
+        pagination = PortalInvoicePagination(
+            page=current_page,
+            pages=pages,
+            page_size=size,
+            total=total,
+            has_next=current_page < pages,
+            has_previous=current_page > 1,
+        )
+        return PortalInvoiceListResult(invoices=invoices, pagination=pagination)
+
+    def _parse_invoice_record(self, record: dict[str, Any]) -> PortalInvoiceSummary:
+        invoice_id = PortalAccountService._extract_id(record.get("id")) or 0
+        currency_label = self._currency_label(record.get("currency"))
+        total_amount = self._to_decimal(record.get("total_amount"))
+        amount_due = self._to_decimal(record.get("amount_to_pay"))
+        if amount_due is None:
+            amount_due = total_amount
+
+        return PortalInvoiceSummary(
+            id=invoice_id,
+            number=str(record.get("number") or "") or None,
+            issue_date=self._to_date(record.get("invoice_date")),
+            due_date=self._to_date(record.get("payment_term_date")),
+            state=str(record.get("state") or "").strip() or "unknown",
+            state_label=self._state_label(record.get("state")),
+            total_amount=total_amount,
+            amount_due=amount_due,
+            currency_label=currency_label,
+        )
+
+    def _currency_label(self, currency_field: Any) -> Optional[str]:
+        if isinstance(currency_field, (list, tuple)) and len(currency_field) > 1:
+            return str(currency_field[1])
+        if isinstance(currency_field, dict) and currency_field.get("rec_name"):
+            return str(currency_field["rec_name"])
+        return None
+
+    def _state_label(self, state: Any) -> str:
+        key = str(state or "").strip().lower()
+        if not key:
+            return "Inconnu"
+        return self.STATE_LABELS.get(key, key.capitalize())
+
+    def _rpc_context(self) -> dict[str, Any]:
+        return dict(self._base_context)
+
+    def _sanitize_page_size(self, page_size: Optional[int]) -> int:
+        if page_size is None:
+            return self.DEFAULT_PAGE_SIZE
+        try:
+            size = int(page_size)
+        except (TypeError, ValueError):
+            return self.DEFAULT_PAGE_SIZE
+        return max(1, min(100, size))
+
+    @staticmethod
+    def _to_date(value: Any) -> Optional[date]:
+        if value is None:
+            return None
+        if isinstance(value, date):
+            return value
+        if isinstance(value, str):
+            try:
+                return date.fromisoformat(value.split("T", 1)[0])
+            except (TypeError, ValueError):
+                return None
+        return None
+
+    @staticmethod
+    def _to_decimal(value: Any) -> Optional[Decimal]:
+        if value in (None, ""):
+            return None
+        if isinstance(value, dict) and value.get("__class__") == "Decimal":
+            value = value.get("decimal")
+        try:
+            return Decimal(str(value))
+        except (ArithmeticError, ValueError, TypeError):
+            return None

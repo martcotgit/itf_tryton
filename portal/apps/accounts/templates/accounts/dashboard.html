@@ -6,33 +6,144 @@
 <main id="contenu-principal" class="main dashboard-main" role="main">
     <section class="dashboard-section">
         <div class="container dashboard-container">
-            <h1 class="dashboard-title">Bienvenue{% if request.user.first_name %}, {{ request.user.first_name }}{% endif %}&nbsp;!</h1>
-            <p class="dashboard-intro">
-                Voici votre point d’accès aux services clients. Nous activerons progressivement les sections qui accompagnent les prochains sprints.
-            </p>
-            <div class="dashboard-panels">
-                <article class="dashboard-panel">
-                    <h2>Factures</h2>
-                    <p>Consultez et téléchargez vos factures.</p>
-                </article>
-                <article class="dashboard-panel">
-                    <h2>Soumissions</h2>
-                    <p>Consultez vos soumissions en attente d’approbation.</p>
-                </article>
-                <article class="dashboard-panel">
-                    <h2>Commandes</h2>
-                    <p>Suivez le statut de vos commandes en cours.</p>
-                    <div class="dashboard-actions-row">
-                        <a href="{% url 'accounts:orders-list' %}" class="btn btn-secondary">Voir mes commandes</a>
-                        <a href="{% url 'accounts:orders-new' %}" class="btn btn-primary">Nouvelle commande</a>
+            <header class="dashboard-header">
+                <div class="dashboard-heading">
+                    <p class="dashboard-kicker">Espace client</p>
+                    <h1 class="dashboard-title">Re-bienvenue{% if request.user.first_name %}, {{ request.user.first_name }}{% endif %}&nbsp;!</h1>
+                    <p class="dashboard-intro">
+                        {% if summary.invoices_due_count %}
+                            Vous avez {{ summary.invoices_due_count }} facture{% if summary.invoices_due_count > 1 %}s{% endif %} à payer{% if summary.invoices_due_total %} ({{ summary.invoices_due_total }} {{ summary.invoices_currency }}){% endif %}.
+                        {% elif summary.orders_to_complete_count %}
+                            {{ summary.orders_to_complete_count }} commande{% if summary.orders_to_complete_count > 1 %}s{% endif %} à compléter.
+                        {% else %}
+                            Tout est à jour. Merci pour votre collaboration.
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="dashboard-cta">
+                    <a href="{% url 'accounts:orders-new' %}" class="btn btn-primary">Nouvelle commande</a>
+                    <a href="{% url 'accounts:profile' %}" class="btn btn-secondary">Mettre à jour mon profil</a>
+                </div>
+            </header>
+
+            <div class="dashboard-metrics">
+                <article class="summary-card">
+                    <div class="summary-top">
+                        <p class="summary-label">Factures dues</p>
+                        <span class="status-chip status-warning">À payer</span>
+                    </div>
+                    <p class="summary-value">
+                        {{ summary.invoices_due_total|default:"0" }}
+                        <span class="summary-currency">{{ summary.invoices_currency|default:"" }}</span>
+                    </p>
+                    <p class="summary-subtitle">
+                        {{ summary.invoices_due_count }} facture{% if summary.invoices_due_count|default:0 > 1 %}s{% endif %} en attente.
+                    </p>
+                    <div class="summary-actions">
+                        <a href="{% url 'accounts:invoices-list' %}" class="btn btn-primary">Payer mes factures</a>
                     </div>
                 </article>
-                <article class="dashboard-panel">
-                    <h2>Profil</h2>
-                    <p>Mettez à jour vos renseignements d’entreprise et vos contacts.</p>
-                    <a href="{% url 'accounts:profile' %}" class="btn btn-primary">Gérer mon profil</a>
+
+                <article class="summary-card">
+                    <div class="summary-top">
+                        <p class="summary-label">Commandes en cours</p>
+                        <span class="status-chip status-info">En suivi</span>
+                    </div>
+                    <p class="summary-value">
+                        {{ summary.orders_active_count|default:0 }}
+                    </p>
+                    <p class="summary-subtitle">Commandes confirmées ou en traitement.</p>
+                    <div class="summary-actions">
+                        <a href="{% url 'accounts:orders-list' %}" class="btn btn-secondary">Suivre mes commandes</a>
+                    </div>
+                </article>
+
+                <article class="summary-card">
+                    <div class="summary-top">
+                        <p class="summary-label">Commandes à compléter</p>
+                        <span class="status-chip status-warning">Action requise</span>
+                    </div>
+                    <p class="summary-value">
+                        {{ summary.orders_to_complete_count|default:0 }}
+                    </p>
+                    <p class="summary-subtitle">Brouillons ou soumissions à finaliser.</p>
+                    <div class="summary-actions">
+                        <a href="{% url 'accounts:orders-list' %}" class="btn btn-secondary">Accéder aux brouillons</a>
+                        <a href="{% url 'accounts:orders-new' %}" class="btn btn-primary">Compléter une commande</a>
+                    </div>
                 </article>
             </div>
+
+            <section class="dashboard-activity">
+                <div class="section-heading">
+                    <div>
+                        <p class="dashboard-kicker">Suivi</p>
+                        <h2>Activité récente</h2>
+                        <p class="dashboard-intro">Dernières factures et commandes des 90&nbsp;derniers jours.</p>
+                    </div>
+                    <div class="activity-links">
+                        <a class="btn btn-tertiary" href="{% url 'accounts:invoices-list' %}">Voir toutes les factures</a>
+                        <a class="btn btn-tertiary" href="{% url 'accounts:orders-list' %}">Voir toutes les commandes</a>
+                    </div>
+                </div>
+                <div class="activity-list">
+                    {% for item in activity_items %}
+                        <article class="activity-item">
+                            <div class="activity-main">
+                                <div class="activity-meta">
+                                    <span class="activity-type">
+                                        {% if item.type == "invoice" %}Facture{% else %}Commande{% endif %}
+                                    </span>
+                                    <span class="activity-date">
+                                        {% if item.date %}{{ item.date|date:"j M Y" }}{% else %}Date à venir{% endif %}
+                                    </span>
+                                </div>
+                                <div class="activity-content">
+                                    <div>
+                                        <p class="activity-title">{{ item.title }}</p>
+                                        <p class="activity-subtitle">
+                                            {% if item.amount %}
+                                                {{ item.amount }} {{ item.currency|default:"" }}
+                                            {% else %}
+                                                Montant à venir
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                    <div class="activity-actions">
+                                        <span class="status-chip status-{{ item.status_style }}">{{ item.status_label }}</span>
+                                        <a class="activity-link" href="{{ item.url }}">Ouvrir</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    {% empty %}
+                        <p class="dashboard-intro">Aucune activité récente.</p>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="dashboard-help">
+                <div>
+                    <p class="dashboard-kicker">Aide rapide</p>
+                    <h2>On reste disponible pour vous aider</h2>
+                </div>
+                <div class="help-grid">
+                    <article class="help-card">
+                        <h3>Soutien</h3>
+                        <p>Besoin d’un coup de main? Écrivez-nous et notre équipe vous répond rapidement.</p>
+                        <a class="btn btn-primary" href="mailto:soutien@itf.ca">Nous écrire</a>
+                    </article>
+                    <article class="help-card">
+                        <h3>Ressources</h3>
+                        <p>Consultez la facturation et le suivi de commandes sans attendre.</p>
+                        <div class="help-actions">
+                            <a class="btn btn-secondary" href="{% url 'accounts:invoices-list' %}">Guide factures</a>
+                            <a class="btn btn-tertiary" href="{% url 'accounts:orders-list' %}">Guide commandes</a>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
             <div class="dashboard-actions">
                 <a href="{% url 'core:home' %}" class="btn btn-secondary">Retour au site</a>
             </div>

@@ -1092,6 +1092,248 @@ body.catalog-open {
     flex-wrap: wrap;
 }
 
+.dashboard-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.dashboard-heading {
+    max-width: 680px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.dashboard-kicker {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.8rem;
+    color: var(--secondary-color);
+    font-weight: 700;
+}
+
+.dashboard-subtitle,
+.dashboard-intro {
+    color: var(--text-light);
+}
+
+.dashboard-cta {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.dashboard-metrics {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.summary-card {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.summary-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.summary-label {
+    font-size: 0.95rem;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.summary-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+}
+
+.summary-currency {
+    font-size: 1rem;
+    color: var(--text-light);
+}
+
+.summary-subtitle {
+    color: var(--text-light);
+    font-size: 0.95rem;
+}
+
+.summary-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+}
+
+.status-info {
+    background: rgba(45, 90, 39, 0.08);
+    color: var(--primary-color);
+    border-color: rgba(45, 90, 39, 0.25);
+}
+
+.status-warning {
+    background: rgba(255, 193, 7, 0.15);
+    color: #8a6d3b;
+    border-color: rgba(255, 193, 7, 0.4);
+}
+
+.status-success {
+    background: rgba(76, 175, 80, 0.15);
+    color: #2d6a4f;
+    border-color: rgba(76, 175, 80, 0.4);
+}
+
+.status-muted {
+    background: rgba(127, 140, 141, 0.12);
+    color: #6c757d;
+    border-color: rgba(127, 140, 141, 0.35);
+}
+
+.dashboard-activity {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.section-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.activity-item {
+    border: 1px solid rgba(127, 140, 141, 0.15);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    transition: var(--transition);
+}
+
+.activity-item:hover,
+.activity-item:focus-within {
+    box-shadow: var(--shadow-light);
+    transform: translateY(-2px);
+}
+
+.activity-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.activity-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+.activity-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.activity-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.activity-subtitle {
+    color: var(--text-light);
+}
+
+.activity-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.activity-link {
+    color: var(--primary-color);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.activity-link:hover,
+.activity-link:focus {
+    text-decoration: underline;
+}
+
+.dashboard-help {
+    background: var(--background-light);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.help-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.help-card {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    padding: 1.25rem;
+    box-shadow: var(--shadow-light);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.help-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
 /* Services Section */
 .services {
     padding: 4rem 0;
