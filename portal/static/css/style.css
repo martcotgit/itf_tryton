@@ -1182,6 +1182,13 @@ body.catalog-open {
     flex-wrap: wrap;
 }
 
+.summary-card .icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--primary-color);
+}
+
+
 .status-chip {
     display: inline-flex;
     align-items: center;
@@ -1302,6 +1309,12 @@ body.catalog-open {
 .activity-link:focus {
     text-decoration: underline;
 }
+
+.activity-item .icon {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
 
 .dashboard-help {
     background: var(--background-light);
@@ -1516,6 +1529,55 @@ address {
 
 .btn-icon {
     font-size: 1.2rem;
+}
+
+/* Icons */
+.icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    display: inline-block;
+    vertical-align: -0.25em;
+}
+
+.btn .icon {
+    margin-right: 0.5rem;
+}
+
+.icon-xl {
+    width: 2.5rem;
+    height: 2.5rem;
+    color: var(--primary-color);
+}
+
+.summary-card .icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--primary-color);
+}
+
+.activity-item .icon {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.hero-header-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.hero-icon-wrapper {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--white);
+    box-shadow: var(--shadow-light);
+    margin-bottom: 1rem;
 }
 
 
