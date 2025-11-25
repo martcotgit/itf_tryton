@@ -89,12 +89,21 @@ class ClientDashboardView(LoginRequiredMixin, TemplateView):
 
         return self.render_to_response(
             self.get_context_data(
+                greeting_name=self._greeting_name(),
                 summary=summary,
                 recent_invoices=invoices_result.invoices[: self.recent_limit] if invoices_result else [],
                 recent_orders=orders_result.orders if orders_result else [],
                 activity_items=activity,
             )
         )
+
+    def _greeting_name(self) -> str:
+        """Return a clean display name for the dashboard hero."""
+        first_name = (getattr(self.request.user, "first_name", "") or "").strip()
+        if first_name and "{{" not in first_name and "}}" not in first_name:
+            return first_name
+        fallback = (getattr(self.request.user, "email", "") or getattr(self.request.user, "username", "") or "").strip()
+        return fallback
 
     def _safe_load_invoices(self, login: str) -> PortalInvoiceListResult | None:
         try:
@@ -182,7 +191,7 @@ class ClientDashboardView(LoginRequiredMixin, TemplateView):
                     "date": invoice.issue_date or invoice.due_date,
                     "amount": invoice.amount_due if invoice.amount_due is not None else invoice.total_amount,
                     "currency": invoice.currency_label,
-                    "status_label": invoice.state_label,
+                    "status_label": self._status_label("invoice", invoice.state_label, invoice.state),
                     "status_style": self._status_style("invoice", invoice.state),
                     "url": reverse("accounts:invoices-list"),
                 }
@@ -196,7 +205,7 @@ class ClientDashboardView(LoginRequiredMixin, TemplateView):
                     "date": order.create_date or order.shipping_date,
                     "amount": order.total_amount,
                     "currency": order.currency_label,
-                    "status_label": order.state_label,
+                    "status_label": self._status_label("order", order.state_label, order.state),
                     "status_style": self._status_style("order", order.state),
                     "url": reverse("accounts:orders-detail", kwargs={"order_id": order.id}),
                 }
@@ -210,6 +219,26 @@ class ClientDashboardView(LoginRequiredMixin, TemplateView):
         if isinstance(value, date):
             return value
         return date.min
+
+    @staticmethod
+    def _status_label(kind: str, label: str | None, state: str | None) -> str:
+        value = (label or "").strip()
+        invalid = not value or "{{" in value or "}}" in value
+
+        if not invalid:
+            return value
+
+        state_key = (state or "").strip().lower()
+        if "{{" in state_key or "}}" in state_key:
+            state_key = ""
+        if kind == "invoice":
+            from .services import PortalInvoiceService
+
+            return PortalInvoiceService.STATE_LABELS.get(state_key, state_key.capitalize() or "Inconnu")
+
+        from .services import PortalOrderService
+
+        return PortalOrderService.STATE_LABELS.get(state_key, state_key.capitalize() or "Inconnu")
 
     @staticmethod
     def _status_style(kind: str, state: str | None) -> str:

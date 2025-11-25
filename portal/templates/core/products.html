@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Palettes neuves et usagées | Catalogue public Ilnu Transforme{% endblock %}
+
+{% block extra_head %}
+    <meta name="description" content="{{ page_description }}">
+    <meta name="keywords" content="{{ page_keywords }}">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ canonical_url }}">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Palettes disponibles – Ilnu Transforme">
+    <meta property="og:description" content="{{ page_description }}">
+    <meta property="og:url" content="{{ canonical_url }}">
+    <meta property="og:locale" content="fr_CA">
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:title" content="Catalogue de palettes – Ilnu Transforme">
+    <meta property="twitter:description" content="{{ page_description }}">
+    {% if products_schema %}
+        <script type="application/ld+json">{{ products_schema|safe }}</script>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<main id="contenu-principal" class="products-main" role="main">
+    <section class="product-hero" aria-labelledby="products-title">
+        <div class="container hero-layout">
+            <div class="hero-copy">
+                <p class="breadcrumb" aria-label="Fil d'Ariane">Accueil / Produits</p>
+                <h1 id="products-title">Catalogue de palettes disponibles</h1>
+                <p class="hero-intro">
+                    Tous les produits listés ci-dessous sont synchronisés avec Tryton : nous affichons uniquement les palettes actuellement en inventaire positif afin d'éviter les mauvaises surprises. Choisissez la famille de palettes neuves, usagées ou consignées qui convient à vos opérations et communiquez avec nous pour une soumission rapide.
+                </p>
+                <div class="hero-cta">
+                    <a class="btn btn-primary" href="tel:+1-418-671-2814">📞 418-671-2814</a>
+                    <a class="btn btn-secondary" href="{% url 'accounts:login' %}">Demander une soumission</a>
+                </div>
+                <ul class="hero-highlights" aria-label="Avantages principaux">
+                    <li>Inspection et tri grade A/B</li>
+                    <li>Rotation des stocks quotidienne</li>
+                    <li>Livraison au Saguenay–Lac-Saint-Jean</li>
+                    <li>Options consignation et récupération</li>
+                </ul>
+            </div>
+            <div class="hero-gallery" aria-hidden="true">
+                <div class="hero-photo hero-photo--primary"></div>
+                <div class="hero-photo hero-photo--secondary"></div>
+                <div class="hero-photo hero-photo--accent"></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="product-categories" aria-labelledby="categories-title">
+        <div class="container">
+            <h2 id="categories-title">Familles de palettes en vedette</h2>
+            {% if category_facets %}
+                <div class="category-grid" role="list">
+                    {% for category in category_facets %}
+                        <article class="category-card category-card--{{ forloop.counter }}" role="listitem">
+                            <div class="category-visual"></div>
+                            <div class="category-body">
+                                <span class="category-pill">{{ category.count }} types</span>
+                                <h3>{{ category.name }}</h3>
+                                <p>Palettes {{ category.name|lower }} livrées au rythme de vos opérations, stock vérifié en direct.</p>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="empty-state">Aucune catégorie disponible pour l'instant.</p>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="product-listing" aria-labelledby="listing-title">
+        <div class="container">
+            <div class="listing-header">
+                <div>
+                    <h2 id="listing-title">Palettes prêtes à être expédiées</h2>
+                    <p class="listing-subtitle">Chaque fiche passera sous peu dans une page détaillée pour optimiser notre référencement; d'ici là, cette liste publique présente l'inventaire réel sans afficher les prix.</p>
+                </div>
+                <div class="listing-meta">
+                    <span class="badge">{{ products_total }} modèles en stock</span>
+                </div>
+            </div>
+            {% if products %}
+                <div class="product-grid" role="list" aria-live="polite">
+                    {% for product in products %}
+                        <article class="product-card" role="listitem">
+                            <div class="product-copy">
+                                <header>
+                                    <p class="product-code">{{ product.code|default:"Code à venir" }}</p>
+                                    <h3>{{ product.name }}</h3>
+                                </header>
+                                <p class="product-description">{{ product.description|default:"Description à confirmer avec notre équipe." }}</p>
+                                <ul class="product-tags" aria-label="Catégories">
+                                    {% for category in product.categories %}
+                                        <li>{{ category }}</li>
+                                    {% empty %}
+                                        <li>Palettes</li>
+                                    {% endfor %}
+                                </ul>
+                                {% if product.quantity_available and product.quantity_available > 0 %}
+                                    <p class="availability">Inventaire vérifié dans Tryton – prêt à être planifié.</p>
+                                {% endif %}
+                                <div class="product-actions">
+                                    <a class="btn btn-secondary" href="{% url 'accounts:login' %}">Parler à un conseiller</a>
+                                    <a class="btn btn-link" href="tel:+1-418-671-2814">Appeler</a>
+                                </div>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+                {% if paginator.num_pages > 1 %}
+                    <nav class="product-pagination" aria-label="Pagination des produits">
+                        <p class="product-pagination__summary">
+                            Page {{ products.number }} sur {{ paginator.num_pages }} — {{ products_total }} modèles au total
+                        </p>
+                        <div class="product-pagination__controls">
+                            {% if products.has_previous %}
+                                <a class="product-pagination__nav" href="?page={{ products.previous_page_number }}" rel="prev">Page précédente</a>
+                            {% else %}
+                                <span class="product-pagination__nav is-disabled" aria-disabled="true">Page précédente</span>
+                            {% endif %}
+
+                            <div class="product-pagination__pages" role="list">
+                                {% for page_num in paginator.page_range %}
+                                    {% if page_num == products.number %}
+                                        <span role="listitem" class="product-pagination__page is-active" aria-current="page">{{ page_num }}</span>
+                                    {% else %}
+                                        <a role="listitem" class="product-pagination__page" href="?page={{ page_num }}">Page {{ page_num }}</a>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+
+                            {% if products.has_next %}
+                                <a class="product-pagination__nav" href="?page={{ products.next_page_number }}" rel="next">Page suivante</a>
+                            {% else %}
+                                <span class="product-pagination__nav is-disabled" aria-disabled="true">Page suivante</span>
+                            {% endif %}
+                        </div>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="empty-state">
+                    <p>Aucun produit n'est présentement disponible. Notre équipe met à jour Tryton; revenez sous peu ou contactez-nous pour réserver votre prochaine production.</p>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="product-faq" aria-labelledby="faq-title">
+        <div class="container">
+            <h2 id="faq-title">Questions fréquentes</h2>
+            <div class="faq-grid">
+                <article>
+                    <h3>Pourquoi ne voyez-vous pas les prix?</h3>
+                    <p>Les tarifs varient selon le volume, le grade (A/B) et le plan logistique. Nous confirmons chaque soumission avec les données Tryton (stock et coût) avant d'émettre une offre personnalisée.</p>
+                </article>
+                <article>
+                    <h3>Comment garantissez-vous la disponibilité?</h3>
+                    <p>Cette page lit directement les gabarits Tryton et n'affiche pas les palettes à quantité nulle. Une mise en cache de 15 minutes nous permet de réduire les appels à la base tout en restant fidèle à l'inventaire.</p>
+                </article>
+                <article>
+                    <h3>Peut-on réserver des palettes consignées?</h3>
+                    <p>Oui. Sélectionnez la famille « Consignation » et indiquez vos besoins. Nos équipes s'occupent ensuite du suivi dans Tryton et des échanges de palettes.</p>
+                </article>
+                <article>
+                    <h3>Une fiche détaillée par produit sera-t-elle disponible?</h3>
+                    <p>Nous préparons une page dédiée pour chaque SKU (ex. 48x40, CHEP, export). Ces fiches seront alimentées par Tryton pour simplifier le SEO et le partage aux clients.</p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="product-cta" aria-labelledby="cta-title">
+        <div class="container">
+            <div>
+                <p class="cta-eyebrow">Prêt à récupérer ou commander vos palettes?</p>
+                <h2 id="cta-title">Un conseiller Ilnu Transforme vous répond en moins d'un jour ouvrable.</h2>
+                <p>Partagez vos volumes, dimensions et délais. Nous vérifions immédiatement l'inventaire Tryton et préparons une soumission en français canadien adaptée à votre flotte.</p>
+                <div class="cta-buttons">
+                    <a class="btn btn-primary" href="tel:+1-418-671-2814">📞 418-671-2814</a>
+                    <a class="btn btn-secondary" href="mailto:info@paletteitf.ca">Écrire un courriel</a>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="footer" role="contentinfo">
+    <div class="container footer-content">
+        <div>
+            <p>&copy; 2025 Ilnu Transforme – Récupération et vente de palettes.</p>
+            <p>Site propulsé par Tryton + Django. Catalogue synchronisé automatiquement.</p>
+        </div>
+        <div class="footer-links">
+            <a href="{% url 'core:home' %}">Accueil</a>
+            <a href="{% url 'core:products' %}">Produits</a>
+            <a href="{% url 'core:home' %}#contact">Contact</a>
+        </div>
+    </div>
+</footer>
+{% endblock %}

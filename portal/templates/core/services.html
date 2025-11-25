@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Services intégrés de palettes | Ilnu Transforme{% endblock %}
+
+{% block extra_head %}
+    <meta name="description" content="{{ page_description }}">
+    <meta name="keywords" content="{{ page_keywords }}">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ canonical_url }}">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Services de récupération et logistique | Ilnu Transforme">
+    <meta property="og:description" content="{{ page_description }}">
+    <meta property="og:url" content="{{ canonical_url }}">
+    <meta property="og:locale" content="fr_CA">
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:title" content="Services pour vos palettes – Ilnu Transforme">
+    <meta property="twitter:description" content="{{ page_description }}">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Service",
+        "name": "Services de palettes Ilnu Transforme",
+        "description": "Collecte, tri, réparation et logistique de palettes au Saguenay–Lac-Saint-Jean.",
+        "provider": {
+            "@type": "Organization",
+            "name": "Ilnu Transforme",
+            "url": "https://ilnutransforme.ca",
+            "telephone": "+1-418-671-2814"
+        },
+        "areaServed": {
+            "@type": "GeoCircle",
+            "geoMidpoint": {
+                "@type": "GeoCoordinates",
+                "latitude": 48.5667,
+                "longitude": -72.2333
+            },
+            "geoRadius": "50000"
+        },
+        "hasOfferCatalog": {
+            "@type": "OfferCatalog",
+            "name": "Services spécialisés",
+            "itemListElement": [
+                {
+                    "@type": "Offer",
+                    "itemOffered": {
+                        "@type": "Service",
+                        "name": "Récupération sur appel",
+                        "description": "Ramassage planifié ou urgence des palettes usagées et consignées."
+                    }
+                },
+                {
+                    "@type": "Offer",
+                    "itemOffered": {
+                        "@type": "Service",
+                        "name": "Tri, réparation et certification",
+                        "description": "Inspection grade A/B, réparation en atelier et consignation."
+                    }
+                },
+                {
+                    "@type": "Offer",
+                    "itemOffered": {
+                        "@type": "Service",
+                        "name": "Logistique et rotation",
+                        "description": "Planification de livraisons et échanges pour vos sites."
+                    }
+                }
+            ]
+        }
+    }
+    </script>
+{% endblock %}
+
+{% block content %}
+<main id="contenu-principal" class="services-main" role="main">
+    <section class="services-hero" aria-labelledby="services-title">
+        <div class="container services-hero__grid">
+            <div class="services-hero__copy">
+                <p class="breadcrumb" aria-label="Fil d'Ariane">Accueil / Services</p>
+                <p class="hero-tag">Service clés en main</p>
+                <h1 id="services-title">Récupération, tri, consignation et logistique de palettes</h1>
+                <p class="hero-intro">
+                    Nous gérons la circulation complète de vos palettes: ramassage planifié, tri et réparation grade A/B,
+                    consignation et rotation avec une visibilité en direct dans Tryton. Une équipe locale qui répond en français canadien.
+                </p>
+                <div class="hero-actions">
+                    <a class="btn btn-primary" href="tel:+1-418-671-2814">📞 418-671-2814</a>
+                    <a class="btn btn-secondary" href="mailto:info@paletteitf.ca">Écrire un courriel</a>
+                </div>
+                <ul class="hero-highlights" aria-label="Forfaits offerts">
+                    <li>Couverture Saguenay–Lac-Saint-Jean</li>
+                    <li>Ramassage ou livraison en 48 h ouvrables</li>
+                    <li>Rapports de rotation via Tryton</li>
+                    <li>Equipe certifiée pour réparations</li>
+                </ul>
+            </div>
+            <div class="services-hero__badge">
+                <div class="badge-inner" aria-hidden="true">
+                    <span class="badge-icon">♻️</span>
+                    <p>Palettes réutilisées en circuit court</p>
+                    <strong>Réduction matière 65&nbsp;%</strong>
+                </div>
+                <p class="badge-caption">Moins de déchets, plus de palettes remises en circulation pour vos sites.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="services-offers" aria-labelledby="offers-title">
+        <div class="container">
+            <h2 id="offers-title">Ce que nous faisons pour votre flotte</h2>
+            <p class="section-lead">
+                Chaque service est géré et tracé dans Tryton afin que vos équipes d'approvisionnement voient l'état des palettes récupérées, réparées ou en transit.
+            </p>
+            <div class="services-offers__grid" role="list">
+                <article class="offer-card" role="listitem">
+                    <div class="offer-icon" aria-hidden="true">🚚</div>
+                    <h3>Récupération planifiée</h3>
+                    <p>Ramassage récurrent ou ponctuel des palettes usagées ou consignées, avec confirmation des volumes et photos à l'enlèvement.</p>
+                    <p class="offer-meta">Itinéraires optimisés, escouade locale, bon de transport partagé.</p>
+                </article>
+                <article class="offer-card" role="listitem">
+                    <div class="offer-icon" aria-hidden="true">🛠️</div>
+                    <h3>Tri et réparation</h3>
+                    <p>Inspection grade A/B, remplacement de planches et blocs, mise à niveau pour réutilisation immédiate ou consignation.</p>
+                    <p class="offer-meta">Atelier certifié, contrôle qualité photographique.</p>
+                </article>
+                <article class="offer-card" role="listitem">
+                    <div class="offer-icon" aria-hidden="true">🔄</div>
+                    <h3>Consignation et rotation</h3>
+                    <p>Gestion des comptes consignés, suivi des dépôts et échanges, ajustements selon vos projections saisonnières.</p>
+                    <p class="offer-meta">Rapports automatisés, niveaux cibles par site.</p>
+                </article>
+                <article class="offer-card" role="listitem">
+                    <div class="offer-icon" aria-hidden="true">📦</div>
+                    <h3>Préparation et livraison</h3>
+                    <p>Assemblage de lots, palettisation uniforme et transport vers vos quais selon vos fenêtres de réception.</p>
+                    <p class="offer-meta">Communication proactive avec vos opérations.</p>
+                </article>
+                <article class="offer-card" role="listitem">
+                    <div class="offer-icon" aria-hidden="true">🌱</div>
+                    <h3>Valorisation responsable</h3>
+                    <p>Réutilisation maximale, recyclage des rebuts et calcul des économies de matière pour vos rapports ESG.</p>
+                    <p class="offer-meta">Traçabilité de la matière, réduction des déchets.</p>
+                </article>
+                <article class="offer-card" role="listitem">
+                    <div class="offer-icon" aria-hidden="true">🧭</div>
+                    <h3>Coordination projet</h3>
+                    <p>Point de contact unique pour déménagements, pics saisonniers ou lancements de lignes nécessitant des palettes dédiées.</p>
+                    <p class="offer-meta">Plan d'action documenté et partagé.</p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="services-proof" aria-labelledby="proof-title">
+        <div class="container proof-grid">
+            <div>
+                <h2 id="proof-title">Pourquoi travailler avec Ilnu Transforme</h2>
+                <p class="section-lead">
+                    Notre équipe opère au Saguenay–Lac-Saint-Jean avec des processus visibles dans Tryton. Vous obtenez la même rigueur qu'un grand réseau avec la proximité d'un partenaire local.
+                </p>
+                <ul class="proof-list">
+                    <li>Inventaire et mouvements tracés dans Tryton</li>
+                    <li>Équipe bilingue, documentation en français canadien</li>
+                    <li>Priorité aux circuits courts et à la remise en circulation</li>
+                </ul>
+            </div>
+            <div class="proof-stats" role="list">
+                <article class="proof-card" role="listitem">
+                    <p class="proof-number">48 h</p>
+                    <p class="proof-label">Délais moyens pour un ramassage confirmé</p>
+                </article>
+                <article class="proof-card" role="listitem">
+                    <p class="proof-number">90 %</p>
+                    <p class="proof-label">Palettes réintroduites après réparation</p>
+                </article>
+                <article class="proof-card" role="listitem">
+                    <p class="proof-number">24/7</p>
+                    <p class="proof-label">Suivi des comptes consignés</p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="services-process" aria-labelledby="process-title">
+        <div class="container">
+            <h2 id="process-title">Comment se déroule une intervention</h2>
+            <div class="process-steps" role="list">
+                <article class="process-step" role="listitem">
+                    <div class="step-number">1</div>
+                    <div>
+                        <h3>Réception de votre demande</h3>
+                        <p>Nous validons volumes, sites et fenêtres horaires. Un numéro d'intervention est ouvert dans Tryton.</p>
+                    </div>
+                </article>
+                <article class="process-step" role="listitem">
+                    <div class="step-number">2</div>
+                    <div>
+                        <h3>Ramassage ou livraison</h3>
+                        <p>Nos équipes se présentent avec le bon de transport partagé. Les palettes sont photographiées à l'arrivée.</p>
+                    </div>
+                </article>
+                <article class="process-step" role="listitem">
+                    <div class="step-number">3</div>
+                    <div>
+                        <h3>Tri et consignation</h3>
+                        <p>Inspection grade A/B, réparation et mise en consignation. Les mouvements sont saisis et visibles.</p>
+                    </div>
+                </article>
+                <article class="process-step" role="listitem">
+                    <div class="step-number">4</div>
+                    <div>
+                        <h3>Rapport et planification</h3>
+                        <p>Vous recevez le compte rendu (photos, volumes, réparations) et la prochaine rotation est planifiée.</p>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="services-cta" aria-labelledby="cta-title">
+        <div class="container services-cta__content">
+            <div>
+                <p class="cta-eyebrow">Prêt pour une intervention?</p>
+                <h2 id="cta-title">Contactez-nous et obtenez un créneau confirmé.</h2>
+                <p>Un conseiller vous répond en moins d'un jour ouvrable pour planifier un ramassage ou préparer vos palettes.</p>
+            </div>
+            <div class="cta-actions">
+                <a class="btn btn-primary" href="tel:+1-418-671-2814">📞 418-671-2814</a>
+                <a class="btn btn-secondary" href="mailto:info@paletteitf.ca">Planifier par courriel</a>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="footer" role="contentinfo">
+    <div class="container footer-content">
+        <div>
+            <p>&copy; 2025 Ilnu Transforme – Services de palettes.</p>
+            <p>Ramassage, réparation et consignation opérés au Saguenay–Lac-Saint-Jean.</p>
+        </div>
+        <div class="footer-links">
+            <a href="{% url 'core:home' %}">Accueil</a>
+            <a href="{% url 'core:products' %}">Produits</a>
+            <a href="{% url 'core:services' %}">Services</a>
+            <a href="{% url 'core:home' %}#contact">Contact</a>
+        </div>
+    </div>
+</footer>
+{% endblock %}

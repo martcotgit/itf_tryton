@@ -4,155 +4,325 @@
 {% block title %}Espace client ITF – Profil{% endblock %}
 
 {% block extra_head %}
-    {{ block.super }}
-    <link rel="stylesheet" href="{% static 'vendor/intl-tel-input/css/intlTelInput.min.css' %}">
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'vendor/intl-tel-input/css/intlTelInput.min.css' %}">
 {% endblock %}
 
 {% block content %}
 <main id="contenu-principal" class="main profile-main" role="main">
     <section class="profile-section">
         <div class="container profile-container">
-            <header class="profile-header">
-                <h1>Profil client</h1>
-                <p>Actualisez vos coordonnées et mettez à jour votre mot de passe afin de garder votre compte sécurisé.</p>
+            <nav class="breadcrumb-nav" aria-label="Fil d'Ariane">
+                <a href="{% url 'accounts:dashboard' %}">Tableau de bord</a>
+                <span aria-hidden="true">/</span>
+                <span aria-current="page">Profil client</span>
+            </nav>
+            <header class="profile-hero">
+                <div class="profile-hero-info">
+                    <div>
+                        <p class="profile-hero-eyebrow">Espace client</p>
+                        <div class="hero-header-group">
+                            <div class="hero-icon-wrapper"
+                                style="width: 2.5rem; height: 2.5rem; background: rgba(255,255,255,0.2); color: #fff; box-shadow: none;">
+                                <svg class="icon-lg" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                                    fill="none">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                                </svg>
+                            </div>
+                            <h1 style="margin-bottom: 0;">Profil client</h1>
+                        </div>
+                        <p class="profile-hero-summary">
+                            {{ profile.company_name|default:"Compte individuel" }} • {{ profile.email }}
+                        </p>
+                        <p class="profile-hero-description">Actualisez vos coordonnées et gardez votre accès
+                            sécurisé.</p>
+                    </div>
+                </div>
             </header>
-            <div class="profile-grid">
-                <article class="profile-card">
-                    <h2>Informations générales</h2>
-                    <form method="post" novalidate>
-                        {% csrf_token %}
-                        <input type="hidden" name="form_name" value="profile">
-                        {% if profile_form.non_field_errors %}
+            <div class="profile-highlights" aria-label="Résumé rapide du compte">
+                <article class="profile-highlight">
+                    <span class="profile-highlight-label">Courriel principal</span>
+                    <p class="profile-highlight-value">{{ profile.email }}</p>
+                    <small>Nous vous avisons par ce courriel pour chaque commande.</small>
+                </article>
+                <article class="profile-highlight">
+                    <span class="profile-highlight-label">Téléphone</span>
+                    <p class="profile-highlight-value">
+                        {{ profile.phone|default:"Ajouter un numéro" }}
+                    </p>
+                    <small>Un numéro mobile accélère le suivi des livraisons.</small>
+                </article>
+                <article class="profile-highlight">
+                    <span class="profile-highlight-label">Ville</span>
+                    <p class="profile-highlight-value">
+                        {{ profile.address.city|default:"À préciser" }}
+                    </p>
+                    <small>Utilisée pour générer vos soumissions et factures.</small>
+                </article>
+            </div>
+            <div class="profile-layout">
+                <div class="profile-column profile-column-main">
+                    <article class="profile-card profile-form-card">
+                        <div class="profile-card-header">
+                            <div>
+                                <p class="profile-card-eyebrow">Coordonnées</p>
+                                <h2>Informations générales</h2>
+                                <p>Indiquez vos renseignements d’entreprise et d’expédition.</p>
+                            </div>
+                            <span class="profile-pill profile-pill-neutral">Synchronisé</span>
+                        </div>
+                        <form method="post" novalidate class="profile-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_name" value="profile">
+                            {% if profile_form.non_field_errors %}
                             <div class="form-errors" role="alert">
                                 {% for error in profile_form.non_field_errors %}
-                                    <p>{{ error }}</p>
+                                <p>{{ error }}</p>
                                 {% endfor %}
                             </div>
-                        {% endif %}
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="{{ profile_form.company_name.id_for_label }}">{{ profile_form.company_name.label }}</label>
-                                {{ profile_form.company_name }}
-                                {% if profile_form.company_name.errors %}
-                                    <div class="field-error" role="alert">
-                                        {% for error in profile_form.company_name.errors %}<p>{{ error }}</p>{% endfor %}
+                            {% endif %}
+                            <div class="form-segment">
+                                <div class="form-segment-header">
+                                    <div>
+                                        <p class="form-segment-title">Entreprise</p>
+                                        <p class="form-segment-description">Affiché sur les factures et soumissions.</p>
                                     </div>
-                                {% endif %}
+                                    <span class="profile-pill profile-pill-muted">Optionnel</span>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="{{ profile_form.company_name.id_for_label }}">Entreprise</label>
+                                        {{ profile_form.company_name }}
+                                        {% if profile_form.company_name.errors %}
+                                        <div class="field-error" role="alert">
+                                            {% for error in profile_form.company_name.errors %}
+                                            <p>{{ error }}</p>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
                             </div>
+                            <div class="form-segment">
+                                <div class="form-segment-header">
+                                    <div>
+                                        <p class="form-segment-title">Contact principal</p>
+                                        <p class="form-segment-description">Utilisé pour vous identifier dans Tryton.
+                                        </p>
+                                    </div>
+                                    <span class="profile-pill profile-pill-success">Requis</span>
+                                </div>
+                                <div class="form-row two-columns">
+                                    <div class="form-group">
+                                        <label for="{{ profile_form.first_name.id_for_label }}">Prénom</label>
+                                        {{ profile_form.first_name }}
+                                        {% if profile_form.first_name.errors %}
+                                        <div class="field-error" role="alert">
+                                            {% for error in profile_form.first_name.errors %}
+                                            <p>{{ error }}</p>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="{{ profile_form.last_name.id_for_label }}">Nom</label>
+                                        {{ profile_form.last_name }}
+                                        {% if profile_form.last_name.errors %}
+                                        <div class="field-error" role="alert">
+                                            {% for error in profile_form.last_name.errors %}
+                                            <p>{{ error }}</p>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="{{ profile_form.email.id_for_label }}">Courriel (identifiant)</label>
+                                        {{ profile_form.email }}
+                                    </div>
+                                    <div class="form-group phone-field-group"
+                                        data-phone-utils-url="{% static 'vendor/intl-tel-input/js/utils.js' %}">
+                                        <label for="{{ profile_form.phone.id_for_label }}">Téléphone</label>
+                                        {{ profile_form.phone }}
+                                        {% if profile_form.phone.errors %}
+                                        <div class="field-error" role="alert">
+                                            {% for error in profile_form.phone.errors %}
+                                            <p>{{ error }}</p>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                        <div id="phone-client-error" class="field-error is-hidden" role="alert"
+                                            aria-live="polite"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-segment">
+                                <div class="form-segment-header">
+                                    <div>
+                                        <p class="form-segment-title">Adresse principale</p>
+                                        <p class="form-segment-description">Alimente vos bordereaux et confirmations.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="{{ profile_form.address.id_for_label }}">Adresse</label>
+                                        {{ profile_form.address }}
+                                        {% if profile_form.address.errors %}
+                                        <div class="field-error" role="alert">
+                                            {% for error in profile_form.address.errors %}
+                                            <p>{{ error }}</p>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="form-row two-columns">
+                                    <div class="form-group">
+                                        <label for="{{ profile_form.city.id_for_label }}">Ville</label>
+                                        {{ profile_form.city }}
+                                        {% if profile_form.city.errors %}
+                                        <div class="field-error" role="alert">
+                                            {% for error in profile_form.city.errors %}
+                                            <p>{{ error }}</p>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="{{ profile_form.postal_code.id_for_label }}">Code postal</label>
+                                        {{ profile_form.postal_code }}
+                                        {% if profile_form.postal_code.errors %}
+                                        <div class="field-error" role="alert">
+                                            {% for error in profile_form.postal_code.errors %}
+                                            <p>{{ error }}</p>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">Enregistrer les changements</button>
+                                <p class="form-note">La mise à jour apparaît dans Tryton en quelques secondes.</p>
+                            </div>
+                        </form>
+                    </article>
+                    <article class="profile-card profile-form-card">
+                        <div class="profile-card-header">
+                            <div>
+                                <p class="profile-card-eyebrow">Sécurité</p>
+                                <h2>Mot de passe</h2>
+                                <p>Choisissez une phrase secrète robuste pour protéger vos commandes.</p>
+                            </div>
+                            <span class="profile-pill profile-pill-accent">Conseillé</span>
                         </div>
-                        <div class="form-row two-columns">
-                            <div class="form-group">
-                                <label for="{{ profile_form.first_name.id_for_label }}">{{ profile_form.first_name.label }}</label>
-                                {{ profile_form.first_name }}
-                                {% if profile_form.first_name.errors %}
-                                    <div class="field-error" role="alert">
-                                        {% for error in profile_form.first_name.errors %}<p>{{ error }}</p>{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            <div class="form-group">
-                                <label for="{{ profile_form.last_name.id_for_label }}">{{ profile_form.last_name.label }}</label>
-                                {{ profile_form.last_name }}
-                                {% if profile_form.last_name.errors %}
-                                    <div class="field-error" role="alert">
-                                        {% for error in profile_form.last_name.errors %}<p>{{ error }}</p>{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="{{ profile_form.email.id_for_label }}">{{ profile_form.email.label }}</label>
-                                {{ profile_form.email }}
-                            </div>
-                            <div class="form-group phone-field-group" data-phone-utils-url="{% static 'vendor/intl-tel-input/js/utils.js' %}">
-                                <label for="{{ profile_form.phone.id_for_label }}">{{ profile_form.phone.label }}</label>
-                                {{ profile_form.phone }}
-                                {% if profile_form.phone.errors %}
-                                    <div class="field-error" role="alert">
-                                        {% for error in profile_form.phone.errors %}<p>{{ error }}</p>{% endfor %}
-                                    </div>
-                                {% endif %}
-                                <div id="phone-client-error" class="field-error is-hidden" role="alert" aria-live="polite"></div>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="{{ profile_form.address.id_for_label }}">{{ profile_form.address.label }}</label>
-                                {{ profile_form.address }}
-                                {% if profile_form.address.errors %}
-                                    <div class="field-error" role="alert">
-                                        {% for error in profile_form.address.errors %}<p>{{ error }}</p>{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="form-row two-columns">
-                            <div class="form-group">
-                                <label for="{{ profile_form.city.id_for_label }}">{{ profile_form.city.label }}</label>
-                                {{ profile_form.city }}
-                                {% if profile_form.city.errors %}
-                                    <div class="field-error" role="alert">
-                                        {% for error in profile_form.city.errors %}<p>{{ error }}</p>{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            <div class="form-group">
-                                <label for="{{ profile_form.postal_code.id_for_label }}">{{ profile_form.postal_code.label }}</label>
-                                {{ profile_form.postal_code }}
-                                {% if profile_form.postal_code.errors %}
-                                    <div class="field-error" role="alert">
-                                        {% for error in profile_form.postal_code.errors %}<p>{{ error }}</p>{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Enregistrer les changements</button>
-                    </form>
-                </article>
-                <article class="profile-card">
-                    <h2>Mot de passe</h2>
-                    <form method="post" novalidate>
-                        {% csrf_token %}
-                        <input type="hidden" name="form_name" value="password">
-                        {% if password_form.non_field_errors %}
+                        <form method="post" novalidate class="profile-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_name" value="password">
+                            {% if password_form.non_field_errors %}
                             <div class="form-errors" role="alert">
                                 {% for error in password_form.non_field_errors %}
-                                    <p>{{ error }}</p>
+                                <p>{{ error }}</p>
                                 {% endfor %}
                             </div>
-                        {% endif %}
-                        <div class="form-group">
-                            <label for="{{ password_form.current_password.id_for_label }}">{{ password_form.current_password.label }}</label>
-                            {{ password_form.current_password }}
-                            {% if password_form.current_password.errors %}
-                                <div class="field-error" role="alert">
-                                    {% for error in password_form.current_password.errors %}<p>{{ error }}</p>{% endfor %}
-                                </div>
                             {% endif %}
-                        </div>
-                        <div class="form-group">
-                            <label for="{{ password_form.new_password1.id_for_label }}">{{ password_form.new_password1.label }}</label>
-                            {{ password_form.new_password1 }}
-                            <small class="form-help">{{ password_form.new_password1.help_text }}</small>
-                            {% if password_form.new_password1.errors %}
-                                <div class="field-error" role="alert">
-                                    {% for error in password_form.new_password1.errors %}<p>{{ error }}</p>{% endfor %}
+                            <div class="form-segment">
+                                <div class="form-group">
+                                    <label for="{{ password_form.current_password.id_for_label }}">Mot de passe actuel</label>
+                                    {{ password_form.current_password }}
+                                    {% if password_form.current_password.errors %}
+                                    <div class="field-error" role="alert">
+                                        {% for error in password_form.current_password.errors %}
+                                        <p>{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
                                 </div>
-                            {% endif %}
-                        </div>
-                        <div class="form-group">
-                            <label for="{{ password_form.new_password2.id_for_label }}">{{ password_form.new_password2.label }}</label>
-                            {{ password_form.new_password2 }}
-                            {% if password_form.new_password2.errors %}
-                                <div class="field-error" role="alert">
-                                    {% for error in password_form.new_password2.errors %}<p>{{ error }}</p>{% endfor %}
+                                <div class="form-row two-columns">
+                                    <div class="form-group">
+                                        <label for="{{ password_form.new_password1.id_for_label }}">Nouveau mot de passe</label>
+                                        {{ password_form.new_password1 }}
+                                        <small class="form-help">{{ password_form.new_password1.help_text }}</small>
+                                        {% if password_form.new_password1.errors %}
+                                        <div class="field-error" role="alert">
+                                            {% for error in password_form.new_password1.errors %}
+                                            <p>{{ error }}</p>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="{{ password_form.new_password2.id_for_label }}">Confirmez le nouveau mot de passe</label>
+                                        {{ password_form.new_password2 }}
+                                        {% if password_form.new_password2.errors %}
+                                        <div class="field-error" role="alert">
+                                            {% for error in password_form.new_password2.errors %}
+                                            <p>{{ error }}</p>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
                                 </div>
-                            {% endif %}
-                        </div>
-                        <button type="submit" class="btn btn-secondary">Mettre à jour le mot de passe</button>
-                    </form>
-                </article>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-secondary">Mettre à jour le mot de passe</button>
+                                <p class="form-note">Utilisez au moins 12 caractères et mélangez lettres, chiffres et
+                                    symboles.</p>
+                            </div>
+                        </form>
+                    </article>
+                </div>
+                <div class="profile-column profile-column-aside">
+                    <section class="profile-sidecard">
+                        <h3>Résumé de la fiche</h3>
+                        <dl class="profile-meta-list">
+                            <div class="profile-meta-row">
+                                <dt>Identifiant</dt>
+                                <dd>{{ profile.login }}</dd>
+                            </div>
+                            <div class="profile-meta-row">
+                                <dt>Entreprise</dt>
+                                <dd>{{ profile.company_name|default:"Compte individuel" }}</dd>
+                            </div>
+                            <div class="profile-meta-row">
+                                <dt>Adresse</dt>
+                                <dd>
+                                    {% if profile.address.street %}
+                                    {{ profile.address.street }}<br>
+                                    {% endif %}
+                                    {% if profile.address.city %}
+                                    {{ profile.address.city }}
+                                    {% else %}
+                                    Ville à confirmer
+                                    {% endif %}
+                                    {% if profile.address.postal_code %}
+                                    , {{ profile.address.postal_code }}
+                                    {% endif %}
+                                </dd>
+                            </div>
+                            <div class="profile-meta-row">
+                                <dt>ID Tryton</dt>
+                                <dd>#{{ profile.party_id }}</dd>
+                            </div>
+                        </dl>
+                        <p class="profile-sidecard-note">Ces données alimentent vos commandes et documents officiels.
+                        </p>
+                    </section>
+                    <section class="profile-sidecard profile-sidecard--accent">
+                        <h3>Besoin d’aide&nbsp;?</h3>
+                        <p>Notre équipe service client répond rapidement à vos questions sur la facturation, les
+                            livraisons ou la sécurité de votre compte.</p>
+                        <ul class="profile-support-list">
+                            <li><strong>Courriel</strong> <a href="mailto:info@paletteitf.ca">info@paletteitf.ca</a>
+                            </li>
+                            <li><strong>Téléphone</strong> <a href="tel:+14186712814">418-671-2814</a></li>
+                        </ul>
+                        <a href="{% url 'core:home' %}#contact" class="btn btn-tertiary">Parler à l’équipe</a>
+                    </section>
+                </div>
             </div>
         </div>
     </section>
@@ -160,109 +330,109 @@
 {% endblock %}
 
 {% block extra_scripts %}
-    {{ block.super }}
-    <script src="{% static 'vendor/intl-tel-input/js/intlTelInput.min.js' %}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const phoneInput = document.getElementById('id_phone');
-            if (!phoneInput || !window.intlTelInput) {
+{{ block.super }}
+<script src="{% static 'vendor/intl-tel-input/js/intlTelInput.min.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const phoneInput = document.getElementById('id_phone');
+        if (!phoneInput || !window.intlTelInput) {
+            return;
+        }
+        const phoneGroup = document.querySelector('.phone-field-group');
+        const utilsScriptUrl = phoneGroup ? phoneGroup.dataset.phoneUtilsUrl : undefined;
+        const errorContainer = document.getElementById('phone-client-error');
+        const form = phoneInput.form;
+
+        const iti = window.intlTelInput(phoneInput, {
+            initialCountry: 'ca',
+            preferredCountries: ['ca', 'us'],
+            autoPlaceholder: 'polite',
+            nationalMode: false,
+            formatOnDisplay: true,
+            utilsScript: utilsScriptUrl,
+        });
+
+        const errorMessages = {
+            0: "Numéro de téléphone invalide.",
+            1: "L’indicatif du pays est invalide.",
+            2: "Le numéro est trop court pour ce pays.",
+            3: "Le numéro est trop long pour ce pays.",
+            4: "Numéro de téléphone invalide.",
+        };
+
+        function showError(message) {
+            if (!errorContainer) {
                 return;
             }
-            const phoneGroup = document.querySelector('.phone-field-group');
-            const utilsScriptUrl = phoneGroup ? phoneGroup.dataset.phoneUtilsUrl : undefined;
-            const errorContainer = document.getElementById('phone-client-error');
-            const form = phoneInput.form;
+            errorContainer.textContent = message;
+            errorContainer.classList.remove('is-hidden');
+        }
 
-            const iti = window.intlTelInput(phoneInput, {
-                initialCountry: 'ca',
-                preferredCountries: ['ca', 'us'],
-                autoPlaceholder: 'polite',
-                nationalMode: false,
-                formatOnDisplay: true,
-                utilsScript: utilsScriptUrl,
+        function clearError() {
+            if (!errorContainer) {
+                return;
+            }
+            errorContainer.textContent = "";
+            errorContainer.classList.add('is-hidden');
+        }
+
+        function validateNumber() {
+            const value = phoneInput.value.trim();
+            if (value === "") {
+                clearError();
+                return true;
+            }
+            if (typeof iti.isValidNumber !== "function") {
+                return true;
+            }
+            if (iti.isValidNumber()) {
+                clearError();
+                return true;
+            }
+            const code = iti.getValidationError();
+            showError(errorMessages[code] || "Numéro de téléphone invalide.");
+            return false;
+        }
+
+        function normalizeNumber() {
+            if (!phoneInput.value.trim()) {
+                return;
+            }
+            try {
+                if (window.intlTelInputUtils) {
+                    phoneInput.value = iti.getNumber(window.intlTelInputUtils.numberFormat.E164);
+                } else {
+                    phoneInput.value = iti.getNumber();
+                }
+            } catch (error) {
+                console.warn("Normalisation du numéro impossible", error);
+            }
+        }
+
+        function attachHandlers() {
+            phoneInput.addEventListener('input', validateNumber);
+            phoneInput.addEventListener('blur', () => {
+                if (validateNumber()) {
+                    normalizeNumber();
+                }
             });
-
-            const errorMessages = {
-                0: "Numéro de téléphone invalide.",
-                1: "L’indicatif du pays est invalide.",
-                2: "Le numéro est trop court pour ce pays.",
-                3: "Le numéro est trop long pour ce pays.",
-                4: "Numéro de téléphone invalide.",
-            };
-
-            function showError(message) {
-                if (!errorContainer) {
-                    return;
-                }
-                errorContainer.textContent = message;
-                errorContainer.classList.remove('is-hidden');
-            }
-
-            function clearError() {
-                if (!errorContainer) {
-                    return;
-                }
-                errorContainer.textContent = "";
-                errorContainer.classList.add('is-hidden');
-            }
-
-            function validateNumber() {
-                const value = phoneInput.value.trim();
-                if (value === "") {
-                    clearError();
-                    return true;
-                }
-                if (typeof iti.isValidNumber !== "function") {
-                    return true;
-                }
-                if (iti.isValidNumber()) {
-                    clearError();
-                    return true;
-                }
-                const code = iti.getValidationError();
-                showError(errorMessages[code] || "Numéro de téléphone invalide.");
-                return false;
-            }
-
-            function normalizeNumber() {
-                if (!phoneInput.value.trim()) {
-                    return;
-                }
-                try {
-                    if (window.intlTelInputUtils) {
-                        phoneInput.value = iti.getNumber(window.intlTelInputUtils.numberFormat.E164);
-                    } else {
-                        phoneInput.value = iti.getNumber();
+            if (form) {
+                form.addEventListener('submit', (event) => {
+                    if (!validateNumber()) {
+                        event.preventDefault();
+                        phoneInput.focus();
+                        return;
                     }
-                } catch (error) {
-                    console.warn("Normalisation du numéro impossible", error);
-                }
-            }
-
-            function attachHandlers() {
-                phoneInput.addEventListener('input', validateNumber);
-                phoneInput.addEventListener('blur', () => {
-                    if (validateNumber()) {
-                        normalizeNumber();
-                    }
+                    normalizeNumber();
                 });
-                if (form) {
-                    form.addEventListener('submit', (event) => {
-                        if (!validateNumber()) {
-                            event.preventDefault();
-                            phoneInput.focus();
-                            return;
-                        }
-                        normalizeNumber();
-                    });
-                }
             }
+        }
 
-            if (iti.promise) {
-                iti.promise.then(attachHandlers);
-            } else {
-                attachHandlers();
-            }
-        });
-    </script>
+        if (iti.promise) {
+            iti.promise.then(attachHandlers);
+        } else {
+            attachHandlers();
+        }
+    });
+</script>
 {% endblock %}

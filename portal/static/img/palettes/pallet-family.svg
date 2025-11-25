@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" role="img" aria-label="Palette de bois stylisée">
+  <defs>
+    <linearGradient id="pf-wood" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#cfa671"/>
+      <stop offset="100%" stop-color="#a8773d"/>
+    </linearGradient>
+    <linearGradient id="pf-dark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#b7844d"/>
+      <stop offset="100%" stop-color="#8c5f2d"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="#0e1a12"/>
+  <g transform="translate(180,220)">
+    <rect x="0" y="220" width="760" height="80" rx="14" fill="url(#pf-dark)" opacity="0.92"/>
+    <rect x="0" y="150" width="760" height="80" rx="14" fill="url(#pf-wood)" opacity="0.9"/>
+    <rect x="0" y="80" width="760" height="80" rx="14" fill="url(#pf-dark)" opacity="0.9"/>
+    <rect x="0" y="10" width="760" height="80" rx="14" fill="url(#pf-wood)" opacity="0.88"/>
+  </g>
+  <rect x="0" y="0" width="1200" height="800" fill="url(#pf-dark)" opacity="0.15"/>
+  <rect x="0" y="0" width="1200" height="800" fill="url(#pf-wood)" opacity="0.08"/>
+</svg>
