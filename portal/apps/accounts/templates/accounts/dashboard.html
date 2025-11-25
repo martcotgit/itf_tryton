@@ -29,7 +29,7 @@
                         </div>
                         <p class="profile-hero-summary">
                             {{ request.user.email|default:request.user.username }} •
-                            {{ summary.orders_to_complete_count|default:0 }} commande{{ summary.orders_to_complete_count|default:0|pluralize:"s" }}
+                            {{ summary.orders_to_complete_label|default:"0 commande" }}
                             à compléter
                         </p>
                         <p class="profile-hero-description">
@@ -164,8 +164,6 @@
                                     </p>
                                 </div>
                                 <div class="activity-actions">
-                                    <span class="status-chip status-{{ item.status_style }}">{{ item.status_label
-                                        }}</span>
                                     <a class="activity-link stretched-link" href="{{ item.url }}">
                                         <span class="visually-hidden">Ouvrir</span>
                                         <svg class="icon" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"

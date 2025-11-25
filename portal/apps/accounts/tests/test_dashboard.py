@@ -128,3 +128,34 @@ class DashboardGreetingTests(TestCase):
 
         self.assertEqual(items[0]["status_label"], "En attente")
         self.assertEqual(items[1]["status_label"], "Brouillon")
+
+    def test_status_label_html_placeholder_is_ignored(self):
+        view = ClientDashboardView()
+        invoice = PortalInvoiceSummary(
+            id=3,
+            number="INV-3",
+            issue_date=None,
+            due_date=None,
+            state="waiting_payment",
+            state_label="&#123;&#123; item.status_label &#125;&#125;",
+            total_amount=None,
+            amount_due=None,
+            currency_label=None,
+        )
+        order = PortalOrderSummary(
+            id=4,
+            number="SO-3",
+            reference=None,
+            state="confirmed",
+            state_label="&#123;&#123; item.status_label &#125;&#125;",
+            shipping_date=None,
+            total_amount=None,
+            currency_id=None,
+            currency_label=None,
+            create_date=None,
+        )
+
+        items = view._build_activity_feed(invoices=[invoice], orders=[order])
+
+        self.assertEqual(items[0]["status_label"], "En attente")
+        self.assertEqual(items[1]["status_label"], "Confirmée")

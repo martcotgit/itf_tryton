@@ -2,6 +2,7 @@ from datetime import date
 from decimal import Decimal
 from math import ceil
 from typing import Optional
+from html import unescape
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login
@@ -135,6 +136,7 @@ class ClientDashboardView(LoginRequiredMixin, TemplateView):
             "invoices_currency": None,
             "orders_active_count": 0,
             "orders_to_complete_count": 0,
+            "orders_to_complete_label": "0 commande",
         }
 
         if invoices_result:
@@ -159,6 +161,9 @@ class ClientDashboardView(LoginRequiredMixin, TemplateView):
             login=login,
             statuses=("confirmed", "processing", "sent"),
         )
+        count = summary["orders_to_complete_count"]
+        plural = "s" if count != 1 else ""
+        summary["orders_to_complete_label"] = f"{count} commande{plural}"
         return summary
 
     def _count_orders(self, *, login: str, statuses: tuple[str, ...]) -> int:
@@ -222,23 +227,28 @@ class ClientDashboardView(LoginRequiredMixin, TemplateView):
 
     @staticmethod
     def _status_label(kind: str, label: str | None, state: str | None) -> str:
-        value = (label or "").strip()
-        invalid = not value or "{{" in value or "}}" in value
-
-        if not invalid:
-            return value
-
-        state_key = (state or "").strip().lower()
+        state_key = unescape((state or "")).strip().lower()
+        mapping = None
         if "{{" in state_key or "}}" in state_key:
             state_key = ""
         if kind == "invoice":
             from .services import PortalInvoiceService
 
-            return PortalInvoiceService.STATE_LABELS.get(state_key, state_key.capitalize() or "Inconnu")
+            mapping = PortalInvoiceService.STATE_LABELS.get(state_key)
+        else:
+            from .services import PortalOrderService
 
-        from .services import PortalOrderService
+            mapping = PortalOrderService.STATE_LABELS.get(state_key)
 
-        return PortalOrderService.STATE_LABELS.get(state_key, state_key.capitalize() or "Inconnu")
+        if mapping:
+            return mapping
+
+        value = unescape((label or "").strip())
+        invalid = (not value) or ("{{" in value) or ("}}" in value) or ("item.status_label" in value.lower())
+        if not invalid:
+            return value
+
+        return state_key.capitalize() or "Inconnu"
 
     @staticmethod
     def _status_style(kind: str, state: str | None) -> str:

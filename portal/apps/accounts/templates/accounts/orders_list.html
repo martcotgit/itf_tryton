@@ -16,21 +16,23 @@
         justify-content: space-between;
         align-items: flex-start;
         gap: 1rem;
-        padding: 1.25rem 1.5rem;
-        background: linear-gradient(135deg, rgba(45, 90, 39, 0.08), rgba(74, 124, 89, 0.06));
-        border-radius: 14px;
-        border: 1px solid rgba(45, 90, 39, 0.08);
-        box-shadow: var(--shadow-light);
+        padding: 1.75rem 1.85rem;
+        background: linear-gradient(120deg, var(--primary-color), #3f7c3c);
+        border-radius: 18px;
+        border: none;
+        box-shadow: var(--shadow);
         margin-bottom: 1.25rem;
+        color: var(--white);
     }
 
     .orders-hero h1 {
         margin-bottom: 0.35rem;
         font-size: 1.45rem;
+        color: var(--white);
     }
 
     .orders-hero p {
-        color: var(--text-light);
+        color: rgba(255, 255, 255, 0.92);
         font-size: 0.95rem;
     }
 
@@ -39,6 +41,16 @@
         align-items: center;
         gap: 0.75rem;
         flex-wrap: wrap;
+    }
+
+    .orders-hero .hero-icon-wrapper {
+        background: rgba(255, 255, 255, 0.2);
+        color: var(--white);
+        box-shadow: none;
+    }
+
+    .orders-hero .icon-xl {
+        color: var(--white);
     }
 
     .orders-grid {
