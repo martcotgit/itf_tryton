@@ -67,6 +67,9 @@ services:
       - traefik.http.routers.tryton-staging.tls=true
       - traefik.http.routers.tryton-staging.tls.certresolver=letsencrypt
       - traefik.http.services.tryton-staging.loadbalancer.server.port=8000
+      # Prevent indexing
+      - traefik.http.middlewares.tryton-noindex.headers.customresponseheaders.X-Robots-Tag=noindex,nofollow,noarchive
+      - traefik.http.routers.tryton-staging.middlewares=tryton-noindex
 
   portal:
     image: ilnutransforme/portail-staging:latest
@@ -89,18 +92,21 @@ services:
       TRYTON_SESSION_TTL: "300"
       TRYTON_TIMEOUT: "10"
       TRYTON_RETRY_ATTEMPTS: "3"
-      PORTAL_ALLOWED_HOSTS: paletteitf.ca,portal,localhost
+      PORTAL_ALLOWED_HOSTS: test.paletteitf.ca,portal,localhost
       PORTAL_ALLOW_ALL_HOSTS: "0"
     ports:
       - "8001:8000"
     restart: always
     labels:
       - traefik.enable=true
-      - traefik.http.routers.portal-staging.rule=Host(`paletteitf.ca`)
+      - traefik.http.routers.portal-staging.rule=Host(`test.paletteitf.ca`)
       - traefik.http.routers.portal-staging.entrypoints=websecure
       - traefik.http.routers.portal-staging.tls=true
       - traefik.http.routers.portal-staging.tls.certresolver=letsencrypt
       - traefik.http.services.portal-staging.loadbalancer.server.port=8000
+      # Prevent indexing
+      - traefik.http.middlewares.portal-noindex.headers.customresponseheaders.X-Robots-Tag=noindex,nofollow,noarchive
+      - traefik.http.routers.portal-staging.middlewares=portal-noindex
 
 volumes:
   db_data:
