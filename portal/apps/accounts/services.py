@@ -1554,6 +1554,28 @@ class PortalInvoiceService:
         self.account_service = account_service or PortalAccountService(client=self.client)
         self._base_context: dict[str, Any] = {}
 
+    def count_invoices(self, *, login: str, statuses: Sequence[str]) -> int:
+        """Compte le nombre de factures dans les états donnés."""
+        profile = self.account_service.fetch_client_profile(login=login)
+        context = self._rpc_context()
+        domain: list[object] = [
+            ("party", "=", profile.party_id),
+            ("type", "=", "out"),
+            ("state", "in", statuses),
+        ]
+        try:
+            return int(
+                self.client.call(
+                    "model.account.invoice",
+                    "search_count",
+                    [domain, context],
+                )
+                or 0
+            )
+        except TrytonRPCError as exc:
+            logger.warning("Impossible de compter les factures pour %s: %s", profile.party_id, exc)
+            return 0
+
     def list_invoices(
         self,
         *,

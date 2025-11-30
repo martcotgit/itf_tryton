@@ -137,29 +137,47 @@ class ClientDashboardView(LoginRequiredMixin, TemplateView):
             "orders_active_count": 0,
             "orders_to_complete_count": 0,
             "orders_to_complete_label": "0 commande",
+            "invoices_breakdown": [],
+            "orders_breakdown": [],
         }
 
+        # Invoices stats
+        inv_draft = self.invoice_service.count_invoices(login=login, statuses=["draft"])
+        inv_posted = self.invoice_service.count_invoices(login=login, statuses=["posted"])
+        inv_validated = self.invoice_service.count_invoices(login=login, statuses=["validated"])
+        inv_waiting = self.invoice_service.count_invoices(login=login, statuses=["waiting_payment"])
+        summary["invoices_breakdown"] = [
+            {"label": "Brouillon", "count": inv_draft},
+            {"label": "Comptabilisées", "count": inv_posted},
+            {"label": "Validées", "count": inv_validated},
+            {"label": "En attente", "count": inv_waiting},
+        ]
+        summary["invoices_due_count"] = inv_posted + inv_validated + inv_waiting + inv_draft
+
+        # Orders stats
+        ord_confirmed = self._count_orders(login=login, statuses=("confirmed",))
+        ord_processing = self._count_orders(login=login, statuses=("processing", "sent"))
+        summary["orders_breakdown"] = [
+            {"label": "Confirmées", "count": ord_confirmed},
+            {"label": "En traitement", "count": ord_processing},
+        ]
+        summary["orders_active_count"] = ord_confirmed + ord_processing
+
+        # Keep total amount from recent list for now (best effort without backend sum)
         if invoices_result:
             due_total = Decimal("0")
             currency = None
-            due_count = 0
             for invoice in invoices_result.invoices:
                 if invoice.amount_due is not None and invoice.amount_due > 0:
                     due_total += invoice.amount_due
-                    due_count += 1
                 if not currency and invoice.currency_label:
                     currency = invoice.currency_label
-            summary["invoices_due_count"] = due_count
-            summary["invoices_due_total"] = due_total if due_count else None
+            summary["invoices_due_total"] = due_total
             summary["invoices_currency"] = currency
 
         summary["orders_to_complete_count"] = self._count_orders(
             login=login,
             statuses=("draft", "quotation"),
-        )
-        summary["orders_active_count"] = self._count_orders(
-            login=login,
-            statuses=("confirmed", "processing", "sent"),
         )
         count = summary["orders_to_complete_count"]
         plural = "s" if count != 1 else ""

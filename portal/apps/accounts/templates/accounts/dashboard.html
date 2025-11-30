@@ -14,16 +14,7 @@
             <header class="profile-hero dashboard-hero">
                 <div class="profile-hero-info">
                     <div>
-                        <p class="profile-hero-eyebrow">Espace client</p>
                         <div class="hero-header-group">
-                            <div class="hero-icon-wrapper"
-                                style="width: 2.5rem; height: 2.5rem; background: rgba(255,255,255,0.2); color: #fff; box-shadow: none;">
-                                <svg class="icon-lg" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-                                    fill="none">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M3 5.25h18M3 12h18M3 18.75h18" />
-                                </svg>
-                            </div>
                             <h1 style="margin-bottom: 0;">Re-bienvenue{% if greeting_name %}, {{ greeting_name }}{% endif %}&nbsp;!
                             </h1>
                         </div>
@@ -56,14 +47,14 @@
                         </div>
                         <span class="status-chip status-warning">À payer</span>
                     </div>
-                    <p class="summary-value">
-                        {{ summary.invoices_due_total|default:"0" }}
-                        <span class="summary-currency">{{ summary.invoices_currency|default:"" }}</span>
-                    </p>
-                    <p class="summary-subtitle">
-                        {{ summary.invoices_due_count }} facture{{ summary.invoices_due_count|default:0|pluralize:"s" }}
-                        en attente.
-                    </p>
+                    <div class="summary-stats">
+                        {% for stat in summary.invoices_breakdown %}
+                        <div class="stat-item">
+                            <span class="stat-count">{{ stat.count }}</span>
+                            <span class="stat-label">{{ stat.label }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
                     <div class="summary-actions">
                         <a href="{% url 'accounts:invoices-list' %}" class="btn btn-primary stretched-link">Consulter
                             mes factures</a>
@@ -81,131 +72,19 @@
                         </div>
                         <span class="status-chip status-info">En suivi</span>
                     </div>
-                    <p class="summary-value">
-                        {{ summary.orders_active_count|default:0 }}
-                    </p>
-                    <p class="summary-subtitle">Commandes confirmées ou en traitement.</p>
+                    <div class="summary-stats">
+                        {% for stat in summary.orders_breakdown %}
+                        <div class="stat-item">
+                            <span class="stat-count">{{ stat.count }}</span>
+                            <span class="stat-label">{{ stat.label }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
                     <div class="summary-actions">
-                        <a href="{% url 'accounts:orders-list' %}" class="btn btn-secondary stretched-link">Suivre mes
+                        <a href="{% url 'accounts:orders-list' %}" class="btn btn-primary stretched-link">Suivre mes
                             commandes</a>
                     </div>
                 </article>
-
-                <article class="summary-card card-accent-top card-accent-warning">
-                    <div class="summary-top">
-                        <div class="summary-label-group">
-                            <svg class="icon" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                            </svg>
-                            <p class="summary-label">Commandes à compléter</p>
-                        </div>
-                        <span class="status-chip status-warning">Action requise</span>
-                    </div>
-                    <p class="summary-value">
-                        {{ summary.orders_to_complete_count|default:0 }}
-                    </p>
-                    <p class="summary-subtitle">Brouillons ou soumissions à finaliser.</p>
-                    <div class="summary-actions">
-                        <a href="{% url 'accounts:orders-new' %}" class="btn btn-primary stretched-link">Nouvelle
-                            commande</a>
-                    </div>
-                </article>
-            </div>
-
-            <section class="dashboard-activity">
-                <div class="section-heading">
-                    <div>
-                        <p class="dashboard-kicker">Suivi</p>
-                        <h2>Activité récente</h2>
-                        <p class="dashboard-intro">Dernières factures et commandes des 90&nbsp;derniers jours.</p>
-                    </div>
-                    <div class="activity-links">
-                        <a class="btn btn-tertiary" href="{% url 'accounts:invoices-list' %}">Voir toutes les
-                            factures</a>
-                        <a class="btn btn-tertiary" href="{% url 'accounts:orders-list' %}">Voir toutes les
-                            commandes</a>
-                    </div>
-                </div>
-                <div class="activity-list">
-                    {% for item in activity_items %}
-                    <article class="activity-item">
-                        <div class="activity-icon type-{{ item.type }}">
-                            {% if item.type == "invoice" %}
-                            <svg class="icon" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                            </svg>
-                            {% else %}
-                            <svg class="icon" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.125-.504 1.125-1.125V14.25m-3 4.5V18m-6 0h6m-6 0F9 18 9 15.75 9 15.75M18.75 18V15.75m0 0L21 12a11.25 11.25 0 00-2.25-7.5h-13.5A11.25 11.25 0 003 12l2.25 3.75m13.5 0H5.25" />
-                            </svg>
-                            {% endif %}
-                        </div>
-                        <div class="activity-main">
-                            <div class="activity-meta">
-                                <span class="activity-type">
-                                    {% if item.type == "invoice" %}Facture{% else %}Commande{% endif %}
-                                </span>
-                                <span class="activity-date">
-                                    {% if item.date %}{{ item.date|date:"j M Y" }}{% else %}Date à venir{% endif %}
-                                </span>
-                            </div>
-                            <div class="activity-content">
-                                <div>
-                                    <p class="activity-title">{{ item.title }}</p>
-                                    <p class="activity-subtitle">
-                                        {% if item.amount %}
-                                        {{ item.amount }} {{ item.currency|default:"" }}
-                                        {% else %}
-                                        Montant à venir
-                                        {% endif %}
-                                    </p>
-                                </div>
-                                <div class="activity-actions">
-                                    <a class="activity-link stretched-link" href="{{ item.url }}">
-                                        <span class="visually-hidden">Ouvrir</span>
-                                        <svg class="icon" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-                                            fill="none">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                                        </svg>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </article>
-                    {% empty %}
-                    <p class="dashboard-intro">Aucune activité récente.</p>
-                    {% endfor %}
-                </div>
-            </section>
-
-            <section class="dashboard-help">
-                <div>
-                    <p class="dashboard-kicker">Aide rapide</p>
-                    <h2>On reste disponible pour vous aider</h2>
-                </div>
-                <div class="help-grid">
-                    <article class="help-card">
-                        <h3>Soutien</h3>
-                        <p>Besoin d’un coup de main? Écrivez-nous et notre équipe vous répond rapidement.</p>
-                        <a class="btn btn-primary" href="mailto:soutien@itf.ca">Nous écrire</a>
-                    </article>
-                    <article class="help-card">
-                        <h3>Ressources</h3>
-                        <p>Consultez la facturation et le suivi de commandes sans attendre.</p>
-                        <div class="help-actions">
-                            <a class="btn btn-secondary" href="{% url 'accounts:invoices-list' %}">Guide factures</a>
-                            <a class="btn btn-tertiary" href="{% url 'accounts:orders-list' %}">Guide commandes</a>
-                        </div>
-                    </article>
-                </div>
-            </section>
-
-            <div class="dashboard-actions">
-                <a href="{% url 'core:home' %}" class="btn btn-secondary">Retour au site</a>
             </div>
         </div>
     </section>

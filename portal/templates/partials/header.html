@@ -21,7 +21,15 @@
                 <a href="{% url 'core:services' %}" class="nav-link" role="menuitem">Services</a>
                 <a href="{% url 'core:home' %}#contact" class="nav-link" role="menuitem">Contact</a>
                 {% if request.user.is_authenticated %}
-                <a href="{% url 'accounts:dashboard' %}" class="nav-link" role="menuitem">Espace clients</a>
+                <div class="nav-item-has-submenu">
+                    <a href="{% url 'accounts:dashboard' %}" class="nav-link" role="menuitem" aria-haspopup="true" aria-expanded="false">Espace clients</a>
+                    <ul class="nav-submenu" role="menu">
+                        <li><a href="{% url 'accounts:profile' %}" class="nav-submenu-link" role="menuitem">Modifier mon profil</a></li>
+                        <li><a href="{% url 'accounts:orders-new' %}" class="nav-submenu-link" role="menuitem">Créer une commande</a></li>
+                        <li><a href="{% url 'accounts:orders-list' %}" class="nav-submenu-link" role="menuitem">Liste des commandes</a></li>
+                        <li><a href="{% url 'accounts:invoices-list' %}" class="nav-submenu-link" role="menuitem">Liste des factures</a></li>
+                    </ul>
+                </div>
                 <form action="{% url 'accounts:logout' %}" method="post" class="nav-logout-form" role="none">
                     {% csrf_token %}
                     <button type="submit" class="nav-button">Se déconnecter</button>

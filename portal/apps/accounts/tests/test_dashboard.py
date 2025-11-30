@@ -23,6 +23,9 @@ class NoopInvoiceService:
         pagination = PortalInvoicePagination(page=1, pages=1, page_size=5, total=0, has_next=False, has_previous=False)
         return PortalInvoiceListResult(invoices=[], pagination=pagination)
 
+    def count_invoices(self, *args, **kwargs):
+        return 0
+
 
 class NoopOrderService:
     def __init__(self, *args, **kwargs):
@@ -159,3 +162,41 @@ class DashboardGreetingTests(TestCase):
 
         self.assertEqual(items[0]["status_label"], "En attente")
         self.assertEqual(items[1]["status_label"], "Confirmée")
+
+
+class DashboardSummaryTests(TestCase):
+    def setUp(self):
+        self.view = ClientDashboardView()
+        self.view.request = type("Request", (), {"user": type("User", (), {"username": "test"})()})()
+        self.view.invoice_service = NoopInvoiceService()
+        self.view.order_service = NoopOrderService()
+
+    def test_build_summary_counts_waiting_payment_invoices(self):
+        def mock_count_invoices(login, statuses):
+            if "draft" in statuses:
+                return 1
+            if "posted" in statuses:
+                return 2
+            if "validated" in statuses:
+                return 3
+            if "waiting_payment" in statuses:
+                return 5
+            return 0
+
+        self.view.invoice_service.count_invoices = mock_count_invoices
+        # Also mock order counts to avoid errors
+        self.view.order_service.list_orders = lambda **kwargs: PortalOrderListResult(
+            orders=[], pagination=PortalOrderPagination(1, 1, 1, 0, False, False)
+        )
+
+        summary = self.view._build_summary(invoices_result=None, login="test")
+
+        # Check breakdown
+        breakdown = {item["label"]: item["count"] for item in summary["invoices_breakdown"]}
+        self.assertEqual(breakdown.get("Brouillon"), 1)
+        self.assertEqual(breakdown.get("Comptabilisées"), 2)
+        self.assertEqual(breakdown.get("Validées"), 3)
+        self.assertEqual(breakdown.get("En attente"), 5)
+
+        # Check total due count (1 + 2 + 3 + 5 = 11)
+        self.assertEqual(summary["invoices_due_count"], 11)

@@ -17,29 +17,22 @@
                     <div>
                         <p class="profile-hero-eyebrow">Commandes</p>
                         <div class="hero-header-group">
-                            <div class="hero-icon-wrapper"
-                                style="width: 2.5rem; height: 2.5rem; background: rgba(255,255,255,0.2); color: #fff; box-shadow: none;">
-                                <svg class="icon-lg" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-                                    fill="none">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                                </svg>
-                            </div>
                             <h1 style="margin-bottom: 0;">Nouvelle commande</h1>
                         </div>
                         <p class="profile-hero-description">Soumettez une commande en brouillon synchronisée avec Tryton.</p>
                     </div>
                 </div>
             </header>
-            <form method="post" novalidate class="order-form">
-                {% csrf_token %}
-                {% if form.non_field_errors %}
-                <div class="form-errors" role="alert">
-                    {% for error in form.non_field_errors %}
-                    <p>{{ error }}</p>
-                    {% endfor %}
-                </div>
-                {% endif %}
-                <div class="order-card">
+            <div class="order-card">
+                <form method="post" novalidate class="order-form">
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                    <div class="form-errors" role="alert">
+                        {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                     <h2>Informations générales</h2>
                     <div class="form-row two-columns">
                         <div class="form-group">
@@ -85,8 +78,7 @@
                             <small class="form-help">Laisser vide si aucune instruction spéciale n'est requise.</small>
                         </div>
                     </div>
-                </div>
-                <div class="order-card">
+
                     <h2>Lignes de commande</h2>
                     <p class="form-help">Ajoutez des lignes au fur et à mesure avec le bouton « Ajouter une ligne »
                         (maximum de 10 lignes). Chaque ligne affiche ses champs sur une seule rangée pour faciliter
@@ -135,12 +127,12 @@
                             {% include "accounts/includes/order_line_row.html" with line_form=line_formset.empty_form %}
                         </template>
                     </div>
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">Soumettre la commande</button>
-                    <a href="{% url 'accounts:dashboard' %}" class="btn btn-secondary">Annuler</a>
-                </div>
-            </form>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Soumettre la commande</button>
+                        <a href="{% url 'accounts:dashboard' %}" class="btn btn-secondary">Annuler</a>
+                    </div>
+                </form>
+            </div>
             {% include "accounts/includes/product_catalog_panel.html" with catalog_url=catalog_url %}
         </div>
     </section>

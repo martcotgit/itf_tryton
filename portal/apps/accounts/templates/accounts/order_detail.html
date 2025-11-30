@@ -110,20 +110,16 @@
                 <div class="status-badge state-{{ order.state|default:'indetermine' }}">{{ order.state_label }}</div>
             </div>
             <div>
-                {% if order.reference %}<div class="order-pill"><strong>Référence client :</strong> {{ order.reference
-                    }}</div>{% endif %}
+                {% if order.reference %}<div class="order-pill"><strong>Référence client :</strong> {{ order.reference }}</div>{% endif %}
             </div>
         </div>
 
         <div class="order-meta">
             <div class="order-pill"><strong>Date de création :</strong> {{ order.create_date|date:"Y-m-d"|default:"—" }}
             </div>
-            <div class="order-pill"><strong>Livraison prévue :</strong> {{ order.shipping_date|date:"Y-m-d"|default:"—"
-                }}</div>
-            <div class="order-pill"><strong>Total TTC :</strong> {{ order.total_amount|default:"—" }} {% if
-                order.currency_label %}{{ order.currency_label }}{% endif %}</div>
-            <div class="order-pill"><strong>Sous-total :</strong> {{ order.untaxed_amount|default:"—" }} {% if
-                order.currency_label %}{{ order.currency_label }}{% endif %}</div>
+            <div class="order-pill"><strong>Livraison prévue :</strong> {{ order.shipping_date|date:"Y-m-d"|default:"—" }}</div>
+            <div class="order-pill"><strong>Total TTC :</strong> {{ order.total_amount|default:"—" }} {% if order.currency_label %}{{ order.currency_label }}{% endif %}</div>
+            <div class="order-pill"><strong>Sous-total :</strong> {{ order.untaxed_amount|default:"—" }} {% if order.currency_label %}{{ order.currency_label }}{% endif %}</div>
         </div>
 
         <section class="order-lines">
@@ -143,10 +139,8 @@
                     <tr>
                         <td>{{ line.description|default:line.product }}</td>
                         <td>{{ line.quantity }}{% if line.unit %} {{ line.unit }}{% endif %}</td>
-                        <td>{% if line.unit_price %}{{ line.unit_price }}{% if order.currency_label %} {{
-                            order.currency_label }}{% endif %}{% else %}—{% endif %}</td>
-                        <td>{% if line.total %}{{ line.total }}{% if order.currency_label %} {{ order.currency_label
-                            }}{% endif %}{% else %}—{% endif %}</td>
+                        <td>{% if line.unit_price %}{{ line.unit_price }}{% if order.currency_label %} {{ order.currency_label }}{% endif %}{% else %}—{% endif %}</td>
+                        <td>{% if line.total %}{{ line.total }}{% if order.currency_label %} {{ order.currency_label }}{% endif %}{% else %}—{% endif %}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
