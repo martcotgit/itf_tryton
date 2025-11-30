@@ -36,10 +36,14 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    restart: always
+    volumes:
+      - redis_data:/data
+
   tryton:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
+    image: ilnutransforme/tryton-staging:latest
     depends_on:
       db:
         condition: service_healthy
@@ -48,21 +52,58 @@ services:
       TRYTON_ADMIN_PASSWORD: fMz1w652uRh1
     volumes:
       - ./config/trytond.conf:/etc/tryton/trytond.conf:ro
-      - ./tryton/modules:/opt/trytond/modules
-      - ./tryton/scripts:/opt/trytond/scripts:ro
+      # Modules and scripts are inside the image, but we can mount them if we want to override
+      # For staging, we should rely on the image content usually, but dev compose mounted them.
+      # I will remove the mounts for code (modules/scripts) to rely on the image,
+      # but keep config and filestore.
       - tryton_filestore:/var/lib/trytond
     ports:
       - "8000:8000"
     restart: always
     labels:
       - traefik.enable=true
-      - traefik.http.routers.tryton-staging.rule=Host(`erp.paletteitf.ca`)
+      - traefik.http.routers.tryton-staging.rule=Host(`test.erp.paletteitf.ca`)
       - traefik.http.routers.tryton-staging.entrypoints=websecure
       - traefik.http.routers.tryton-staging.tls=true
       - traefik.http.routers.tryton-staging.tls.certresolver=letsencrypt
       - traefik.http.services.tryton-staging.loadbalancer.server.port=8000
 
+  portal:
+    image: ilnutransforme/portail-staging:latest
+    command: python manage.py runserver 0.0.0.0:8000
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      tryton:
+        condition: service_started
+    environment:
+      DJANGO_SETTINGS_MODULE: itf_portal.settings.production
+      DATABASE_URL: postgresql://tryton:tryton@db:5432/portal
+      REDIS_URL: redis://redis:6379/0
+      TRYTON_RPC_URL: http://tryton:8000/
+      TRYTON_DATABASE: tryton
+      TRYTON_USER: admin
+      TRYTON_PASSWORD: fMz1w652uRh1
+      TRYTON_SESSION_TTL: "300"
+      TRYTON_TIMEOUT: "10"
+      TRYTON_RETRY_ATTEMPTS: "3"
+      PORTAL_ALLOWED_HOSTS: paletteitf.ca,portal,localhost
+      PORTAL_ALLOW_ALL_HOSTS: "0"
+    ports:
+      - "8001:8000"
+    restart: always
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.portal-staging.rule=Host(`paletteitf.ca`)
+      - traefik.http.routers.portal-staging.entrypoints=websecure
+      - traefik.http.routers.portal-staging.tls=true
+      - traefik.http.routers.portal-staging.tls.certresolver=letsencrypt
+      - traefik.http.services.portal-staging.loadbalancer.server.port=8000
+
 volumes:
   db_data:
   tryton_filestore:
   traefik_letsencrypt:
+  redis_data:
