@@ -16,3 +16,19 @@ tryton-shell:
 
 build:
 	$(DOCKER_COMPOSE) build
+
+# Staging commands
+staging-up:
+	$(DOCKER_COMPOSE) -f docker-compose-staging.yml up -d --remove-orphans
+
+staging-down:
+	$(DOCKER_COMPOSE) -f docker-compose-staging.yml down
+
+staging-logs:
+	$(DOCKER_COMPOSE) -f docker-compose-staging.yml logs -f
+
+staging-update-db:
+	$(DOCKER_COMPOSE) -f docker-compose-staging.yml exec tryton trytond-admin -c /etc/tryton/trytond.conf -d tryton --all
+
+staging-shell:
+	$(DOCKER_COMPOSE) -f docker-compose-staging.yml exec tryton bash
