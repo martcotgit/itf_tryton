@@ -42,7 +42,7 @@ class ClientAuthTests(TestCase):
             data={"username": "client@example.com", "password": "Motdepasse!123"},
         )
 
-        self.assertRedirects(response, self.dashboard_url)
+        self.assertRedirects(response, self.dashboard_url, fetch_redirect_response=False)
         user = self.UserModel.objects.get(username="client@example.com")
         self.assertEqual(user.email, "client@example.com")
         session_payload = self.client.session.get("tryton_session")
@@ -89,7 +89,7 @@ class ClientAuthTests(TestCase):
             data={"username": "client@example.com", "password": "Motdepasse!123"},
         )
 
-        self.assertRedirects(response, self.dashboard_url)
+        self.assertRedirects(response, self.dashboard_url, fetch_redirect_response=False)
         user = self.UserModel.objects.get(username="client@example.com")
         self.assertEqual(user.email, "client@example.com")
         self.assertEqual(user.first_name, "client@example.com")
