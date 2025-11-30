@@ -106,11 +106,12 @@ class PublicProductService:
         if not positive_template_ids:
             return []
         templates = self._read_templates(positive_template_ids, context)
+        positive_set = set(positive_template_ids)
 
         catalog: list[PublicProduct] = []
         for record in templates:
             template_id = self._extract_id(record.get("id"))
-            if template_id is None:
+            if template_id is None or template_id not in positive_set:
                 continue
             quantity = template_quantities.get(template_id, Decimal("0"))
             categories = self._extract_category_names(record.get("categories"))

@@ -382,7 +382,7 @@ class OrderCreateViewTests(TestCase):
 
         response = self.client.post(self.url, data=data)
 
-        self.assertRedirects(response, self.dashboard_url)
+        self.assertRedirects(response, self.dashboard_url, fetch_redirect_response=False)
         service.create_draft_order.assert_called_once()
         kwargs = service.create_draft_order.call_args.kwargs
         self.assertEqual(kwargs["client_reference"], "PO-88")
@@ -429,7 +429,7 @@ class OrderCreateViewTests(TestCase):
 
         response = self.client.post(self.url, data=data)
 
-        self.assertRedirects(response, self.dashboard_url)
+        self.assertRedirects(response, self.dashboard_url, fetch_redirect_response=False)
         kwargs = service.create_draft_order.call_args.kwargs
         self.assertEqual(len(kwargs["lines"]), 1)
         self.assertEqual(kwargs["lines"][0].quantity, Decimal("4"))
