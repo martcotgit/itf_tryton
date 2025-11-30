@@ -155,13 +155,17 @@ class ClientDashboardView(LoginRequiredMixin, TemplateView):
         summary["invoices_due_count"] = inv_posted + inv_validated + inv_waiting + inv_draft
 
         # Orders stats
+        ord_draft = self._count_orders(login=login, statuses=("draft",))
+        ord_quotation = self._count_orders(login=login, statuses=("quotation",))
         ord_confirmed = self._count_orders(login=login, statuses=("confirmed",))
         ord_processing = self._count_orders(login=login, statuses=("processing", "sent"))
         summary["orders_breakdown"] = [
+            {"label": "Brouillon", "count": ord_draft},
+            {"label": "Soumission", "count": ord_quotation},
             {"label": "Confirmées", "count": ord_confirmed},
             {"label": "En traitement", "count": ord_processing},
         ]
-        summary["orders_active_count"] = ord_confirmed + ord_processing
+        summary["orders_active_count"] = ord_draft + ord_quotation + ord_confirmed + ord_processing
 
         # Keep total amount from recent list for now (best effort without backend sum)
         if invoices_result:

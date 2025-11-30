@@ -200,3 +200,35 @@ class DashboardSummaryTests(TestCase):
 
         # Check total due count (1 + 2 + 3 + 5 = 11)
         self.assertEqual(summary["invoices_due_count"], 11)
+
+    def test_build_summary_counts_draft_orders(self):
+        def mock_list_orders(login, statuses=None, **kwargs):
+            total = 0
+            if statuses:
+                if "draft" in statuses:
+                    total += 1
+                if "quotation" in statuses:
+                    total += 2
+                if "confirmed" in statuses:
+                    total += 3
+                if "processing" in statuses or "sent" in statuses:
+                    total += 4
+            
+            return PortalOrderListResult(
+                orders=[],
+                pagination=PortalOrderPagination(1, 1, 1, total, False, False)
+            )
+
+        self.view.order_service.list_orders = mock_list_orders
+        
+        summary = self.view._build_summary(invoices_result=None, login="test")
+
+        # Check breakdown
+        breakdown = {item["label"]: item["count"] for item in summary["orders_breakdown"]}
+        self.assertEqual(breakdown.get("Brouillon"), 1)
+        self.assertEqual(breakdown.get("Soumission"), 2)
+        self.assertEqual(breakdown.get("Confirmées"), 3)
+        self.assertEqual(breakdown.get("En traitement"), 4)
+
+        # Check total active count (1 + 2 + 3 + 4 = 10)
+        self.assertEqual(summary["orders_active_count"], 10)

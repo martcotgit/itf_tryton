@@ -109,4 +109,4 @@ class ClientAuthTests(TestCase):
 
         response = self.client.get(self.login_url)
 
-        self.assertRedirects(response, self.dashboard_url)
+        self.assertRedirects(response, self.dashboard_url, fetch_redirect_response=False)
