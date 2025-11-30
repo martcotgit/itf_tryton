@@ -40,3 +40,44 @@ jobs:
       - name: Nettoyer l'environnement
         if: always()
         run: docker compose down --volumes --remove-orphans
+
+  publish-images:
+    name: Publier les images sur Docker Hub
+    needs: portal-pytest
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    env:
+      DOCKER_BUILDKIT: "1"
+      COMPOSE_DOCKER_CLI_BUILD: "1"
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Configurer Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Connexion à Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Construire et pousser l'image portail-staging
+        uses: docker/build-push-action@v6
+        with:
+          context: ./portal
+          file: ./portal/Dockerfile
+          push: true
+          tags: |
+            ilnutransforme/portail-staging:latest
+            ilnutransforme/portail-staging:${{ github.sha }}
+
+      - name: Construire et pousser l'image tryton-staging
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          push: true
+          tags: |
+            ilnutransforme/tryton-staging:latest
+            ilnutransforme/tryton-staging:${{ github.sha }}
