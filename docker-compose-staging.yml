@@ -31,7 +31,7 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U tryton"]
+      test: [ "CMD-SHELL", "pg_isready -U tryton" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -51,14 +51,13 @@ services:
       TRYTON_DATABASE_URI: postgresql://tryton:tryton@db:5432/tryton
       TRYTON_ADMIN_PASSWORD: fMz1w652uRh1
     volumes:
-      - ./config/trytond.conf:/etc/tryton/trytond.conf:ro
       # Modules and scripts are inside the image, but we can mount them if we want to override
       # For staging, we should rely on the image content usually, but dev compose mounted them.
       # I will remove the mounts for code (modules/scripts) to rely on the image,
       # but keep config and filestore.
       - tryton_filestore:/var/lib/trytond
     ports:
-      - "8000:8000"
+      - "8005:8000"
     restart: always
     labels:
       - traefik.enable=true
