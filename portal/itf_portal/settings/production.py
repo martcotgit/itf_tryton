@@ -12,3 +12,5 @@ CSRF_COOKIE_SECURE = True
 X_FRAME_OPTIONS = "DENY"
 
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
+
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
