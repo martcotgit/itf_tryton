@@ -81,3 +81,8 @@ jobs:
           tags: |
             ilnutransforme/tryton-staging:latest
             ilnutransforme/tryton-staging:${{ github.sha }}
+
+      - name: Trigger Watchtower
+        run: |
+          curl -H "Authorization: Bearer ${{ secrets.WATCHTOWER_HTTP_API_TOKEN }}" \
+          https://watchtower.test.paletteitf.ca/v1/update

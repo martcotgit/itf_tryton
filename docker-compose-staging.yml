@@ -69,6 +69,7 @@ services:
       # Prevent indexing
       - traefik.http.middlewares.tryton-noindex.headers.customresponseheaders.X-Robots-Tag=noindex,nofollow,noarchive
       - traefik.http.routers.tryton-staging.middlewares=tryton-noindex
+      - com.centurylinklabs.watchtower.enable=true
 
   portal:
     image: ilnutransforme/portail-staging:latest
@@ -106,6 +107,24 @@ services:
       # Prevent indexing
       - traefik.http.middlewares.portal-noindex.headers.customresponseheaders.X-Robots-Tag=noindex,nofollow,noarchive
       - traefik.http.routers.portal-staging.middlewares=portal-noindex
+      - com.centurylinklabs.watchtower.enable=true
+
+  watchtower:
+    image: containrrr/watchtower
+    restart: always
+    environment:
+      - WATCHTOWER_HTTP_API_UPDATE=true
+      - WATCHTOWER_HTTP_API_TOKEN=${WATCHTOWER_HTTP_API_TOKEN}
+      - WATCHTOWER_LABEL_ENABLE=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.watchtower.rule=Host(`watchtower.test.paletteitf.ca`)
+      - traefik.http.routers.watchtower.entrypoints=websecure
+      - traefik.http.routers.watchtower.tls=true
+      - traefik.http.routers.watchtower.tls.certresolver=letsencrypt
+      - traefik.http.services.watchtower.loadbalancer.server.port=8080
 
 volumes:
   db_data:
