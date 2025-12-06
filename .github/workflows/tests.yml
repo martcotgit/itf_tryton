@@ -5,10 +5,12 @@ on:
     branches:
       - main
       - master
+      - develop
   pull_request:
     branches:
       - main
       - master
+      - develop
 
 permissions:
   contents: read
@@ -45,7 +47,7 @@ jobs:
     name: Publier les images sur Docker Hub
     needs: portal-pytest
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     env:
       DOCKER_BUILDKIT: "1"
       COMPOSE_DOCKER_CLI_BUILD: "1"
