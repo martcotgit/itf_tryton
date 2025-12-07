@@ -11,7 +11,7 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U tryton"]
+      test: [ "CMD-SHELL", "pg_isready -U tryton" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -79,7 +79,7 @@ services:
       - "traefik.http.services.portal.loadbalancer.server.port=8000"
 
   traefik:
-    image: traefik:v3.1
+    image: traefik:v2.11
     command:
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
@@ -89,6 +89,8 @@ services:
       - "8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - DOCKER_API_VERSION=1.44
     depends_on:
       portal:
         condition: service_started
