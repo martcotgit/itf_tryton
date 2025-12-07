@@ -38,6 +38,10 @@ from .services import (
     PortalOrderSummary,
 )
 
+class MissingAddressError(Exception):
+    """Levée quand aucune adresse de livraison n'est disponible."""
+    pass
+
 
 class ClientLoginView(LoginView):
     template_name = "accounts/login.html"
@@ -523,6 +527,12 @@ class OrderCreateView(LoginRequiredMixin, TemplateView):
         try:
             form = self.form_class(address_choices=self._address_choices())
             formset = self._build_line_formset()
+        except MissingAddressError:
+            messages.warning(
+                request,
+                "Veuillez compléter votre profil avec une adresse de livraison avant de passer commande.",
+            )
+            return redirect("accounts:profile")
         except PortalOrderServiceError as exc:
             messages.error(request, str(exc))
             return redirect("accounts:dashboard")
@@ -544,6 +554,12 @@ class OrderCreateView(LoginRequiredMixin, TemplateView):
         try:
             address_choices = self._address_choices()
             product_choices = self._product_choices()
+        except MissingAddressError:
+            messages.warning(
+                request,
+                "Veuillez compléter votre profil avec une adresse de livraison avant de passer commande.",
+            )
+            return redirect("accounts:profile")
         except PortalOrderServiceError as exc:
             messages.error(request, str(exc))
             return redirect("accounts:dashboard")
@@ -626,8 +642,8 @@ class OrderCreateView(LoginRequiredMixin, TemplateView):
         if self._addresses_cache is None:
             _, addresses = self.order_service.list_shipment_addresses(login=self._current_login())
             if not addresses:
-                raise PortalOrderServiceError(
-                    "Aucune adresse de livraison n’est configurée pour votre compte. Contactez notre équipe."
+                raise MissingAddressError(
+                    "Aucune adresse de livraison n’est configurée pour votre compte."
                 )
             self._addresses_cache = [(addr.id, addr.label) for addr in addresses]
         return self._addresses_cache
