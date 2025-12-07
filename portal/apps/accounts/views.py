@@ -37,6 +37,7 @@ from .services import (
     PortalOrderServiceError,
     PortalOrderSummary,
 )
+from apps.core.utils.notifications import sanitize_error_message
 
 class MissingAddressError(Exception):
     """Levée quand aucune adresse de livraison n'est disponible."""
@@ -118,7 +119,7 @@ class ClientDashboardView(LoginRequiredMixin, TemplateView):
                 page_size=self.recent_limit,
             )
         except PortalInvoiceServiceError as exc:
-            messages.error(self.request, str(exc))
+            messages.error(self.request, sanitize_error_message(str(exc)))
             return None
 
     def _safe_load_orders(self, login: str) -> PortalOrderListResult | None:
@@ -130,7 +131,7 @@ class ClientDashboardView(LoginRequiredMixin, TemplateView):
                 page_size=self.recent_limit,
             )
         except PortalOrderServiceError as exc:
-            messages.error(self.request, str(exc))
+            messages.error(self.request, sanitize_error_message(str(exc)))
             return None
 
     def _build_summary(self, invoices_result: PortalInvoiceListResult | None, login: str) -> dict[str, object]:
@@ -202,7 +203,7 @@ class ClientDashboardView(LoginRequiredMixin, TemplateView):
                 page_size=1,
             )
         except PortalOrderServiceError as exc:
-            messages.error(self.request, str(exc))
+            messages.error(self.request, sanitize_error_message(str(exc)))
             return 0
         return result.pagination.total
 
@@ -322,7 +323,7 @@ class InvoiceListView(LoginRequiredMixin, TemplateView):
                 page_size=self.default_page_size,
             )
         except PortalInvoiceServiceError as exc:
-            messages.error(request, str(exc))
+            messages.error(request, sanitize_error_message(str(exc)))
 
         invoices = result.invoices if result else []
         pagination = result.pagination if result else None
@@ -489,7 +490,7 @@ class ClientProfileView(LoginRequiredMixin, TemplateView):
         try:
             return self.account_service.fetch_client_profile(login=self._current_login())
         except PortalAccountServiceError as exc:
-            messages.error(self.request, str(exc))
+            messages.error(self.request, sanitize_error_message(str(exc)))
             return None
 
     def _build_profile_form(self, profile: PortalClientProfile) -> ClientProfileForm:
@@ -534,7 +535,7 @@ class OrderCreateView(LoginRequiredMixin, TemplateView):
             )
             return redirect("accounts:profile")
         except PortalOrderServiceError as exc:
-            messages.error(request, str(exc))
+            messages.error(request, sanitize_error_message(str(exc)))
             return redirect("accounts:dashboard")
         return self.render_to_response(
             self.get_context_data(
@@ -561,7 +562,7 @@ class OrderCreateView(LoginRequiredMixin, TemplateView):
             )
             return redirect("accounts:profile")
         except PortalOrderServiceError as exc:
-            messages.error(request, str(exc))
+            messages.error(request, sanitize_error_message(str(exc)))
             return redirect("accounts:dashboard")
 
         form = self.form_class(request.POST, address_choices=address_choices)
@@ -579,7 +580,7 @@ class OrderCreateView(LoginRequiredMixin, TemplateView):
                     instructions=form.cleaned_data.get("notes"),
                 )
             except PortalOrderServiceError as exc:
-                messages.error(request, str(exc))
+                messages.error(request, sanitize_error_message(str(exc)))
             else:
                 success_message = "Votre commande a été transmise."
                 if result.portal_reference:
@@ -676,7 +677,7 @@ class OrderListView(LoginRequiredMixin, TemplateView):
                 page_size=filters["page_size"],
             )
         except PortalOrderServiceError as exc:
-            messages.error(request, str(exc))
+            messages.error(request, sanitize_error_message(str(exc)))
 
         orders = result.orders if result else []
         pagination = result.pagination if result else None
@@ -767,7 +768,7 @@ class OrderDetailView(LoginRequiredMixin, TemplateView):
                 order_id=order_id,
             )
         except PortalOrderServiceError as exc:
-            messages.error(request, str(exc))
+            messages.error(request, sanitize_error_message(str(exc)))
             return redirect("accounts:orders-list")
         return self.render_to_response(
             self.get_context_data(

@@ -1,10 +1,12 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Portail ITF{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'vendor/notyf/notyf.min.css' %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,19 +14,24 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     {% block extra_head %}{% endblock %}
 </head>
+
 <body class="{% block body_class %}{% endblock %}">
-{% include "partials/header.html" %}
-{% if messages %}
-<div class="messages" role="status" aria-live="polite">
-    {% for message in messages %}
-        <div class="message message-{{ message.level_tag }}">
-            {{ message }}
-        </div>
-    {% endfor %}
-</div>
-{% endif %}
-{% block content %}{% endblock %}
-<script src="{% static 'js/main.js' %}"></script>
-{% block extra_scripts %}{% endblock %}
+    {% include "partials/header.html" %}
+
+    {% block content %}{% endblock %}
+    <script src="{% static 'vendor/notyf/notyf.min.js' %}"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+    <script src="{% static 'js/notifications.js' %}"></script>
+    {% if messages %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            {% for message in messages %}
+            window.ITFNotify.show('{{ message.level_tag|escapejs }}', `{{ message|escapejs }}`);
+            {% endfor %}
+        });
+    </script>
+    {% endif %}
+    {% block extra_scripts %}{% endblock %}
 </body>
+
 </html>

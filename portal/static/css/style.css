@@ -4957,3 +4957,82 @@ html {
     background: #FFFBEB;
     color: #92400E;
 }
+
+/* =========================================
+   NOTIFICATION TOAST SYSTEM (Notyf Overrides)
+   ========================================= */
+
+.notyf {
+    font-family: 'Inter', sans-serif;
+    padding: 110px 20px 20px 20px;
+    z-index: 10001;
+    /* top: sous header, autres côtés: marge standard */
+}
+
+.notyf__toast {
+    border-radius: 10px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    min-width: 280px;
+    max-width: 420px;
+}
+
+.notyf__message {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    font-weight: 500;
+    color: #ffffff;
+}
+
+.notyf__dismiss-btn {
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.notyf__dismiss-btn:hover {
+    opacity: 1;
+}
+
+.notyf-icon-success,
+.notyf-icon-error,
+.notyf-icon-warning,
+.notyf-icon-info {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+/* Animation d'entrée améliorée */
+@keyframes notyf-slide-in {
+    from {
+        transform: translateX(120%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+
+.notyf__toast {
+    animation: notyf-slide-in 0.35s ease-out;
+}
+
+.notyf__toast.notyf__toast--disappear {
+    animation: notyf-fadeoutdown 0.3s forwards !important;
+    animation-delay: 0s !important;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .notyf {
+        padding: 110px 10px 10px 10px;
+        /* Maintenir le dégagement même sur mobile */
+    }
+
+    .notyf__toast {
+        min-width: auto;
+        max-width: calc(100vw - 2rem);
+        margin: 0.5rem;
+    }
+}
