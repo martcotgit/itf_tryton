@@ -41,7 +41,23 @@ def configure():
     cfg_file = os.environ.get("TRYTON_CONFIG", "/etc/tryton/trytond.conf")
     database = os.environ.get("TRYTON_DATABASE", "tryton")
     user = os.environ.get("TRYTON_USER", "admin")
-    config.set_trytond(database=database, user=user, config_file=cfg_file)
+    
+    # Initial connection, capture the config object
+    c = config.set_trytond(database=database, user=user, config_file=cfg_file)
+    
+    # Try to set company context
+    try:
+        Company = Model.get('company.company')
+        companies = Company.find(limit=1)
+        if companies:
+            # Update the context on the active configuration
+            # context property likely returns a copy, so update _context field directly if available
+            if hasattr(c, '_context'):
+                c._context['company'] = companies[0].id
+            else:
+                c.context['company'] = companies[0].id
+    except Exception:
+        pass
 
 
 def determine_price(code: str | None, default_price: Decimal) -> Decimal | None:
