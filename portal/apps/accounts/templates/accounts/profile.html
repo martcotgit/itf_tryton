@@ -32,27 +32,7 @@
                     </div>
                 </div>
             </header>
-            <div class="profile-highlights" aria-label="Résumé rapide du compte">
-                <article class="profile-highlight">
-                    <span class="profile-highlight-label">Courriel principal</span>
-                    <p class="profile-highlight-value">{{ profile.email }}</p>
-                    <small>Nous vous avisons par ce courriel pour chaque commande.</small>
-                </article>
-                <article class="profile-highlight">
-                    <span class="profile-highlight-label">Téléphone</span>
-                    <p class="profile-highlight-value">
-                        {{ profile.phone|default:"Ajouter un numéro" }}
-                    </p>
-                    <small>Un numéro mobile accélère le suivi des livraisons.</small>
-                </article>
-                <article class="profile-highlight">
-                    <span class="profile-highlight-label">Ville</span>
-                    <p class="profile-highlight-value">
-                        {{ profile.address.city|default:"À préciser" }}
-                    </p>
-                    <small>Utilisée pour générer vos soumissions et factures.</small>
-                </article>
-            </div>
+
             <div class="profile-layout">
                 <div class="profile-column profile-column-main">
                     <article class="profile-card profile-form-card">
@@ -131,7 +111,8 @@
                                 </div>
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label for="{{ profile_form.email.id_for_label }}">Courriel (identifiant)</label>
+                                        <label for="{{ profile_form.email.id_for_label }}">Courriel
+                                            (identifiant)</label>
                                         {{ profile_form.email }}
                                     </div>
                                     <div class="form-group phone-field-group"
@@ -223,7 +204,8 @@
                             {% endif %}
                             <div class="form-segment">
                                 <div class="form-group">
-                                    <label for="{{ password_form.current_password.id_for_label }}">Mot de passe actuel</label>
+                                    <label for="{{ password_form.current_password.id_for_label }}">Mot de passe
+                                        actuel</label>
                                     {{ password_form.current_password }}
                                     {% if password_form.current_password.errors %}
                                     <div class="field-error" role="alert">
@@ -235,7 +217,8 @@
                                 </div>
                                 <div class="form-row two-columns">
                                     <div class="form-group">
-                                        <label for="{{ password_form.new_password1.id_for_label }}">Nouveau mot de passe</label>
+                                        <label for="{{ password_form.new_password1.id_for_label }}">Nouveau mot de
+                                            passe</label>
                                         {{ password_form.new_password1 }}
                                         <small class="form-help">{{ password_form.new_password1.help_text }}</small>
                                         {% if password_form.new_password1.errors %}
@@ -247,7 +230,8 @@
                                         {% endif %}
                                     </div>
                                     <div class="form-group">
-                                        <label for="{{ password_form.new_password2.id_for_label }}">Confirmez le nouveau mot de passe</label>
+                                        <label for="{{ password_form.new_password2.id_for_label }}">Confirmez le nouveau
+                                            mot de passe</label>
                                         {{ password_form.new_password2 }}
                                         {% if password_form.new_password2.errors %}
                                         <div class="field-error" role="alert">
