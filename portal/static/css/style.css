@@ -307,7 +307,7 @@ a:focus {
 .hero {
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     color: var(--white);
-    padding: 4rem 0;
+    padding: 6rem 0;
     text-align: center;
     position: relative;
     overflow: hidden;
@@ -320,29 +320,49 @@ a:focus {
     left: 0;
     right: 0;
     bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    background:
+        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><defs><pattern id="wood" width="40" height="40" patternUnits="userSpaceOnUse"><rect width="40" height="8" fill="white" fill-opacity="0.03"/><rect y="20" width="40" height="6" fill="white" fill-opacity="0.02"/></pattern></defs><rect width="200" height="200" fill="url(%23wood)"/></svg>'),
+        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.08"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.08"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.06"/><circle cx="10" cy="60" r="0.8" fill="white" opacity="0.05"/><circle cx="90" cy="30" r="0.6" fill="white" opacity="0.07"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
     animation: float 20s ease-in-out infinite;
+}
+
+.hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.1), transparent);
+    pointer-events: none;
 }
 
 .hero-content {
     position: relative;
     z-index: 2;
-    max-width: 800px;
+    max-width: 900px;
     margin: 0 auto;
     padding: 0 20px;
 }
 
 .hero-title {
-    font-size: 3rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
+    font-size: 3.5rem;
+    font-weight: 800;
+    margin-bottom: 1.25rem;
+    letter-spacing: -0.02em;
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.15);
     animation: fadeInUp 1s ease 0.2s both;
 }
 
 .hero-subtitle {
-    font-size: 1.25rem;
+    font-size: 1.35rem;
     margin-bottom: 2rem;
-    opacity: 0.9;
+    opacity: 0.92;
+    font-weight: 400;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6;
     animation: fadeInUp 1s ease 0.4s both;
 }
 
@@ -2693,33 +2713,45 @@ body.catalog-open {
 
 /* Services Section */
 .services {
-    padding: 4rem 0;
+    padding: 5rem 0;
     background: var(--background-light);
 }
 
 .section-title {
     text-align: center;
     font-size: 2.5rem;
-    font-weight: 600;
+    font-weight: 700;
     margin-bottom: 3rem;
     color: var(--primary-color);
+    position: relative;
+}
+
+.section-title::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    margin: 1rem auto 0;
+    border-radius: 2px;
 }
 
 .services-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    margin-top: 2rem;
+    gap: 2.5rem;
+    margin-top: 2.5rem;
 }
 
 .service-card {
     background: var(--white);
-    padding: 2rem;
-    border-radius: var(--border-radius);
+    padding: 2.5rem 2rem;
+    border-radius: 16px;
     text-align: center;
-    box-shadow: var(--shadow);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
     transition: var(--transition);
     animation: fadeInUp 0.8s ease both;
+    border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .service-card:nth-child(1) {
@@ -2735,75 +2767,92 @@ body.catalog-open {
 }
 
 .service-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-hover);
+    transform: translateY(-8px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
 }
 
 .service-icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
+    font-size: 2.5rem;
+    margin-bottom: 1.25rem;
+    width: 80px;
+    height: 80px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(45, 90, 39, 0.1), rgba(74, 124, 89, 0.08));
+    border-radius: 50%;
+    border: 2px solid rgba(45, 90, 39, 0.15);
 }
 
 .service-card h3 {
-    font-size: 1.5rem;
-    font-weight: 600;
+    font-size: 1.4rem;
+    font-weight: 700;
     margin-bottom: 1rem;
     color: var(--primary-color);
 }
 
 .service-card p {
     color: var(--text-light);
-    line-height: 1.6;
+    line-height: 1.7;
+    font-size: 0.95rem;
 }
 
 /* Contact Section */
 .contact {
-    padding: 4rem 0;
+    padding: 5rem 0;
     background: var(--background-light);
+    margin-top: 1rem;
 }
 
 .contact-content {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4rem;
-    align-items: center;
-    max-width: 1000px;
+    grid-template-columns: 1fr 1.1fr;
+    gap: 3rem;
+    align-items: stretch;
+    max-width: 1100px;
     margin: 0 auto;
 }
 
 .contact-info {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1.25rem;
 }
 
 .contact-item {
     display: flex;
     align-items: flex-start;
     gap: 1rem;
-    padding: 2rem;
+    padding: 1.75rem;
     background: var(--white);
-    border-radius: var(--border-radius);
+    border-radius: 14px;
     transition: var(--transition);
-    box-shadow: var(--shadow);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
     border-left: 4px solid var(--accent-color);
 }
 
 .contact-item:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-hover);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
 }
 
 .contact-icon {
-    font-size: 2.5rem;
+    font-size: 2rem;
     flex-shrink: 0;
-    margin-top: 0.25rem;
+    margin-top: 0.15rem;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(45, 90, 39, 0.08);
+    border-radius: 12px;
 }
 
 .contact-details h3 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 0.75rem;
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
     color: var(--primary-color);
 }
 
@@ -2817,42 +2866,47 @@ body.catalog-open {
     color: var(--primary-color);
     text-decoration: none;
     font-weight: 600;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
+    transition: var(--transition);
 }
 
 .contact-item a:hover {
     color: var(--secondary-color);
+    text-decoration: underline;
 }
 
 /* Address styling */
 address {
     font-style: normal;
     color: var(--text-light);
-    line-height: 1.6;
+    line-height: 1.7;
 }
 
 /* Contact CTA Section */
 .contact-cta {
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    padding: 3rem;
-    border-radius: var(--border-radius);
+    padding: 2.5rem;
+    border-radius: 20px;
     color: var(--white);
     text-align: center;
-    box-shadow: var(--shadow-hover);
+    box-shadow: 0 10px 40px rgba(45, 90, 39, 0.25);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .contact-message h3 {
-    font-size: 2rem;
+    font-size: 1.75rem;
     font-weight: 700;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
     color: var(--white);
 }
 
 .contact-message p {
-    font-size: 1.1rem;
-    line-height: 1.6;
-    margin-bottom: 2rem;
-    opacity: 0.9;
+    font-size: 1rem;
+    line-height: 1.7;
+    margin-bottom: 1.75rem;
+    opacity: 0.92;
 }
 
 .contact-cta .cta-buttons {
@@ -2865,18 +2919,21 @@ address {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 1.1rem;
-    padding: 1rem 2rem;
-    background: var(--white);
+    font-size: 1rem;
+    padding: 0.9rem 1.75rem;
+    background: #FFFEF5;
     color: var(--primary-color);
-    border: none;
-    font-weight: 600;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    font-weight: 700;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .contact-cta .btn:hover {
-    background: var(--accent-color);
-    color: var(--white);
+    background: var(--white);
+    color: var(--primary-color);
     transform: translateY(-3px);
+    box-shadow: 0 6px 25px rgba(255, 255, 255, 0.25);
 }
 
 .btn-icon {
@@ -3191,20 +3248,41 @@ address {
 
 /* Footer */
 .footer {
-    background: var(--primary-color);
+    background: linear-gradient(180deg, #1a3d17, #152f12);
     color: var(--white);
     text-align: center;
-    padding: 2rem 0;
+    padding: 2.5rem 0;
+    position: relative;
+    margin-top: 0;
+}
+
+.footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent-color), var(--secondary-color), var(--primary-color));
+}
+
+.footer p {
+    margin: 0;
+    font-size: 0.95rem;
+    opacity: 0.9;
+    letter-spacing: 0.02em;
 }
 
 .footer a {
     color: var(--white);
     text-decoration: none;
     margin: 0 0.5rem;
+    transition: var(--transition);
 }
 
 .footer a:hover {
     text-decoration: underline;
+    opacity: 0.8;
 }
 
 /* Animations */
