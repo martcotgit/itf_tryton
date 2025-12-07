@@ -3,239 +3,17 @@
 
 {% block title %}Mes commandes – Portail ITF{% endblock %}
 
-{% block extra_head %}
-<style>
-    .orders-shell {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 1.5rem 0 3rem;
-    }
-
-    .orders-hero {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 1rem;
-        padding: 1.75rem 1.85rem;
-        background: linear-gradient(120deg, var(--primary-color), #3f7c3c);
-        border-radius: 18px;
-        border: none;
-        box-shadow: var(--shadow);
-        margin-bottom: 1.25rem;
-        color: var(--white);
-    }
-
-    .orders-hero h1 {
-        margin-bottom: 0.35rem;
-        font-size: 1.45rem;
-        color: var(--white);
-    }
-
-    .orders-hero p {
-        color: rgba(255, 255, 255, 0.92);
-        font-size: 0.95rem;
-    }
-
-    .orders-cta {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        flex-wrap: wrap;
-    }
-
-    .orders-hero .hero-icon-wrapper {
-        background: rgba(255, 255, 255, 0.2);
-        color: var(--white);
-        box-shadow: none;
-    }
-
-    .orders-hero .icon-xl {
-        color: var(--white);
-    }
-
-    .orders-grid {
-        display: grid;
-        grid-template-columns: 360px 1fr;
-        gap: 1.25rem;
-        align-items: start;
-    }
-
-    .orders-card {
-        background: var(--white);
-        border: 1px solid #e6ece7;
-        border-radius: 14px;
-        box-shadow: var(--shadow-light);
-        padding: 1.1rem 1.2rem;
-    }
-
-    .orders-card h2 {
-        font-size: 1.05rem;
-        margin-bottom: 0.65rem;
-    }
-
-    .filters-grid {
-        display: grid;
-        gap: 0.9rem;
-    }
-
-    .filter-row {
-        display: flex;
-        flex-direction: column;
-        gap: 0.35rem;
-    }
-
-    .filter-label {
-        font-weight: 600;
-        color: var(--text-dark);
-        font-size: 0.95rem;
-    }
-
-    .status-pills {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        gap: 0.4rem;
-    }
-
-    .status-pill {
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-        padding: 0.55rem 0.65rem;
-        border: 1px solid #dfe8e0;
-        border-radius: 10px;
-        background: #f9fbf9;
-    }
-
-    .filters-actions {
-        display: flex;
-        gap: 0.6rem;
-        flex-wrap: wrap;
-        margin-top: 0.4rem;
-    }
-
-    .orders-summary {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 0.75rem;
-        margin-bottom: 0.9rem;
-    }
-
-    .orders-summary strong {
-        font-size: 1rem;
-    }
-
-    .orders-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .orders-table th,
-    .orders-table td {
-        padding: 0.65rem 0.6rem;
-        text-align: left;
-        font-size: 0.94rem;
-    }
-
-    .orders-table thead th {
-        color: var(--text-light);
-        font-weight: 600;
-        border-bottom: 1px solid #e6ece7;
-    }
-
-    .orders-table tbody tr {
-        border-bottom: 1px solid #f0f3f1;
-    }
-
-    .orders-table tbody tr:hover {
-        background: #f8fbf8;
-    }
-
-    .status-badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.2rem 0.55rem;
-        border-radius: 999px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        background: #eef5ef;
-        color: var(--primary-color);
-    }
-
-    .state-cancelled {
-        background: #fff2f2;
-        color: #b00020;
-    }
-
-    .state-done {
-        background: #e9f6ec;
-        color: #1b6b3a;
-    }
-
-    .state-processing {
-        background: #f3f6ff;
-        color: #3451b2;
-    }
-
-    .state-quotation {
-        background: #fdf4e5;
-        color: #a35b00;
-    }
-
-    .pagination-controls {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 0.75rem;
-        margin-top: 1rem;
-    }
-
-    .pagination-actions {
-        display: flex;
-        gap: 0.4rem;
-    }
-
-    .order-empty {
-        padding: 1rem;
-        background: #f8fbf8;
-        border: 1px dashed #dfe8e0;
-        border-radius: 10px;
-        color: var(--text-light);
-    }
-
-    @media (max-width: 960px) {
-        .orders-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .orders-hero {
-            flex-direction: column;
-        }
-
-        .orders-summary {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .pagination-controls {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-    }
-</style>
-{% endblock %}
-
 {% block content %}
 <main id="contenu-principal" class="main" role="main">
     <div class="container orders-shell">
         <a href="{% url 'accounts:dashboard' %}" class="back-link">&larr; Retour au tableau de bord</a>
+        
         <div class="orders-hero">
             <div>
                 <div class="hero-header-group" style="align-items: flex-start; text-align: left;">
                     <h1 style="margin-bottom: 0;">Mes commandes</h1>
                 </div>
-                <p>Consultez vos commandes Tryton récentes, ajustez les filtres et lancez une nouvelle commande en
-                    quelques clics.</p>
+                <p>Consultez vos commandes Tryton récentes, ajustez les filtres et lancez une nouvelle commande en quelques clics.</p>
             </div>
             <div class="orders-cta">
                 <a href="{% url 'accounts:orders-new' %}" class="btn btn-primary">Nouvelle commande</a>
@@ -243,20 +21,22 @@
         </div>
 
         <div class="orders-grid">
+            <!-- Section Filtres -->
             <section class="orders-card">
-                <h2>Filtres</h2>
+                <h2 class="filters-title">Filtres</h2>
                 <form method="get" class="filters-grid">
                     <div class="filter-row">
                         <span class="filter-label">Statuts</span>
-                        <div class="status-pills">
+                        <div class="status-filters-grid">
                             {% for status in status_options %}
-                            <label class="status-pill">
+                            <label class="checkbox-simple">
                                 <input type="checkbox" name="statut" value="{{ status.value }}" {% if status.selected %}checked{% endif %}>
                                 <span>{{ status.label }}</span>
                             </label>
                             {% endfor %}
                         </div>
                     </div>
+                    
                     <div class="filter-row">
                         <label for="periode" class="filter-label">Période</label>
                         <select id="periode" name="periode" class="form-input">
@@ -265,27 +45,24 @@
                             {% endfor %}
                         </select>
                     </div>
+                    
                     <div class="filter-row">
                         <label for="recherche" class="filter-label">Recherche</label>
-                        <input type="search" id="recherche" name="recherche" value="{{ filters.search }}"
-                            placeholder="Numéro ou référence client" class="form-input">
+                        <input type="search" id="recherche" name="recherche" value="{{ filters.search }}" placeholder="Numéro ou référence client" class="form-input">
                     </div>
+                    
                     <div class="filters-actions">
-                        <button type="submit" class="btn btn-primary">Appliquer les filtres</button>
-                        <a href="{% url 'accounts:orders-list' %}" class="btn btn-secondary">Réinitialiser</a>
+                        <button type="submit" class="btn-filter-primary">Appliquer les filtres</button>
+                        <a href="{% url 'accounts:orders-list' %}" class="btn-filter-reset">Réinitialiser</a>
                     </div>
                 </form>
             </section>
 
+            <!-- Section Résultats -->
             <section class="orders-card">
                 <div class="orders-summary">
                     <div>
-                        <h2>Résultats</h2>
-                        {% if pagination %}
-                        {% with total=pagination.total|default_if_none:0 %}
-                        <div class="order-results-meta">{{ total }} commande{% if total != 1 %}s{% endif %} — page {{ pagination.page }}/{{ pagination.pages }}</div>
-                        {% endwith %}
-                        {% endif %}
+                        <h2 class="results-title">Résultats{% if pagination %}{% with total=pagination.total|default_if_none:0 %} <span style="font-weight: 400; font-size: 0.9em; color: #6B7280; margin-left: 0.5rem;">{{ total }} commande{% if total != 1 %}s{% endif %}</span>{% endwith %}{% endif %}</h2>
                     </div>
                 </div>
 
@@ -305,73 +82,47 @@
                         <tbody>
                             {% for order in orders %}
                             <tr>
-                                <td><a href="{% url 'accounts:orders-detail' order.id %}" class="link-contrast">{{ order.number|default:"—" }}</a></td>
+                                <td><a href="{% url 'accounts:orders-detail' order.id %}" class="link-contrast" style="font-weight: 600; color: var(--primary-color);">{{ order.number|default:"—" }}</a></td>
                                 <td>{{ order.reference|default:"—" }}</td>
                                 <td><span class="status-badge state-{{ order.state|default:'indetermine' }}">{{ order.state_label }}</span></td>
-                                <td>
-                                    {% if order.shipping_date %}
-                                    {{ order.shipping_date|date:"Y-m-d" }}
-                                    {% else %}
-                                    —
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if order.total_amount %}
-                                    {{ order.total_amount }}{% if order.currency_label %} {{ order.currency_label }}{% endif %}
-                                    {% else %}
-                                    —
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if order.create_date %}
-                                    {{ order.create_date|date:"Y-m-d" }}
-                                    {% else %}
-                                    —
-                                    {% endif %}
-                                </td>
+                                <td>{% if order.shipping_date %}{{ order.shipping_date|date:"Y-m-d" }}{% else %}—{% endif %}</td>
+                                <td>{% if order.total_amount %}{{ order.total_amount }}{% if order.currency_label %} {{ order.currency_label }}{% endif %}{% else %}—{% endif %}</td>
+                                <td>{% if order.create_date %}{{ order.create_date|date:"Y-m-d" }}{% else %}—{% endif %}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
                 {% else %}
-                <div class="order-empty">
-                    Aucune commande trouvée avec ces critères. Ajustez les filtres ou commencez une nouvelle commande.
+                <div class="empty-state">
+                    <svg class="empty-state-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                    </svg>
+                    <div class="empty-state-text">Aucune commande trouvée</div>
+                    <div class="empty-state-subtext">Ajustez vos filtres ou créez une nouvelle commande dès maintenant.</div>
+                    <a href="{% url 'accounts:orders-new' %}" class="btn-text" style="color: var(--primary-color); font-weight: 500; font-size: 0.9rem;">Créer une commande</a>
                 </div>
                 {% endif %}
 
                 {% if pagination %}
                 <div class="pagination-controls">
                     {% with total=pagination.total|default_if_none:0 %}
-                    <div class="pagination-info">Page {{ pagination.page }} / {{ pagination.pages }} — {{ total }}
-                        résultat{% if total != 1 %}s{% endif %} ({{ pagination.page_size }} par page)</div>
+                    <div class="pagination-info">Page {{ pagination.page }} sur {{ pagination.pages }}</div>
                     {% endwith %}
                     <div class="pagination-actions">
-                        <form method="get" class="pagination-form">
-                            {% for status in filters.statuses %}
-                            <input type="hidden" name="statut" value="{{ status }}">
-                            {% endfor %}
-                            {% if filters.period_days %}
-                            <input type="hidden" name="periode" value="{{ filters.period_days }}">
-                            {% endif %}
-                            {% if filters.search %}
-                            <input type="hidden" name="recherche" value="{{ filters.search }}">
-                            {% endif %}
+                        <form method="get" class="pagination-form" style="display:inline;">
+                             {% for status in filters.statuses %}<input type="hidden" name="statut" value="{{ status }}">{% endfor %}
+                            {% if filters.period_days %}<input type="hidden" name="periode" value="{{ filters.period_days }}">{% endif %}
+                            {% if filters.search %}<input type="hidden" name="recherche" value="{{ filters.search }}">{% endif %}
                             <input type="hidden" name="page" value="{{ pagination.page|add:'-1' }}">
-                            <button type="submit" class="btn btn-secondary" {% if not pagination.has_previous %}disabled{% endif %}>Précédent</button>
+                            <button type="submit" class="pagination-btn" {% if not pagination.has_previous %}disabled{% endif %}>Précédent</button>
                         </form>
-                        <form method="get" class="pagination-form">
-                            {% for status in filters.statuses %}
-                            <input type="hidden" name="statut" value="{{ status }}">
-                            {% endfor %}
-                            {% if filters.period_days %}
-                            <input type="hidden" name="periode" value="{{ filters.period_days }}">
-                            {% endif %}
-                            {% if filters.search %}
-                            <input type="hidden" name="recherche" value="{{ filters.search }}">
-                            {% endif %}
+                        <form method="get" class="pagination-form" style="display:inline;">
+                            {% for status in filters.statuses %}<input type="hidden" name="statut" value="{{ status }}">{% endfor %}
+                            {% if filters.period_days %}<input type="hidden" name="periode" value="{{ filters.period_days }}">{% endif %}
+                            {% if filters.search %}<input type="hidden" name="recherche" value="{{ filters.search }}">{% endif %}
                             <input type="hidden" name="page" value="{{ pagination.page|add:'1' }}">
-                            <button type="submit" class="btn btn-secondary" {% if not pagination.has_next %}disabled{% endif %}>Suivant</button>
+                            <button type="submit" class="pagination-btn" {% if not pagination.has_next %}disabled{% endif %}>Suivant</button>
                         </form>
                     </div>
                 </div>
