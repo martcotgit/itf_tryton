@@ -44,6 +44,17 @@ services:
     volumes:
       - redis_data:/data
 
+  mailpit:
+    image: axllent/mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mailpit.rule=Host(`mailpit.localhost`)"
+      - "traefik.http.services.mailpit.loadbalancer.server.port=8025"
+
   portal:
     build:
       context: ./portal
@@ -62,12 +73,15 @@ services:
       TRYTON_RPC_URL: http://tryton:8000/
       TRYTON_DATABASE: tryton
       TRYTON_USER: admin
-      TRYTON_PASSWORD: admin
+      TRYTON_PASSWORD: mK19o36B4v23
       TRYTON_SESSION_TTL: "300"
       TRYTON_TIMEOUT: "10"
       TRYTON_RETRY_ATTEMPTS: "3"
       PORTAL_ALLOWED_HOSTS: portal.localhost,portal,host.docker.internal
       PORTAL_ALLOW_ALL_HOSTS: "1"
+      EMAIL_BACKEND: "django.core.mail.backends.smtp.EmailBackend"
+      EMAIL_HOST: "mailpit"
+      EMAIL_PORT: "1025"
     volumes:
       - ./portal:/app
     ports:

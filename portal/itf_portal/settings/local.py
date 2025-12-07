@@ -11,7 +11,9 @@ else:
         default=["localhost", "127.0.0.1", "portal", "portal.localhost"],
     )
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
+EMAIL_HOST = env("EMAIL_HOST", default="localhost")
+EMAIL_PORT = env.int("EMAIL_PORT", default=1025)
 
 INTERNAL_IPS = ["127.0.0.1"]
 

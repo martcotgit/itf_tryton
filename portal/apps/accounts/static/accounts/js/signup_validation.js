@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Store original help text
     const originalHelpText = feedbackElement.textContent;
 
+
     passwordInput.addEventListener('input', function () {
         const password = passwordInput.value;
 
@@ -56,4 +57,58 @@ document.addEventListener('DOMContentLoaded', function () {
             passwordInput.setCustomValidity("Le mot de passe ne respecte pas les critères de sécurité.");
         }
     });
+
+    // --- Phone Validation ---
+    const phoneInput = document.getElementById('id_phone');
+    if (phoneInput) {
+        // Create feedback element parent if not existing (it might not have help text)
+        let phoneFeedback = phoneInput.parentElement.querySelector('.field-help');
+        if (!phoneFeedback) {
+            phoneFeedback = document.createElement('p');
+            phoneFeedback.className = 'field-help';
+            phoneInput.parentElement.appendChild(phoneFeedback);
+        }
+        const originalPhoneHelp = phoneFeedback.textContent;
+
+        phoneInput.addEventListener('input', function () {
+            const val = phoneInput.value.trim();
+            if (val.length === 0) {
+                // Optional field
+                phoneFeedback.textContent = originalPhoneHelp;
+                phoneFeedback.classList.remove('text-success', 'text-error');
+                phoneInput.classList.remove('input-success', 'input-error');
+                phoneInput.setCustomValidity("");
+                return;
+            }
+
+            // Simple check: does it start with +?
+            // And does it have enough digits?
+            const isInternational = val.startsWith('+');
+            const digitCount = (val.match(/\d/g) || []).length;
+
+            if (!isInternational) {
+                phoneFeedback.textContent = "Format international requis (ex: +1 418...).";
+                phoneFeedback.classList.remove('text-success');
+                phoneFeedback.classList.add('text-error');
+                phoneInput.classList.remove('input-success');
+                phoneInput.classList.add('input-error');
+                phoneInput.setCustomValidity("Veuillez inclure l'indicatif pays (ex: +1).");
+            } else if (digitCount < 8) {
+                phoneFeedback.textContent = "Numéro trop court.";
+                phoneFeedback.classList.remove('text-success');
+                phoneFeedback.classList.add('text-error');
+                phoneInput.classList.remove('input-success');
+                phoneInput.classList.add('input-error');
+                phoneInput.setCustomValidity("Numéro trop court.");
+            } else {
+                phoneFeedback.textContent = "Format valide.";
+                phoneFeedback.classList.remove('text-error');
+                phoneFeedback.classList.add('text-success');
+                phoneInput.classList.remove('input-error');
+                phoneInput.classList.add('input-success');
+                phoneInput.setCustomValidity("");
+            }
+        });
+    }
 });
+
