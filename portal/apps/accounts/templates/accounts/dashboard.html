@@ -14,22 +14,17 @@
             <header class="profile-hero dashboard-hero">
                 <div class="profile-hero-info">
                     <div>
-                        <div class="hero-header-group">
-                            <h1 style="margin-bottom: 0;">Re-bienvenue{% if greeting_name %}, {{ greeting_name }}{% endif %}&nbsp;!
-                            </h1>
-                        </div>
+                        <h1 class="hero-title-sc">Bonjour !</h1>
                         <p class="profile-hero-summary">
-                            {{ request.user.email|default:request.user.username }} •
-                            {{ summary.orders_to_complete_label|default:"0 commande" }}
-                            à compléter
+                            {{ request.user.email }}
                         </p>
                         <p class="profile-hero-description">
-                            Vos raccourcis vers les commandes, les factures et la mise à jour du profil.
+                            Vous avez <strong>{{ summary.orders_to_complete_label|default:"0 commande" }}</strong> à
+                            compléter.
                         </p>
-                        <div class="dashboard-cta" style="margin-top: 1rem;">
+                        <div class="dashboard-cta">
                             <a href="{% url 'accounts:orders-new' %}" class="btn btn-primary">Nouvelle commande</a>
-                            <a href="{% url 'accounts:profile' %}" class="btn btn-secondary">Mettre à jour mon
-                                profil</a>
+                            <a href="{% url 'accounts:profile' %}" class="btn btn-secondary">Mon profil</a>
                         </div>
                     </div>
                 </div>
@@ -43,7 +38,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                             </svg>
-                            <p class="summary-label">Factures dues</p>
+                            <p class="summary-label">Factures à régler</p>
                         </div>
                         <span class="status-chip status-warning">À payer</span>
                     </div>
@@ -68,7 +63,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.125-.504 1.125-1.125V14.25m-3 4.5V18m-6 0h6m-6 0F9 18 9 15.75 9 15.75M18.75 18V15.75m0 0L21 12a11.25 11.25 0 00-2.25-7.5h-13.5A11.25 11.25 0 003 12l2.25 3.75m13.5 0H5.25" />
                             </svg>
-                            <p class="summary-label">Commandes en cours</p>
+                            <p class="summary-label">Suivi commandes</p>
                         </div>
                         <span class="status-chip status-info">En suivi</span>
                     </div>
