@@ -1311,6 +1311,20 @@ a:focus {
     color: var(--primary-color);
 }
 
+/* Styles pour les placeholders dans les champs avec icônes */
+.input-wrapper input::placeholder,
+.input-wrapper .form-input::placeholder {
+    color: transparent;
+    opacity: 0;
+}
+
+.input-wrapper input:focus::placeholder,
+.input-wrapper .form-input:focus::placeholder {
+    color: var(--text-light);
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+}
+
 .form-row {
     display: flex;
     flex-wrap: wrap;
