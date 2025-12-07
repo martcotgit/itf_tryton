@@ -1181,6 +1181,7 @@ a:focus {
     flex-direction: column;
     gap: 2rem;
 }
+
 .order-fieldset {
     border: none;
     background: var(--white);
@@ -3260,4 +3261,21 @@ html {
         box-shadow: none;
         border: 1px solid #ccc;
     }
+}
+
+/* Validation Classes */
+.text-success {
+    color: var(--secondary-color);
+}
+
+.text-error {
+    color: #c1121f;
+}
+
+.input-success {
+    border-color: var(--secondary-color) !important;
+}
+
+.input-error {
+    border-color: #c1121f !important;
 }
