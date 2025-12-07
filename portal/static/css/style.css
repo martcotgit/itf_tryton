@@ -1442,7 +1442,7 @@ a:focus {
 .order-card {
     background: var(--white);
     border-radius: 14px;
-    padding: 1.75rem;
+    padding: 2rem;
     box-shadow: var(--shadow);
 }
 
@@ -1479,6 +1479,42 @@ a:focus {
     gap: 2rem;
 }
 
+.order-form input[type="text"],
+.order-form input[type="number"],
+.order-form input[type="date"],
+.order-form select,
+.order-form textarea {
+    border: 1px solid #D1D5DB;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.order-form input:focus,
+.order-form select:focus,
+.order-form textarea:focus {
+    border-color: #16A34A;
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
+    outline: none;
+}
+
+.order-form label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.order-form .form-help {
+    font-size: 0.75rem;
+    color: #6B7280;
+    margin-top: 0.375rem;
+}
+
+.order-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
 .order-fieldset {
     border: none;
     background: var(--white);
@@ -1507,7 +1543,9 @@ a:focus {
 }
 
 .order-lines-inline {
-    margin-top: 1rem;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #E5E7EB;
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -1522,34 +1560,49 @@ a:focus {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
-    border: 1px solid rgba(45, 90, 39, 0.12);
-    border-radius: var(--border-radius);
+    border: none;
     background: var(--white);
 }
 
 .order-lines-table th,
 .order-lines-table td {
-    padding: 0.85rem 1rem;
-    border-bottom: 1px solid rgba(45, 90, 39, 0.08);
+    padding: 1rem;
+    border-bottom: 1px solid #E5E7EB;
     text-align: left;
     vertical-align: top;
 }
 
 .order-lines-table thead th {
-    background: rgba(45, 90, 39, 0.07);
-    font-size: 0.85rem;
-    letter-spacing: 0.05em;
-    color: var(--text-dark);
+    font-size: 0.75rem;
     text-transform: uppercase;
+    font-weight: 600;
+    color: #6B7280;
+    padding: 0.75rem 1rem;
+    background-color: #F9FAFB;
+    border-bottom: 1px solid #E5E7EB;
 }
 
 .order-lines-table tbody tr:last-child td {
-    border-bottom: none;
+    border-bottom: 1px solid #E5E7EB;
 }
 
 .order-lines-table .form-input,
+.order-lines-table input[type="text"],
+.order-lines-table input[type="number"],
 .order-lines-table textarea {
     width: 100%;
+    border: 1px solid #D1D5DB;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.order-lines-table .form-input:focus,
+.order-lines-table input:focus,
+.order-lines-table textarea:focus {
+    border-color: #16A34A;
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
+    outline: none;
 }
 
 .order-line-product-cell {
@@ -1619,7 +1672,7 @@ body.product-picker-enabled [data-product-field] select[data-product-select] {
 .order-line-remove {
     background: transparent;
     border: none;
-    color: #c1121f;
+    color: #9CA3AF;
     font-weight: 600;
     cursor: pointer;
     padding: 0.15rem 0.25rem;
@@ -1628,8 +1681,7 @@ body.product-picker-enabled [data-product-field] select[data-product-select] {
 
 .order-line-remove:hover,
 .order-line-remove:focus {
-    color: #8b0d18;
-    text-decoration: underline;
+    color: #EF4444;
 }
 
 .order-line-row--hidden {
@@ -4541,4 +4593,61 @@ html {
     .auth-aside {
         order: -1;
     }
+}
+
+/* Audit Design Fixes for Order Form - Buttons */
+.product-catalog-trigger.btn-tertiary {
+    background-color: #F3F4F6;
+    color: #374151;
+    border: 1px solid #D1D5DB;
+    border-radius: 6px;
+    box-shadow: none;
+    padding: 0.5rem 1rem;
+    width: auto;
+}
+
+.product-catalog-trigger.btn-tertiary:hover {
+    background-color: #E5E7EB;
+}
+
+.order-lines-actions button[data-formset-add] {
+    border: 1px dashed #D1D5DB !important;
+    background-color: transparent !important;
+    color: #374151 !important;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.order-lines-actions button[data-formset-add]:hover {
+    border-color: #16A34A !important;
+    color: #16A34A !important;
+}
+
+.order-form .form-actions .btn-primary {
+    background-color: #16A34A;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    border: none;
+}
+
+.order-form .form-actions .btn-primary:hover {
+    background-color: #15803D;
+}
+
+.order-form .form-actions .btn-secondary {
+    background-color: transparent;
+    color: #374151;
+    border: 1px solid #D1D5DB;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+}
+
+.order-form .form-actions .btn-secondary:hover {
+    background-color: #F3F4F6;
+    border-color: #D1D5DB;
 }
