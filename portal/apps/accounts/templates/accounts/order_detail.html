@@ -1,154 +1,117 @@
 {% extends "base.html" %}
-{% block extra_head %}
-<style>
-    .order-detail-shell {
-        max-width: 1100px;
-        margin: 0 auto;
-        padding: 1.5rem 0 3rem;
-    }
-
-    .order-header {
-        display: flex;
-        justify-content: space-between;
-        gap: 1rem;
-        align-items: flex-start;
-        margin-bottom: 1rem;
-    }
-
-    .order-meta {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 0.75rem;
-        margin-bottom: 1rem;
-    }
-
-    .order-pill {
-        padding: 0.65rem 0.75rem;
-        background: #f8fbf8;
-        border: 1px solid #e6ece7;
-        border-radius: 12px;
-        box-shadow: var(--shadow-light);
-    }
-
-    .order-lines {
-        background: var(--white);
-        border: 1px solid #e6ece7;
-        border-radius: 14px;
-        box-shadow: var(--shadow-light);
-        padding: 1rem 1.2rem;
-    }
-
-    .order-lines table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .order-lines th,
-    .order-lines td {
-        padding: 0.65rem 0.5rem;
-        text-align: left;
-    }
-
-    .order-lines thead th {
-        color: var(--text-light);
-        font-weight: 600;
-        border-bottom: 1px solid #e6ece7;
-    }
-
-    .order-lines tbody tr {
-        border-bottom: 1px solid #f0f3f1;
-    }
-
-    .status-badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.25rem 0.6rem;
-        border-radius: 999px;
-        font-size: 0.88rem;
-        font-weight: 600;
-        background: #eef5ef;
-        color: var(--primary-color);
-    }
-
-    .state-cancelled {
-        background: #fff2f2;
-        color: #b00020;
-    }
-
-    .state-done {
-        background: #e9f6ec;
-        color: #1b6b3a;
-    }
-
-    .state-processing {
-        background: #f3f6ff;
-        color: #3451b2;
-    }
-
-    .state-quotation {
-        background: #fdf4e5;
-        color: #a35b00;
-    }
-</style>
-{% endblock %}
+{% load i18n %}
 
 {% block content %}
-<main id="contenu-principal" class="main" role="main">
-    <div class="container order-detail-shell">
-        <a href="{% url 'accounts:orders-list' %}" class="back-link">&larr; Retour à mes commandes</a>
-        <div class="order-header">
-            <div>
-                <div class="hero-header-group">
-                    <div class="hero-icon-wrapper">
-                        <svg class="icon-xl" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.125-.504 1.125-1.125V14.25m-3 4.5V18m-6 0h6m-6 0F9 18 9 15.75 9 15.75M18.75 18V15.75m0 0L21 12a11.25 11.25 0 00-2.25-7.5h-13.5A11.25 11.25 0 003 12l2.25 3.75m13.5 0H5.25" />
-                        </svg>
-                    </div>
-                    <h1>Commande {{ order.number|default:"(sans numéro)" }}</h1>
-                </div>
-                <div class="status-badge state-{{ order.state|default:'indetermine' }}">{{ order.state_label }}</div>
+<main class="container order-detail-container">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+        <a href="{% url 'accounts:orders-list' %}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+            {% trans "Mes commandes" %}
+        </a>
+    </nav>
+
+    <!-- Hero -->
+    <div class="order-hero">
+        <div class="order-hero-left">
+            <h1 class="order-title">{% trans "Commande" %} #{{ order.number }}</h1>
+            <span class="order-status-badge badge-{{ order.state }}">
+                {{ order.state_label }}
+            </span>
+        </div>
+        <div class="order-hero-actions">
+            <!-- Future actions like Download PDF -->
+            <button class="btn btn-outline" disabled title="Bientôt disponible">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                {% trans "Télécharger le bon de commande" %}
+            </button>
+        </div>
+    </div>
+
+    <!-- Métadonnées -->
+    <div class="order-meta-card">
+        <div class="order-meta-grid">
+            <div class="meta-item">
+                <span class="meta-label">{% trans "Créée le" %}</span>
+                <span class="meta-value {% if not order.create_date %}empty{% endif %}">
+                    {{ order.create_date|date:"d/m/Y"|default:_("Non définie") }}
+                </span>
             </div>
-            <div>
-                {% if order.reference %}<div class="order-pill"><strong>Référence client :</strong> {{ order.reference }}</div>{% endif %}
+            <div class="meta-item">
+                <span class="meta-label">{% trans "Livraison estimée" %}</span>
+                <span class="meta-value {% if not order.shipping_date %}empty{% endif %}">
+                    {{ order.shipping_date|date:"d/m/Y"|default:_("À confirmer") }}
+                </span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">{% trans "Sous-total (avant taxes)" %}</span>
+                <span class="meta-value">{{ order.untaxed_amount|default:"—" }} {% if order.currency_label %}{{ order.currency_label }}{% endif %}</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">{% trans "Total (taxes incluses)" %}</span>
+                <span class="meta-value">{{ order.total_amount|default:"—" }} {% if order.currency_label %}{{ order.currency_label }}{% endif %}</span>
             </div>
         </div>
+    </div>
 
-        <div class="order-meta">
-            <div class="order-pill"><strong>Date de création :</strong> {{ order.create_date|date:"Y-m-d"|default:"—" }}
-            </div>
-            <div class="order-pill"><strong>Livraison prévue :</strong> {{ order.shipping_date|date:"Y-m-d"|default:"—" }}</div>
-            <div class="order-pill"><strong>Total TTC :</strong> {{ order.total_amount|default:"—" }} {% if order.currency_label %}{{ order.currency_label }}{% endif %}</div>
-            <div class="order-pill"><strong>Sous-total :</strong> {{ order.untaxed_amount|default:"—" }} {% if order.currency_label %}{{ order.currency_label }}{% endif %}</div>
+    <!-- Lignes -->
+    <div class="order-lines-card">
+        <h2>{% trans "Produits commandés" %}</h2>
+        {% if order.lines %}
+        <table class="order-table">
+            <thead>
+                <tr>
+                    <th>{% trans "Produit" %}</th>
+                    <th>{% trans "Qté" %}</th>
+                    <th>{% trans "Prix unit." %}</th>
+                    <th>{% trans "Total ligne" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for line in order.lines %}
+                <tr>
+                    <td>
+                        <div class="product-name">{{ line.description|default:line.product }}</div>
+                        {% if line.note %}
+                        <div class="product-description">{{ line.note }}</div>
+                        {% endif %}
+                    </td>
+                    <td>{{ line.quantity }}{% if line.unit %} {{ line.unit }}{% endif %}</td>
+                    <td>{% if line.unit_price %}{{ line.unit_price }}{% if order.currency_label %} {{ order.currency_label }}{% endif %}{% else %}<span class="empty">—</span>{% endif %}</td>
+                    <td>{% if line.total %}{{ line.total }}{% if order.currency_label %} {{ order.currency_label }}{% endif %}{% else %}<span class="empty">—</span>{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" class="total-label">{% trans "Total général" %}</td>
+                    <td>{{ order.total_amount|default:"—" }} {% if order.currency_label %}{{ order.currency_label }}{% endif %}</td>
+                </tr>
+            </tfoot>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+                class="feather feather-package">
+                <line x1="16.5" y1="9.4" x2="7.5" y2="4.21" />
+                <path
+                    d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                <line x1="12" y1="22.08" x2="12" y2="12" />
+            </svg>
+            <h3>{% trans "Aucun produit dans cette commande" %}</h3>
+            <p>{% trans "Ajoutez des produits pour finaliser votre commande." %}</p>
         </div>
-
-        <section class="order-lines">
-            <h2>Lignes</h2>
-            {% if order.lines %}
-            <table>
-                <thead>
-                    <tr>
-                        <th scope="col">Produit / description</th>
-                        <th scope="col">Quantité</th>
-                        <th scope="col">Prix unitaire</th>
-                        <th scope="col">Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for line in order.lines %}
-                    <tr>
-                        <td>{{ line.description|default:line.product }}</td>
-                        <td>{{ line.quantity }}{% if line.unit %} {{ line.unit }}{% endif %}</td>
-                        <td>{% if line.unit_price %}{{ line.unit_price }}{% if order.currency_label %} {{ order.currency_label }}{% endif %}{% else %}—{% endif %}</td>
-                        <td>{% if line.total %}{{ line.total }}{% if order.currency_label %} {{ order.currency_label }}{% endif %}{% else %}—{% endif %}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <p>Aucune ligne disponible pour cette commande.</p>
-            {% endif %}
-        </section>
+        {% endif %}
     </div>
 </main>
 {% endblock %}
