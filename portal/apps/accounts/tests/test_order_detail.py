@@ -16,7 +16,7 @@ class OrderDetailViewTests(TestCase):
             email="test@example.com",
             password="password"
         )
-        self.client.login(username="testuser", password="password")
+        self.client.force_login(self.user)
         self.url = reverse("accounts:orders-detail", kwargs={"order_id": 123})
 
     @patch("apps.accounts.views.OrderDetailView.service_class")

@@ -40,6 +40,10 @@
     <div class="order-meta-card">
         <div class="order-meta-grid">
             <div class="meta-item">
+                <span class="meta-label">{% trans "Référence" %}</span>
+                <span class="meta-value">{{ order.reference|default:"—" }}</span>
+            </div>
+            <div class="meta-item">
                 <span class="meta-label">{% trans "Créée le" %}</span>
                 <span class="meta-value {% if not order.create_date %}empty{% endif %}">
                     {{ order.create_date|date:"d/m/Y"|default:_("Non définie") }}
@@ -53,11 +57,21 @@
             </div>
             <div class="meta-item">
                 <span class="meta-label">{% trans "Sous-total (avant taxes)" %}</span>
-                <span class="meta-value">{{ order.untaxed_amount|default:"—" }} {% if order.currency_label %}{{ order.currency_label }}{% endif %}</span>
+                <span class="meta-value">
+                    {{ order.untaxed_amount|default:"—" }}
+                    {% if order.currency_label %}
+                    {{ order.currency_label }}
+                    {% endif %}
+                </span>
             </div>
             <div class="meta-item">
                 <span class="meta-label">{% trans "Total (taxes incluses)" %}</span>
-                <span class="meta-value">{{ order.total_amount|default:"—" }} {% if order.currency_label %}{{ order.currency_label }}{% endif %}</span>
+                <span class="meta-value">
+                    {{ order.total_amount|default:"—" }}
+                    {% if order.currency_label %}
+                    {{ order.currency_label }}
+                    {% endif %}
+                </span>
             </div>
         </div>
     </div>
@@ -85,15 +99,38 @@
                         {% endif %}
                     </td>
                     <td>{{ line.quantity }}{% if line.unit %} {{ line.unit }}{% endif %}</td>
-                    <td>{% if line.unit_price %}{{ line.unit_price }}{% if order.currency_label %} {{ order.currency_label }}{% endif %}{% else %}<span class="empty">—</span>{% endif %}</td>
-                    <td>{% if line.total %}{{ line.total }}{% if order.currency_label %} {{ order.currency_label }}{% endif %}{% else %}<span class="empty">—</span>{% endif %}</td>
+                    <td>
+                        {% if line.unit_price %}
+                        {{ line.unit_price }}
+                        {% if order.currency_label %}
+                        {{ order.currency_label }}
+                        {% endif %}
+                        {% else %}
+                        <span class="empty">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if line.total %}
+                        {{ line.total }}
+                        {% if order.currency_label %}
+                        {{ order.currency_label }}
+                        {% endif %}
+                        {% else %}
+                        <span class="empty">—</span>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
             <tfoot>
                 <tr>
                     <td colspan="3" class="total-label">{% trans "Total général" %}</td>
-                    <td>{{ order.total_amount|default:"—" }} {% if order.currency_label %}{{ order.currency_label }}{% endif %}</td>
+                    <td>
+                        {{ order.total_amount|default:"—" }}
+                        {% if order.currency_label %}
+                        {{ order.currency_label }}
+                        {% endif %}
+                    </td>
                 </tr>
             </tfoot>
         </table>
