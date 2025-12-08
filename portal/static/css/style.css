@@ -289,17 +289,23 @@ a:focus {
 }
 
 .logo-text {
-    font-size: 2rem;
+    font-size: 1.25rem;
     font-weight: 700;
     color: var(--primary-color);
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    text-shadow: none;
+    letter-spacing: -0.02em;
 }
 
 .recycle-symbol {
     position: relative;
-    width: 60px;
-    height: 60px;
-    animation: rotate 10s linear infinite;
+    width: 32px;
+    height: 32px;
+    /* Suppression de l'animation rotative permanente */
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.logo-container:hover .recycle-symbol {
+    transform: rotate(20deg) scale(1.05);
 }
 
 .recycle-svg {
@@ -311,7 +317,7 @@ a:focus {
     fill: var(--secondary-color);
     stroke: var(--primary-color);
     stroke-width: 2;
-    animation: pulse 2s ease-in-out infinite;
+    /* Suppression de l'animation pulse */
 }
 
 .pallet-inside {
@@ -327,10 +333,18 @@ a:focus {
 }
 
 .company-name {
-    font-size: 1.5rem;
+    font-size: 1rem;
     font-weight: 600;
     color: var(--primary-color);
     margin: 0;
+    opacity: 0.9;
+    display: none;
+}
+
+@media (min-width: 1024px) {
+    .company-name {
+        display: inline-block;
+    }
 }
 
 .nav-links {
@@ -344,13 +358,28 @@ a:focus {
     color: var(--text-dark);
     text-decoration: none;
     font-weight: 500;
-    transition: var(--transition);
+    transition: color 0.2s ease;
+    position: relative;
+    padding-bottom: 2px;
 }
 
-.nav-link:hover,
-.nav-link:focus {
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--primary-color);
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-link:hover {
     color: var(--primary-color);
-    font-weight: 700;
+}
+
+.nav-link:hover::after {
+    width: 100%;
 }
 
 .nav-link-accent {
@@ -359,12 +388,23 @@ a:focus {
     padding: 0.5rem 1rem;
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .nav-link-accent:hover,
 .nav-link-accent:focus {
     background: var(--secondary-color);
     color: var(--white);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-hover);
+}
+
+.nav-link-accent .nav-icon {
+    width: 18px;
+    height: 18px;
+    stroke-width: 2.5;
 }
 
 .nav-logout-form {
