@@ -1,165 +1,234 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Mes commandes – Portail ITF{% endblock %}
+{% block title %}Commandes – Portail ITF{% endblock %}
 
 {% block content %}
 <main id="contenu-principal" class="main" role="main">
-    <div class="container orders-shell">
-        <a href="{% url 'core:home' %}" class="back-link">&larr; Retour à l'accueil</a>
+    <div class="orders-shell">
 
-        <div class="orders-hero">
-            <div>
-                <div class="hero-header-group" style="align-items: flex-start; text-align: left;">
-                    <h1 style="margin-bottom: 0;">Mes commandes</h1>
-                </div>
-                <p>Consultez vos commandes Tryton récentes, ajustez les filtres et lancez une nouvelle commande en
-                    quelques clics.</p>
-            </div>
-            <div class="orders-cta">
-                <a href="{% url 'accounts:orders-new' %}" class="btn btn-primary">Nouvelle commande</a>
-            </div>
-        </div>
+        <!-- 1. Page Toolbar -->
+        <header class="page-toolbar">
+            <h1 class="page-title">Commandes</h1>
 
-        <div class="orders-grid">
-            <!-- Section Filtres -->
-            <section class="orders-card">
-                <h2 class="filters-title">Filtres</h2>
-                <form method="get" class="filters-grid">
-                    <div class="filter-row">
-                        <span class="filter-label">Statuts</span>
-                        <div class="status-filters-grid">
-                            {% for status in status_options %}
-                            <label class="checkbox-simple">
-                                <input type="checkbox" name="statut" value="{{ status.value }}" {% if status.selected %}checked{% endif %}>
-                                <span>{{ status.label }}</span>
-                            </label>
-                            {% endfor %}
-                        </div>
-                    </div>
-
-                    <div class="filter-row">
-                        <label for="periode" class="filter-label">Période</label>
-                        <select id="periode" name="periode" class="form-input">
-                            {% for option in period_options %}
-                            <option value="{{ option.value }}" {% if option.selected %}selected{% endif %}>{{ option.label }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div class="filter-row">
-                        <label for="recherche" class="filter-label">Recherche</label>
-                        <input type="search" id="recherche" name="recherche" value="{{ filters.search }}"
-                            placeholder="Numéro ou référence client" class="form-input">
-                    </div>
-
-                    <div class="filters-actions">
-                        <button type="submit" class="btn-filter-primary">Appliquer les filtres</button>
-                        <a href="{% url 'accounts:orders-list' %}" class="btn-filter-reset">Réinitialiser</a>
-                    </div>
-                </form>
-            </section>
-
-            <!-- Section Résultats -->
-            <section class="orders-card">
-                <div class="orders-summary">
-                    <div>
-                        <h2 class="results-title">
-                            Résultats
-                            {% if pagination %}
-                            {% with total=pagination.total|default_if_none:0 %}
-                            <span style="font-weight: 400; font-size: 0.9em; color: #6B7280; margin-left: 0.5rem;">
-                                {{ total }} commande{% if total != 1 %}s{% endif %}
-                            </span>
-                            {% endwith %}
-                            {% endif %}
-                        </h2>
-                    </div>
-                </div>
-
-                {% if orders %}
-                <div class="table-responsive">
-                    <table class="orders-table">
-                        <thead>
-                            <tr>
-                                <th scope="col">Numéro</th>
-                                <th scope="col">Référence client</th>
-                                <th scope="col">Statut</th>
-                                <th scope="col">Livraison prévue</th>
-                                <th scope="col">Total TTC</th>
-                                <th scope="col">Créée le</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for order in orders %}
-                            <tr>
-                                <td><a href="{% url 'accounts:orders-detail' order.id %}" class="link-contrast"
-                                        style="font-weight: 600; color: var(--primary-color);">{{ order.number|default:"—" }}</a></td>
-                                <td>{{ order.reference|default:"—" }}</td>
-                                <td><span class="status-badge state-{{ order.state|default:'indetermine' }}">{{ order.state_label }}</span></td>
-                                <td>{% if order.shipping_date %}{{ order.shipping_date|date:"Y-m-d" }}{% else %}—{% endif %}
-                                </td>
-                                <td>{% if order.total_amount %}{{ order.total_amount }}{% if order.currency_label %} {{ order.currency_label }}{% endif %}{% else %}—{% endif %}</td>
-                                <td>{% if order.create_date %}{{ order.create_date|date:"Y-m-d" }}{% else %}—{% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                <div class="empty-state">
-                    <svg class="empty-state-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                        aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
-                        </path>
+            <form method="get" class="page-toolbar-actions" id="filters-form">
+                <!-- Search -->
+                <div class="search-container">
+                    <svg class="search-icon-marker" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
-                    <div class="empty-state-text">Aucune commande trouvée</div>
-                    <div class="empty-state-subtext">Ajustez vos filtres ou créez une nouvelle commande dès maintenant.
-                    </div>
-                    <a href="{% url 'accounts:orders-new' %}" class="btn-text"
-                        style="color: var(--primary-color); font-weight: 500; font-size: 0.9rem;">Créer une commande</a>
+                    <input type="search" name="recherche" value="{{ filters.search }}"
+                        placeholder="Rechercher une commande..." class="search-inline" aria-label="Rechercher">
                 </div>
-                {% endif %}
 
-                {% if pagination %}
-                <div class="pagination-controls">
-                    {% with total=pagination.total|default_if_none:0 %}
-                    <div class="pagination-info">Page {{ pagination.page }} sur {{ pagination.pages }}</div>
-                    {% endwith %}
-                    <div class="pagination-actions">
-                        <form method="get" class="pagination-form" style="display:inline;">
-                            {% for status in filters.statuses %}
-                            <input type="hidden" name="statut" value="{{ status }}">
-                            {% endfor %}
-                            {% if filters.period_days %}
-                            <input type="hidden" name="periode" value="{{ filters.period_days }}">
-                            {% endif %}
-                            {% if filters.search %}
-                            <input type="hidden" name="recherche" value="{{ filters.search }}">
-                            {% endif %}
-                            <input type="hidden" name="page" value="{{ pagination.page|add:'-1' }}">
-                            <button type="submit" class="pagination-btn" {% if not pagination.has_previous %}disabled{% endif %}>Précédent</button>
-                        </form>
-                        <form method="get" class="pagination-form" style="display:inline;">
-                            {% for status in filters.statuses %}
-                            <input type="hidden" name="statut" value="{{ status }}">
-                            {% endfor %}
-                            {% if filters.period_days %}
-                            <input type="hidden" name="periode" value="{{ filters.period_days }}">
-                            {% endif %}
-                            {% if filters.search %}
-                            <input type="hidden" name="recherche" value="{{ filters.search }}">
-                            {% endif %}
-                            <input type="hidden" name="page" value="{{ pagination.page|add:'1' }}">
-                            <button type="submit" class="pagination-btn" {% if not pagination.has_next %}disabled{% endif %}>Suivant</button>
-                        </form>
-                    </div>
+                <!-- Période Select -->
+                <div class="filter-select-wrapper">
+                    <select name="periode" class="filter-select-inline" onchange="this.form.submit()">
+                        {% for option in period_options %}
+                        <option value="{{ option.value }}" {% if option.selected %}selected{% endif %}>{{ option.label
+                            }}</option>
+                        {% endfor %}
+                    </select>
+                    <svg class="filter-select-arrow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
                 </div>
+
+                <!-- Hidden inputs for pills logic (JS will handle pills separately or we submit form) -->
+                <!-- We'll keep pills as links or submit buttons for simplicity without JS complex logic first -->
+            </form>
+
+            <a href="{% url 'accounts:orders-new' %}" class="btn btn-primary">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                    style="margin-right: 2px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Nouvelle
+            </a>
+        </header>
+
+        <!-- 2. Filter Pills (Status) -->
+        <nav class="filter-pills-container" aria-label="Filtres par statut">
+            <!-- "Toutes" logic: if no status selected -->
+            <a href="?{% if filters.period_days %}periode={{ filters.period_days }}&{% endif %}{% if filters.search %}recherche={{ filters.search }}&{% endif %}"
+                class="filter-pill {% if not filters.statuses %}active{% endif %}">
+                Toutes
+            </a>
+
+            {% for status in status_options %}
+            <!-- Construct URL for single status filtering for simplicity -->
+            <a href="?statut={{ status.value }}&{% if filters.period_days %}periode={{ filters.period_days }}&{% endif %}{% if filters.search %}recherche={{ filters.search }}&{% endif %}"
+                class="filter-pill {% if status.selected %}active{% endif %}">
+                {{ status.label }}
+            </a>
+            {% endfor %}
+
+            {% if filters.statuses or filters.search %}
+            <a href="{% url 'accounts:orders-list' %}" class="filter-pill"
+                style="margin-left: auto; background: white; border: 1px solid #e7e5e4;">
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                    style="margin-right: 6px; color: #78716c;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Effacer les filtres
+            </a>
+            {% endif %}
+        </nav>
+
+        <!-- 3. Results Table -->
+        <section class="orders-table-card">
+            {% if orders %}
+            <div class="table-responsive">
+                <table class="orders-table">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width: 15%;">N°</th>
+                            <th scope="col" style="width: 25%;">Statut</th>
+                            <th scope="col" style="width: 25%;">Livraison</th>
+                            <th scope="col" style="width: 20%;">Montant</th>
+                            <th scope="col" style="width: 15%; text-align: right;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr onclick="window.location='{% url 'accounts:orders-detail' order.id %}'">
+                            <td>
+                                <a href="{% url 'accounts:orders-detail' order.id %}" class="link-order">
+                                    {{ order.number|default:"—" }}
+                                </a>
+                            </td>
+                            <td>
+                                <span class="status-badge state-{{ order.state|default:'draft' }}">
+                                    <!-- Mapping status labels manually if needed, or using view provided label -->
+                                    {% if order.state == 'quotation' %}En attente
+                                    {% elif order.state == 'processing' %}Confirmée
+                                    {% elif order.state == 'done' %}Livrée
+                                    {% elif order.state == 'cancelled' %}Annulée
+                                    {% else %}{{ order.state_label|default:"Brouillon" }}
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                {% if order.shipping_date %}
+                                {{ order.shipping_date|date:"d M Y" }}
+                                {% else %}
+                                <span style="color: #a8a29e;">—</span>
+                                {% endif %}
+                            </td>
+                            <td style="font-weight: 500;">
+                                {% if order.total_amount %}
+                                {{ order.total_amount }}
+                                <span style="font-size: 0.8em; color: #78716c;">{% if order.currency_label %}{{
+                                    order.currency_label }}{% else %}${% endif %}</span>
+                                {% else %}
+                                —
+                                {% endif %}
+                            </td>
+                            <td style="text-align: right;">
+                                <a href="{% url 'accounts:orders-detail' order.id %}" class="link-action">
+                                    Voir
+                                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if pagination %}
+            <div class="pagination-controls">
+                {% with total=pagination.total|default_if_none:0 %}
+                <div class="pagination-info">Page {{ pagination.page }} / {{ pagination.pages }}</div>
+                {% endwith %}
+                <div class="pagination-actions">
+                    <!-- Previous Button -->
+                    <form method="get" style="display:inline;">
+                        <!-- Keep filters -->
+                        {% for status in filters.statuses %}
+                        <input type="hidden" name="statut" value="{{ status }}">
+                        {% endfor %}
+                        {% if filters.period_days %}
+                        <input type="hidden" name="periode" value="{{ filters.period_days }}">
+                        {% endif %}
+                        {% if filters.search %}
+                        <input type="hidden" name="recherche" value="{{ filters.search }}">
+                        {% endif %}
+
+                        <input type="hidden" name="page" value="{{ pagination.page|add:'-1' }}">
+                        <button type="submit" class="pagination-btn" {% if not pagination.has_previous %}disabled{% endif %}>
+                            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 19l-7-7 7-7" />
+                            </svg>
+                            Préc.
+                        </button>
+                    </form>
+
+                    <!-- Next Button -->
+                    <form method="get" style="display:inline;">
+                        <!-- Keep filters -->
+                        {% for status in filters.statuses %}
+                        <input type="hidden" name="statut" value="{{ status }}">
+                        {% endfor %}
+                        {% if filters.period_days %}
+                        <input type="hidden" name="periode" value="{{ filters.period_days }}">
+                        {% endif %}
+                        {% if filters.search %}
+                        <input type="hidden" name="recherche" value="{{ filters.search }}">
+                        {% endif %}
+
+                        <input type="hidden" name="page" value="{{ pagination.page|add:'1' }}">
+                        <button type="submit" class="pagination-btn" {% if not pagination.has_next %}disabled{% endif %}>
+                            Suiv.
+                            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
+            {% else %}
+            <!-- Empty State -->
+            <div class="empty-state">
+                <svg class="empty-state-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                    </path>
+                </svg>
+                <div class="empty-state-text">Aucune commande pour le moment</div>
+                <div class="empty-state-subtext">Essayez d'ajuster vos filtres, ou passez votre première commande dès
+                    maintenant.</div>
+
+                {% if filters.statuses or filters.search %}
+                <a href="{% url 'accounts:orders-list' %}" class="btn btn-secondary"
+                    style="border: 1px solid #d1d5db; padding: 0.5rem 1rem; border-radius: 8px; color: #374151;">Effacer
+                    les filtres</a>
+                {% else %}
+                <a href="{% url 'accounts:orders-new' %}" class="btn btn-primary"
+                    style="padding: 0.5rem 1.25rem;">Passer une commande</a>
                 {% endif %}
-            </section>
-        </div>
+            </div>
+            {% endif %}
+        </section>
     </div>
 </main>
+
+<script>
+    // Submit forms on search enter (optional enhancement)
+    document.querySelector('.search-inline')?.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('filters-form').submit();
+        }
+    });
+</script>
 {% endblock %}

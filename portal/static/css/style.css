@@ -4754,281 +4754,290 @@ html {
 }
 
 /* 
+/*
    ==========================================================================
-   Orders List Audit Improvements
+   Orders List Redesign (Awwwards Style)
    ==========================================================================
 */
 
-.orders-shell {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 1.5rem 0 3rem;
+/* Layout & Typography Configuration */
+:root {
+    --text-xs: 0.6875rem;
+    /* 11px */
+    --text-sm: 0.8125rem;
+    /* 13px */
+    --text-base: 0.9375rem;
+    /* 15px */
+    --text-lg: 1.125rem;
+    /* 18px */
+    --text-xl: 1.5rem;
+    /* 24px */
+
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-full: 9999px;
+
+    --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
 }
 
-.orders-hero {
+.orders-shell {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 3rem;
+}
+
+/* 1. Page Toolbar (Header) */
+.page-toolbar {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     gap: 1rem;
-    padding: 1.75rem 1.85rem;
-    background: linear-gradient(120deg, var(--primary-color), #3f7c3c);
-    border-radius: 18px;
-    border: none;
-    box-shadow: var(--shadow);
-    margin-bottom: 1.25rem;
-    color: var(--white);
+    padding: 0.5rem 0;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
 }
 
-.orders-hero h1 {
-    margin-bottom: 0.35rem;
-    font-size: 1.45rem;
-    color: var(--white);
+.page-title {
+    font-size: var(--text-xl);
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: -0.02em;
+    margin: 0;
 }
 
-.orders-hero p {
-    color: rgba(255, 255, 255, 0.92);
-    font-size: 0.95rem;
-}
-
-.orders-cta {
+.page-toolbar-actions {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     flex-wrap: wrap;
 }
 
-.orders-grid {
-    display: grid;
-    grid-template-columns: 320px 1fr;
-    gap: 1.5rem;
-    align-items: start;
+/* 2. Search Input (Pill Style) */
+.search-container {
+    position: relative;
 }
 
-/* 1. Cartes Filtres & Résultats */
-.orders-card {
-    background-color: #FFFFFF;
-    border: 1px solid #E5E7EB;
-    border-radius: 12px;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-    padding: 1.5rem;
+.search-inline {
+    width: 240px;
+    padding: 0.5rem 1rem 0.5rem 2.25rem;
+    border: 1px solid #e7e5e4;
+    /* Stone 200 */
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    background-color: #ffffff;
+    transition: all 0.15s ease;
+    color: var(--text-main);
 }
 
-/* 2. Titre "Filtres" */
-.orders-card h2.filters-title {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #374151;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 1rem;
+.search-icon-marker {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    color: #a8a29e;
+    /* Stone 400 */
+    pointer-events: none;
 }
 
-/* 3. Titres Résultats */
-.orders-card h2.results-title {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #1F2937;
-    margin-bottom: 1rem;
+.search-inline:hover {
+    border-color: #d6d3d1;
+    /* Stone 300 */
+    background-color: #fefefe;
 }
 
-/* 4. Checkboxes de statut */
-.status-filters-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
-}
-
-.checkbox-simple {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-    color: #374151;
-    font-weight: 500;
-    cursor: pointer;
-}
-
-.checkbox-simple input[type="checkbox"] {
-    width: 1rem;
-    height: 1rem;
-    border: 1px solid #D1D5DB;
-    border-radius: 4px;
-    accent-color: #4A7C23;
-}
-
-/* Inputs & Forms in Filters */
-.filter-row {
-    margin-bottom: 1.5rem;
-}
-
-.filter-label {
-    display: block;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #374151;
-    margin-bottom: 0.5rem;
-}
-
-.form-input {
-    width: 100%;
-    border: 1px solid #D1D5DB;
-    border-radius: 8px;
-    padding: 0.625rem 0.875rem;
-    font-size: 0.875rem;
-    transition: all 0.2s;
-}
-
-.form-input:focus {
+.search-inline:focus {
     outline: none;
-    border-color: #4A7C23;
-    box-shadow: 0 0 0 3px rgba(74, 124, 35, 0.15);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.12);
 }
 
-.filters-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    margin-top: 2rem;
+/* 3. Filter Select (Inline) */
+.filter-select-wrapper {
+    position: relative;
 }
 
-/* 5. Bouton Appliquer */
-.btn-filter-primary {
-    background-color: #4A7C23;
-    color: #FFFFFF;
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    font-weight: 600;
-    border: none;
-    width: 100%;
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.btn-filter-primary:hover {
-    background-color: #3D6A1C;
-}
-
-/* 6. Bouton Réinitialiser */
-.btn-filter-reset {
-    background: none;
-    border: none;
-    padding: 0.5rem 0;
-    color: #4A7C23;
+.filter-select-inline {
+    appearance: none;
+    -webkit-appearance: none;
+    padding: 0.5rem 2rem 0.5rem 0.875rem;
+    border: 1px solid #e7e5e4;
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
     font-weight: 500;
-    text-align: center;
+    color: var(--text-main);
+    background-color: #ffffff;
     cursor: pointer;
-    font-size: 0.9rem;
+    transition: all 0.15s ease;
+    min-width: 160px;
 }
 
-.btn-filter-reset:hover {
-    text-decoration: underline;
+.filter-select-arrow {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 10px;
+    height: 10px;
+    color: #57534e;
+    pointer-events: none;
 }
 
-/* 7. Empty State */
-.empty-state {
-    background-color: #F9FAFB;
-    border: 1px dashed #D1D5DB;
-    border-radius: 8px;
-    padding: 2rem;
-    text-align: center;
+.filter-select-inline:hover {
+    border-color: #d6d3d1;
+    background-color: #fefefe;
+}
+
+.filter-select-inline:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(45, 80, 22, 0.12);
+}
+
+/* 4. Filter Pills (Tabs) */
+.filter-pills-container {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
+    overflow-x: auto;
+    gap: 0.5rem;
+    padding-bottom: 0.25rem;
+    margin-bottom: 1.5rem;
+    scrollbar-width: none;
+    /* Hide scrollbar Firefox */
+    -ms-overflow-style: none;
+    /* Hide scrollbar IE/Edge */
 }
 
-.empty-state-icon {
-    color: #9CA3AF;
-    width: 48px;
-    height: 48px;
-    margin-bottom: 0.5rem;
+.filter-pills-container::-webkit-scrollbar {
+    display: none;
+    /* Hide scrollbar Chrome/Safari/Opera */
 }
 
-.empty-state-text {
+.filter-pill {
+    white-space: nowrap;
+    padding: 0.375rem 1rem;
+    border: none;
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
     font-weight: 500;
-    color: #374151;
-    font-size: 1rem;
-}
-
-.empty-state-subtext {
-    font-size: 0.875rem;
-    color: #6B7280;
-}
-
-/* 8. Pagination */
-.pagination-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 0.75rem;
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid #E5E7EB;
-}
-
-.pagination-info {
-    font-size: 0.875rem;
-    color: #6B7280;
-}
-
-.pagination-btn {
-    background-color: #FFFFFF;
-    border: 1px solid #D1D5DB;
-    color: #374151;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    font-size: 0.875rem;
+    color: #57534e;
+    /* Stone 600 */
+    background-color: #f5f5f4;
+    /* Stone 100 */
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
 }
 
-.pagination-btn:hover:not(:disabled) {
-    background-color: #F9FAFB;
-    border-color: #9CA3AF;
+.filter-pill:hover {
+    background-color: #e7e5e4;
+    /* Stone 200 */
+    color: var(--text-main);
+    transform: translateY(-1px);
 }
 
-.pagination-btn:disabled {
-    background-color: #F3F4F6;
-    color: #9CA3AF;
-    cursor: not-allowed;
-    border-color: #E5E7EB;
+.filter-pill.active {
+    background-color: var(--primary-color);
+    color: #ffffff;
+    box-shadow: 0 2px 4px 0 rgba(45, 80, 22, 0.2);
 }
 
-/* Table styles (migrated and tweaked) */
+.filter-pill.active:hover {
+    background-color: #1f3a0f;
+    /* Primary Hover */
+}
+
+/* 5. Data Table Card */
+.orders-table-card {
+    background-color: #ffffff;
+    border: 1px solid #e7e5e4;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .orders-table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 1rem;
-}
-
-.orders-table th,
-.orders-table td {
-    padding: 0.75rem 1rem;
-    text-align: left;
-    font-size: 0.9rem;
-    color: #374151;
+    font-size: var(--text-base);
 }
 
 .orders-table thead th {
-    background-color: #F9FAFB;
-    color: #6B7280;
+    padding: 0.875rem 1rem;
+    text-align: left;
+    font-size: var(--text-xs);
     font-weight: 600;
+    color: #78716c;
+    /* Stone 500 */
     text-transform: uppercase;
-    font-size: 0.75rem;
     letter-spacing: 0.05em;
-    border-bottom: 1px solid #E5E7EB;
+    background-color: #fafaf9;
+    /* Stone 50 */
+    border-bottom: 1px solid #e7e5e4;
 }
 
 .orders-table tbody tr {
-    border-bottom: 1px solid #F3F4F6;
+    border-bottom: 1px solid #f5f5f4;
+    transition: background-color 0.1s ease;
+}
+
+.orders-table tbody tr:last-child {
+    border-bottom: none;
 }
 
 .orders-table tbody tr:hover {
-    background-color: #F9FAFB;
+    background-color: #fafaf9;
+    cursor: pointer;
 }
 
-/* Status Badges */
+.orders-table tbody td {
+    padding: 0.875rem 1rem;
+    color: var(--text-main);
+    font-weight: 400;
+    vertical-align: middle;
+}
+
+/* Link in Table */
+.link-order {
+    font-weight: 600;
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+.link-order:hover {
+    color: #1f3a0f;
+    text-decoration: underline;
+}
+
+/* Action Link */
+.link-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--text-sm);
+    color: #78716c;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+.link-action:hover {
+    color: var(--primary-color);
+}
+
+.link-action svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* 6. Status Badges Refined */
 .status-badge {
     display: inline-flex;
     align-items: center;
@@ -5036,27 +5045,149 @@ html {
     border-radius: 9999px;
     font-size: 0.75rem;
     font-weight: 600;
+    letter-spacing: 0.01em;
+    line-height: 1;
 }
 
-.state-cancelled {
-    background: #FEF2F2;
-    color: #991B1B;
+/* Soumission -> En attente (Orange) */
+.state-quotation,
+.state-draft {
+    background: #fff7ed;
+    color: #9a3412;
+    border: 1px solid #fed7aa;
 }
 
-.state-done {
-    background: #ECFDF5;
-    color: #065F46;
-}
-
+/* Confirmée / En traitement (Blue/Indigo -> Emerald in design spec, keeping logical mapping) */
 .state-processing {
-    background: #EFF6FF;
-    color: #1E40AF;
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
 }
 
-.state-quotation {
-    background: #FFFBEB;
-    color: #92400E;
+/* Terminée / Envoyée (Green) */
+.state-done {
+    background: #f0fdf4;
+    color: #14532d;
+    border: 1px solid #bbf7d0;
 }
+
+/* Annulée (Red) */
+.state-cancelled {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+/* 7. Empty State Refined */
+.empty-state {
+    padding: 4rem 2rem;
+    text-align: center;
+    background: linear-gradient(180deg, #fafaf9 0%, #ffffff 100%);
+    border: 1px dashed #d6d3d1;
+    border-radius: var(--radius-lg);
+}
+
+.empty-state-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 1.25rem;
+    color: #a8a29e;
+    opacity: 0.8;
+}
+
+.empty-state-text {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 0.5rem;
+}
+
+.empty-state-subtext {
+    font-size: var(--text-base);
+    color: #78716c;
+    margin-bottom: 1.5rem;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* 8. Pagination Minimal */
+.pagination-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #e7e5e4;
+    background-color: #fafaf9;
+}
+
+.pagination-info {
+    font-size: var(--text-sm);
+    color: #57534e;
+    font-weight: 500;
+}
+
+.pagination-btn {
+    padding: 0.4rem 0.875rem;
+    border: 1px solid #e7e5e4;
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--text-main);
+    background-color: #ffffff;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    border-color: #d6d3d1;
+    background-color: #fafaf9;
+    transform: translateY(-1px);
+}
+
+.pagination-btn:disabled {
+    color: #a8a29e;
+    background-color: #f5f5f4;
+    cursor: not-allowed;
+    border-color: #e7e5e4;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .page-toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .page-toolbar-actions {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-inline,
+    .filter-select-inline {
+        width: 100%;
+    }
+
+    .filter-pills-container {
+        padding-bottom: 0.5rem;
+    }
+
+    .orders-table thead {
+        display: none;
+        /* Card view on mobile could be better, but dense table works with scroll */
+    }
+
+    .orders-table-card {
+        overflow-x: auto;
+    }
+}
+
 
 /* =========================================
    NOTIFICATION TOAST SYSTEM (Notyf Overrides)
