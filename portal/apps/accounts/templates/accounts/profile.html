@@ -12,294 +12,225 @@
 <main id="contenu-principal" class="main profile-main" role="main">
     <section class="profile-section">
         <div class="container profile-container">
+            <!-- Breadcrumb -->
             <nav class="breadcrumb-nav" aria-label="Fil d'Ariane">
                 <a href="{% url 'accounts:dashboard' %}">Tableau de bord</a>
                 <span aria-hidden="true">/</span>
                 <span aria-current="page">Profil client</span>
             </nav>
-            <header class="profile-hero">
-                <div class="profile-hero-info">
-                    <div>
-                        <p class="profile-hero-eyebrow">Espace client</p>
-                        <div class="hero-header-group">
-                            <h1 style="margin-bottom: 0;">Profil client</h1>
-                        </div>
-                        <p class="profile-hero-summary">
-                            {{ profile.company_name|default:"Compte individuel" }} • {{ profile.email }}
-                        </p>
-                        <p class="profile-hero-description">Actualisez vos coordonnées et gardez votre accès
-                            sécurisé.</p>
-                    </div>
-                </div>
+
+            <!-- Compact Hero -->
+            <header class="profile-hero-compact">
+                <h1>
+                    Profil
+                    <span class="hero-meta">{{ user.email }}</span>
+                </h1>
             </header>
 
-            <div class="profile-layout">
-                <div class="profile-column profile-column-main">
-                    <article class="profile-card profile-form-card">
-                        <div class="profile-card-header">
-                            <div>
-                                <p class="profile-card-eyebrow">Coordonnées</p>
-                                <h2>Informations générales</h2>
-                                <p>Indiquez vos renseignements d’entreprise et d’expédition.</p>
-                            </div>
-                            <span class="profile-pill profile-pill-neutral">Synchronisé</span>
+            <!-- Unified Card Layout -->
+            <article class="profile-unified-card">
+
+                <!-- Section Profil (Informations générales) -->
+                <section class="profile-section-block">
+                    <header class="section-header">
+                        <h2>
+                            <span class="section-eyebrow">Coordonnées</span>
+                            Informations générales
+                        </h2>
+                    </header>
+
+                    <form method="post" novalidate class="profile-form profile-form--flat">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_name" value="profile">
+
+                        {% if profile_form.non_field_errors %}
+                        <div class="form-errors" role="alert">
+                            {% for error in profile_form.non_field_errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
                         </div>
-                        <form method="post" novalidate class="profile-form">
-                            {% csrf_token %}
-                            <input type="hidden" name="form_name" value="profile">
-                            {% if profile_form.non_field_errors %}
-                            <div class="form-errors" role="alert">
-                                {% for error in profile_form.non_field_errors %}
+                        {% endif %}
+
+                        <div class="form-group">
+                            <label for="{{ profile_form.company_name.id_for_label }}">
+                                Nom de l'entreprise <span class="label-optional">(optionnel)</span>
+                            </label>
+                            {{ profile_form.company_name }}
+                            {% if profile_form.company_name.errors %}
+                            <div class="field-error" role="alert">
+                                {% for error in profile_form.company_name.errors %}
                                 <p>{{ error }}</p>
                                 {% endfor %}
                             </div>
                             {% endif %}
-                            <div class="form-segment">
-                                <div class="form-segment-header">
-                                    <div>
-                                        <p class="form-segment-title">Entreprise</p>
-                                        <p class="form-segment-description">Affiché sur les factures et soumissions.</p>
-                                    </div>
-                                    <span class="profile-pill profile-pill-muted">Optionnel</span>
-                                </div>
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="{{ profile_form.company_name.id_for_label }}">Entreprise</label>
-                                        {{ profile_form.company_name }}
-                                        {% if profile_form.company_name.errors %}
-                                        <div class="field-error" role="alert">
-                                            {% for error in profile_form.company_name.errors %}
-                                            <p>{{ error }}</p>
-                                            {% endfor %}
-                                        </div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-segment">
-                                <div class="form-segment-header">
-                                    <div>
-                                        <p class="form-segment-title">Contact principal</p>
-                                        <p class="form-segment-description">Utilisé pour vous identifier dans Tryton.
-                                        </p>
-                                    </div>
-                                    <span class="profile-pill profile-pill-success">Requis</span>
-                                </div>
-                                <div class="form-row two-columns">
-                                    <div class="form-group">
-                                        <label for="{{ profile_form.first_name.id_for_label }}">Prénom</label>
-                                        {{ profile_form.first_name }}
-                                        {% if profile_form.first_name.errors %}
-                                        <div class="field-error" role="alert">
-                                            {% for error in profile_form.first_name.errors %}
-                                            <p>{{ error }}</p>
-                                            {% endfor %}
-                                        </div>
-                                        {% endif %}
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="{{ profile_form.last_name.id_for_label }}">Nom</label>
-                                        {{ profile_form.last_name }}
-                                        {% if profile_form.last_name.errors %}
-                                        <div class="field-error" role="alert">
-                                            {% for error in profile_form.last_name.errors %}
-                                            <p>{{ error }}</p>
-                                            {% endfor %}
-                                        </div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="{{ profile_form.email.id_for_label }}">Courriel
-                                            (identifiant)</label>
-                                        {{ profile_form.email }}
-                                    </div>
-                                    <div class="form-group phone-field-group"
-                                        data-phone-utils-url="{% static 'vendor/intl-tel-input/js/utils.js' %}">
-                                        <label for="{{ profile_form.phone.id_for_label }}">Téléphone</label>
-                                        {{ profile_form.phone }}
-                                        {% if profile_form.phone.errors %}
-                                        <div class="field-error" role="alert">
-                                            {% for error in profile_form.phone.errors %}
-                                            <p>{{ error }}</p>
-                                            {% endfor %}
-                                        </div>
-                                        {% endif %}
-                                        <div id="phone-client-error" class="field-error is-hidden" role="alert"
-                                            aria-live="polite"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-segment">
-                                <div class="form-segment-header">
-                                    <div>
-                                        <p class="form-segment-title">Adresse principale</p>
-                                        <p class="form-segment-description">Alimente vos bordereaux et confirmations.
-                                        </p>
-                                    </div>
-                                </div>
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="{{ profile_form.address.id_for_label }}">Adresse</label>
-                                        {{ profile_form.address }}
-                                        {% if profile_form.address.errors %}
-                                        <div class="field-error" role="alert">
-                                            {% for error in profile_form.address.errors %}
-                                            <p>{{ error }}</p>
-                                            {% endfor %}
-                                        </div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <div class="form-row two-columns">
-                                    <div class="form-group">
-                                        <label for="{{ profile_form.city.id_for_label }}">Ville</label>
-                                        {{ profile_form.city }}
-                                        {% if profile_form.city.errors %}
-                                        <div class="field-error" role="alert">
-                                            {% for error in profile_form.city.errors %}
-                                            <p>{{ error }}</p>
-                                            {% endfor %}
-                                        </div>
-                                        {% endif %}
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="{{ profile_form.postal_code.id_for_label }}">Code postal</label>
-                                        {{ profile_form.postal_code }}
-                                        {% if profile_form.postal_code.errors %}
-                                        <div class="field-error" role="alert">
-                                            {% for error in profile_form.postal_code.errors %}
-                                            <p>{{ error }}</p>
-                                            {% endfor %}
-                                        </div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">Enregistrer les changements</button>
-                                <p class="form-note">La mise à jour apparaît dans Tryton en quelques secondes.</p>
-                            </div>
-                        </form>
-                    </article>
-                    <article class="profile-card profile-form-card">
-                        <div class="profile-card-header">
-                            <div>
-                                <p class="profile-card-eyebrow">Sécurité</p>
-                                <h2>Mot de passe</h2>
-                                <p>Choisissez une phrase secrète robuste pour protéger vos commandes.</p>
-                            </div>
-                            <span class="profile-pill profile-pill-accent">Conseillé</span>
+                            <span class="field-hint">Affiché sur les factures et soumissions.</span>
                         </div>
-                        <form method="post" novalidate class="profile-form">
-                            {% csrf_token %}
-                            <input type="hidden" name="form_name" value="password">
-                            {% if password_form.non_field_errors %}
-                            <div class="form-errors" role="alert">
-                                {% for error in password_form.non_field_errors %}
+
+                        <div class="form-row two-columns">
+                            <div class="form-group">
+                                <label for="{{ profile_form.first_name.id_for_label }}">Prénom <span
+                                        class="required-mark">*</span></label>
+                                {{ profile_form.first_name }}
+                                {% if profile_form.first_name.errors %}
+                                <div class="field-error" role="alert">
+                                    {% for error in profile_form.first_name.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="form-group">
+                                <label for="{{ profile_form.last_name.id_for_label }}">Nom <span
+                                        class="required-mark">*</span></label>
+                                {{ profile_form.last_name }}
+                                {% if profile_form.last_name.errors %}
+                                <div class="field-error" role="alert">
+                                    {% for error in profile_form.last_name.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="form-row two-columns">
+                            <div class="form-group">
+                                <label for="{{ profile_form.email.id_for_label }}">Courriel</label>
+                                {{ profile_form.email }}
+                            </div>
+                            <div class="form-group phone-field-group"
+                                data-phone-utils-url="{% static 'vendor/intl-tel-input/js/utils.js' %}">
+                                <label for="{{ profile_form.phone.id_for_label }}">Téléphone</label>
+                                {{ profile_form.phone }}
+                                {% if profile_form.phone.errors %}
+                                <div class="field-error" role="alert">
+                                    {% for error in profile_form.phone.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <div id="phone-client-error" class="field-error is-hidden" role="alert"
+                                    aria-live="polite"></div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="{{ profile_form.address.id_for_label }}">Adresse complète</label>
+                            {{ profile_form.address }}
+                            {% if profile_form.address.errors %}
+                            <div class="field-error" role="alert">
+                                {% for error in profile_form.address.errors %}
                                 <p>{{ error }}</p>
                                 {% endfor %}
                             </div>
                             {% endif %}
-                            <div class="form-segment">
-                                <div class="form-group">
-                                    <label for="{{ password_form.current_password.id_for_label }}">Mot de passe
-                                        actuel</label>
-                                    {{ password_form.current_password }}
-                                    {% if password_form.current_password.errors %}
-                                    <div class="field-error" role="alert">
-                                        {% for error in password_form.current_password.errors %}
-                                        <p>{{ error }}</p>
-                                        {% endfor %}
-                                    </div>
-                                    {% endif %}
+                        </div>
+
+                        <div class="form-row two-columns">
+                            <div class="form-group">
+                                <label for="{{ profile_form.city.id_for_label }}">Ville</label>
+                                {{ profile_form.city }}
+                                {% if profile_form.city.errors %}
+                                <div class="field-error" role="alert">
+                                    {% for error in profile_form.city.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
                                 </div>
-                                <div class="form-row two-columns">
-                                    <div class="form-group">
-                                        <label for="{{ password_form.new_password1.id_for_label }}">Nouveau mot de
-                                            passe</label>
-                                        {{ password_form.new_password1 }}
-                                        <small class="form-help">{{ password_form.new_password1.help_text }}</small>
-                                        {% if password_form.new_password1.errors %}
-                                        <div class="field-error" role="alert">
-                                            {% for error in password_form.new_password1.errors %}
-                                            <p>{{ error }}</p>
-                                            {% endfor %}
-                                        </div>
-                                        {% endif %}
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="{{ password_form.new_password2.id_for_label }}">Confirmez le nouveau
-                                            mot de passe</label>
-                                        {{ password_form.new_password2 }}
-                                        {% if password_form.new_password2.errors %}
-                                        <div class="field-error" role="alert">
-                                            {% for error in password_form.new_password2.errors %}
-                                            <p>{{ error }}</p>
-                                            {% endfor %}
-                                        </div>
-                                        {% endif %}
-                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="form-group">
+                                <label for="{{ profile_form.postal_code.id_for_label }}">Code postal</label>
+                                {{ profile_form.postal_code }}
+                                {% if profile_form.postal_code.errors %}
+                                <div class="field-error" role="alert">
+                                    {% for error in profile_form.postal_code.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
                                 </div>
+                                {% endif %}
                             </div>
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-secondary">Mettre à jour le mot de passe</button>
-                                <p class="form-note">Utilisez au moins 12 caractères et mélangez lettres, chiffres et
-                                    symboles.</p>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Enregistrer</button>
+                            <span class="form-hint">Mise à jour immédiate.</span>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- Section Sécurité (Mot de passe) -->
+                <section class="profile-section-block profile-section-block--security">
+                    <header class="section-header">
+                        <h2>
+                            <span class="section-eyebrow">Sécurité</span>
+                            <span>Mot de passe <i class="lock-icon" aria-hidden="true">🔒</i></span>
+                        </h2>
+                    </header>
+
+                    <form method="post" novalidate class="profile-form profile-form--flat">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_name" value="password">
+
+                        {% if password_form.non_field_errors %}
+                        <div class="form-errors" role="alert">
+                            {% for error in password_form.non_field_errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <div class="form-group">
+                            <label for="{{ password_form.current_password.id_for_label }}">Mot de passe actuel</label>
+                            {{ password_form.current_password }}
+                            {% if password_form.current_password.errors %}
+                            <div class="field-error" role="alert">
+                                {% for error in password_form.current_password.errors %}
+                                <p>{{ error }}</p>
+                                {% endfor %}
                             </div>
-                        </form>
-                    </article>
-                </div>
-                <div class="profile-column profile-column-aside">
-                    <section class="profile-sidecard">
-                        <h3>Résumé de la fiche</h3>
-                        <dl class="profile-meta-list">
-                            <div class="profile-meta-row">
-                                <dt>Identifiant</dt>
-                                <dd>{{ profile.login }}</dd>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-row two-columns">
+                            <div class="form-group">
+                                <label for="{{ password_form.new_password1.id_for_label }}">Nouveau mot de passe</label>
+                                {{ password_form.new_password1 }}
+                                <span class="field-hint">{{ password_form.new_password1.help_text }}</span>
+                                {% if password_form.new_password1.errors %}
+                                <div class="field-error" role="alert">
+                                    {% for error in password_form.new_password1.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
                             </div>
-                            <div class="profile-meta-row">
-                                <dt>Entreprise</dt>
-                                <dd>{{ profile.company_name|default:"Compte individuel" }}</dd>
+                            <div class="form-group">
+                                <label for="{{ password_form.new_password2.id_for_label }}">Confirmer</label>
+                                {{ password_form.new_password2 }}
+                                {% if password_form.new_password2.errors %}
+                                <div class="field-error" role="alert">
+                                    {% for error in password_form.new_password2.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
                             </div>
-                            <div class="profile-meta-row">
-                                <dt>Adresse</dt>
-                                <dd>
-                                    {% if profile.address.street %}
-                                    {{ profile.address.street }}<br>
-                                    {% endif %}
-                                    {% if profile.address.city %}
-                                    {{ profile.address.city }}
-                                    {% else %}
-                                    Ville à confirmer
-                                    {% endif %}
-                                    {% if profile.address.postal_code %}
-                                    , {{ profile.address.postal_code }}
-                                    {% endif %}
-                                </dd>
-                            </div>
-                            <div class="profile-meta-row">
-                                <dt>ID Tryton</dt>
-                                <dd>#{{ profile.party_id }}</dd>
-                            </div>
-                        </dl>
-                        <p class="profile-sidecard-note">Ces données alimentent vos commandes et documents officiels.
-                        </p>
-                    </section>
-                    <section class="profile-sidecard profile-sidecard--accent">
-                        <h3>Besoin d’aide&nbsp;?</h3>
-                        <p>Notre équipe service client répond rapidement à vos questions sur la facturation, les
-                            livraisons ou la sécurité de votre compte.</p>
-                        <ul class="profile-support-list">
-                            <li><strong>Courriel</strong> <a href="mailto:info@paletteitf.ca">info@paletteitf.ca</a>
-                            </li>
-                            <li><strong>Téléphone</strong> <a href="tel:+14186712814">418-671-2814</a></li>
-                        </ul>
-                        <a href="{% url 'core:home' %}#contact" class="btn btn-tertiary">Parler à l’équipe</a>
-                    </section>
-                </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-secondary">Mettre à jour</button>
+                        </div>
+                    </form>
+                </section>
+
+            </article>
+
+            <!-- Discrete Help Link -->
+            <div class="help-banner-discrete">
+                <span class="help-text">Besoin d'aide avec votre compte ?</span>
+                <a href="mailto:info@paletteitf.ca" class="help-link">Contactez notre support →</a>
             </div>
+
         </div>
     </section>
 </main>
@@ -394,12 +325,17 @@
             });
             if (form) {
                 form.addEventListener('submit', (event) => {
-                    if (!validateNumber()) {
-                        event.preventDefault();
-                        phoneInput.focus();
-                        return;
+                    const submitBtn = form.querySelector('button[type="submit"]');
+
+                    // Si c'est le formulaire "profile", on valide le téléphone
+                    if (form.querySelector('input[name="form_name"]').value === 'profile') {
+                        if (!validateNumber()) {
+                            event.preventDefault();
+                            phoneInput.focus();
+                            return;
+                        }
+                        normalizeNumber();
                     }
-                    normalizeNumber();
                 });
             }
         }

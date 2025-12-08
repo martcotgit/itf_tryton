@@ -6,6 +6,8 @@ from django.views import View
 from django.views.generic import TemplateView
 
 from apps.core.services import PublicProductService, PublicProductServiceError, build_products_schema
+from apps.accounts.services import PortalOrderService
+
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +21,19 @@ class HealthCheckView(View):
 
 class HomeView(TemplateView):
     template_name = "core/home.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.user.is_authenticated:
+            try:
+                service = PortalOrderService()
+                result = service.list_orders(login=self.request.user.email, page_size=5)
+                context["recent_orders"] = result.orders
+            except Exception as e:
+                logger.error("Error fetching orders for home dashboard: %s", e)
+                context["recent_orders"] = []
+        return context
+
 
 
 class ServicesView(TemplateView):

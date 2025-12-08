@@ -120,6 +120,119 @@
 
 {% block content %}
 <main id="contenu-principal" class="main" role="main">
+    {% if user.is_authenticated %}
+    {# --- DASHBOARD VIEW (AUTHENTICATED) --- #}
+    <div class="dashboard-container">
+        <!-- Greeting Banner -->
+        <div class="greeting-banner">
+            <div class="greeting-icon">👋</div>
+            <div class="greeting-text">
+                <h1>Bienvenue, {{ user.first_name|default:user.username }} !</h1>
+                <p>Voici un résumé de votre activité.</p>
+            </div>
+        </div>
+
+        <!-- Action Cards -->
+        <div class="action-cards">
+            <a href="{% url 'accounts:orders-new' %}" class="action-card">
+                <div class="action-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                </div>
+                <div class="action-label">Nouvelle Commande</div>
+                <div class="action-desc">Passez une commande de palettes en quelques clics.</div>
+            </a>
+            <a href="{% url 'accounts:orders-list' %}" class="action-card">
+                <div class="action-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                </div>
+                <div class="action-label">Mes Commandes</div>
+                <div class="action-desc">Suivez l'état de vos commandes en cours et passées.</div>
+            </a>
+            <a href="{% url 'accounts:profile' %}" class="action-card">
+                <div class="action-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </div>
+                <div class="action-label">Mon Profil</div>
+                <div class="action-desc">Gérez vos informations personnelles et préférences.</div>
+            </a>
+        </div>
+
+        <!-- Recent Activity Table -->
+        <section class="recent-orders-section">
+            <div class="section-header">
+                <h2>Activité récente</h2>
+                <a href="{% url 'accounts:orders-list' %}" class="see-all-link">Voir tout</a>
+            </div>
+            <div class="table-responsive">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th># Commande</th>
+                            <th>Date</th>
+                            <th>Statut</th>
+                            <th>Montant</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in recent_orders %}
+                        <tr onclick="window.location='{% url 'accounts:orders-detail' order.id %}'"
+                            style="cursor: pointer;">
+                            <td><strong>{{ order.number|default:"-" }}</strong></td>
+                            <td>{{ order.create_date|date:"d M Y" }}</td>
+                            <td>
+                                <span class="status-badge status-{{ order.state|lower }}">
+                                    {{ order.state_label }}
+                                </span>
+                            </td>
+                            <td>{% if order.total_amount %}{{ order.total_amount }} ${% else %}-{% endif %}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4">
+                                <div class="empty-state">
+                                    <p>Vous n'avez pas encore passé de commande.</p>
+                                    <a href="{% url 'accounts:orders-new' %}" class="btn btn-primary btn-sm">Passer
+                                        votre première commande →</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Help Banner -->
+        <div class="help-banner">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path
+                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                </path>
+            </svg>
+            <div class="help-text">
+                Une question ? Contactez notre équipe au <a href="tel:+14186712814" class="help-link">418-671-2814</a>.
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    {# --- LANDING PAGE (ANONYMOUS) --- #}
     <section class="hero">
         <div class="hero-content">
             <h2 class="hero-title">La palette, c'est notre affaire.</h2>
@@ -194,6 +307,7 @@
             </div>
         </div>
     </section>
+    {% endif %}
 </main>
 
 <footer class="footer" role="contentinfo">
