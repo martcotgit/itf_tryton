@@ -65,9 +65,16 @@
             <section class="orders-card">
                 <div class="orders-summary">
                     <div>
-                        <h2 class="results-title">Résultats{% if pagination %}{% with total=pagination.total|default_if_none:0 %} <span
-                                style="font-weight: 400; font-size: 0.9em; color: #6B7280; margin-left: 0.5rem;">{{
-                                total }} commande{% if total != 1 %}s{% endif %}</span>{% endwith %}{% endif %}</h2>
+                        <h2 class="results-title">
+                            Résultats
+                            {% if pagination %}
+                            {% with total=pagination.total|default_if_none:0 %}
+                            <span style="font-weight: 400; font-size: 0.9em; color: #6B7280; margin-left: 0.5rem;">
+                                {{ total }} commande{% if total != 1 %}s{% endif %}
+                            </span>
+                            {% endwith %}
+                            {% endif %}
+                        </h2>
                     </div>
                 </div>
 
@@ -93,9 +100,10 @@
                                 <td>{{ order.reference|default:"—" }}</td>
                                 <td><span class="status-badge state-{{ order.state|default:'indetermine' }}">{{
                                         order.state_label }}</span></td>
-                                <td>{% if order.shipping_date %}{{ order.shipping_date|date:"Y-m-d" }}{% else %}—{% endif %}</td>
+                                <td>{% if order.shipping_date %}{{ order.shipping_date|date:"Y-m-d" }}{% else %}—{% endif %}
+                                </td>
                                 <td>{% if order.total_amount %}{{ order.total_amount }}{% if order.currency_label %} {{
-                                    order.currency_label }}{% endif %}{% else %}—{% endif %}</td>
+                                        order.currency_label }}{% endif %}{% else %}—{% endif %}</td>
                                 <td>{% if order.create_date %}{{ order.create_date|date:"Y-m-d" }}{% else %}—{% endif %}
                                 </td>
                             </tr>
@@ -126,22 +134,28 @@
                     {% endwith %}
                     <div class="pagination-actions">
                         <form method="get" class="pagination-form" style="display:inline;">
-                            {% for status in filters.statuses %}<input type="hidden" name="statut"
-                                value="{{ status }}">{% endfor %}
-                            {% if filters.period_days %}<input type="hidden" name="periode"
-                                value="{{ filters.period_days }}">{% endif %}
-                            {% if filters.search %}<input type="hidden" name="recherche" value="{{ filters.search }}">{%
-                            endif %}
+                            {% for status in filters.statuses %}
+                            <input type="hidden" name="statut" value="{{ status }}">
+                            {% endfor %}
+                            {% if filters.period_days %}
+                            <input type="hidden" name="periode" value="{{ filters.period_days }}">
+                            {% endif %}
+                            {% if filters.search %}
+                            <input type="hidden" name="recherche" value="{{ filters.search }}">
+                            {% endif %}
                             <input type="hidden" name="page" value="{{ pagination.page|add:'-1' }}">
                             <button type="submit" class="pagination-btn" {% if not pagination.has_previous %}disabled{% endif %}>Précédent</button>
                         </form>
                         <form method="get" class="pagination-form" style="display:inline;">
-                            {% for status in filters.statuses %}<input type="hidden" name="statut"
-                                value="{{ status }}">{% endfor %}
-                            {% if filters.period_days %}<input type="hidden" name="periode"
-                                value="{{ filters.period_days }}">{% endif %}
-                            {% if filters.search %}<input type="hidden" name="recherche" value="{{ filters.search }}">{%
-                            endif %}
+                            {% for status in filters.statuses %}
+                            <input type="hidden" name="statut" value="{{ status }}">
+                            {% endfor %}
+                            {% if filters.period_days %}
+                            <input type="hidden" name="periode" value="{{ filters.period_days }}">
+                            {% endif %}
+                            {% if filters.search %}
+                            <input type="hidden" name="recherche" value="{{ filters.search }}">
+                            {% endif %}
                             <input type="hidden" name="page" value="{{ pagination.page|add:'1' }}">
                             <button type="submit" class="pagination-btn" {% if not pagination.has_next %}disabled{% endif %}>Suivant</button>
                         </form>
