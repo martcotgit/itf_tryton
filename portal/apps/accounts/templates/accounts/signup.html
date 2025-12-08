@@ -3,142 +3,138 @@
 
 {% block title %}Espace client ITF – Création de compte{% endblock %}
 
+
 {% block content %}
-<main id="contenu-principal" class="main auth-main" role="main">
+<main id="contenu-principal" class="auth-main" role="main">
     <section class="auth-section">
         <div class="container auth-container">
             <div class="auth-card" role="form">
-                <h1 class="auth-title">Créer votre espace client</h1>
-                <p class="auth-subtitle">
-                    Accédez à vos documents en ligne, suivez vos commandes et échangez plus rapidement avec l’équipe
-                    d’ITF.
-                </p>
-                <form method="post" novalidate>
+                <header class="auth-header">
+                    <h1 class="auth-title">Fini les appels pour savoir où en est votre commande</h1>
+                    <p class="auth-subtitle">
+                        Consultez vos factures, suivez vos livraisons et contactez notre équipe — le tout sans décrocher
+                        le téléphone.
+                    </p>
+                </header>
+
+                <form method="post" novalidate class="auth-form">
                     {% csrf_token %}
                     {% if form.non_field_errors %}
                     <div class="form-errors" role="alert">
                         {% for error in form.non_field_errors %}
-                        <p>{{ error }}</p>
+                        <p class="field-error">{{ error }}</p>
                         {% endfor %}
                     </div>
                     {% endif %}
+
                     <div class="form-group">
                         <label for="{{ form.company_name.id_for_label }}">Entreprise</label>
                         {{ form.company_name }}
                         {% if form.company_name.errors %}
-                        <div class="field-error" role="alert">
-                            {% for error in form.company_name.errors %}
-                            <p>{{ error }}</p>
-                            {% endfor %}
-                        </div>
+                        {% for error in form.company_name.errors %}
+                        <p class="field-error">{{ error }}</p>
+                        {% endfor %}
                         {% endif %}
                     </div>
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="{{ form.first_name.id_for_label }}">Prénom</label>
                             {{ form.first_name }}
                             {% if form.first_name.errors %}
-                            <div class="field-error" role="alert">
-                                {% for error in form.first_name.errors %}
-                                <p>{{ error }}</p>
-                                {% endfor %}
-                            </div>
+                            {% for error in form.first_name.errors %}
+                            <p class="field-error">{{ error }}</p>
+                            {% endfor %}
                             {% endif %}
                         </div>
                         <div class="form-group">
                             <label for="{{ form.last_name.id_for_label }}">Nom</label>
                             {{ form.last_name }}
                             {% if form.last_name.errors %}
-                            <div class="field-error" role="alert">
-                                {% for error in form.last_name.errors %}
-                                <p>{{ error }}</p>
-                                {% endfor %}
-                            </div>
+                            {% for error in form.last_name.errors %}
+                            <p class="field-error">{{ error }}</p>
+                            {% endfor %}
                             {% endif %}
                         </div>
                     </div>
+
                     <div class="form-group">
                         <label for="{{ form.email.id_for_label }}">Adresse courriel</label>
                         {{ form.email }}
                         {% if form.email.errors %}
-                        <div class="field-error" role="alert">
-                            {% for error in form.email.errors %}
-                            <p>{{ error }}</p>
-                            {% endfor %}
-                        </div>
+                        {% for error in form.email.errors %}
+                        <p class="field-error">{{ error }}</p>
+                        {% endfor %}
                         {% endif %}
                     </div>
+
                     <div class="form-group">
-                        <label for="{{ form.phone.id_for_label }}">Téléphone</label>
+                        <label for="{{ form.phone.id_for_label }}">Téléphone <span
+                                class="label-optional">(facultatif)</span></label>
                         {{ form.phone }}
                         {% if form.phone.errors %}
-                        <div class="field-error" role="alert">
-                            {% for error in form.phone.errors %}
-                            <p>{{ error }}</p>
-                            {% endfor %}
-                        </div>
+                        {% for error in form.phone.errors %}
+                        <p class="field-error">{{ error }}</p>
+                        {% endfor %}
                         {% endif %}
                     </div>
+
                     <div class="form-group">
                         <label for="{{ form.password1.id_for_label }}">Mot de passe</label>
                         {{ form.password1 }}
                         {% if form.password1.help_text %}
-                        <p class="field-help">{{ form.password1.help_text }}</p>
+                        <p class="field-help">Minimum 8 caractères (mélangez lettres, chiffres et symboles)</p>
                         {% endif %}
                         {% if form.password1.errors %}
-                        <div class="field-error" role="alert">
-                            {% for error in form.password1.errors %}
-                            <p>{{ error }}</p>
-                            {% endfor %}
-                        </div>
+                        {% for error in form.password1.errors %}
+                        <p class="field-error">{{ error }}</p>
+                        {% endfor %}
                         {% endif %}
                     </div>
+
                     <div class="form-group">
                         <label for="{{ form.password2.id_for_label }}">Confirmation du mot de passe</label>
                         {{ form.password2 }}
-                        {% if form.password2.help_text %}
-                        <p class="field-help">{{ form.password2.help_text }}</p>
-                        {% endif %}
                         {% if form.password2.errors %}
-                        <div class="field-error" role="alert">
-                            {% for error in form.password2.errors %}
-                            <p>{{ error }}</p>
-                            {% endfor %}
-                        </div>
+                        {% for error in form.password2.errors %}
+                        <p class="field-error">{{ error }}</p>
+                        {% endfor %}
                         {% endif %}
                     </div>
+
                     <div class="form-group form-group-checkbox">
                         <label class="checkbox-label">
                             {{ form.accept_terms }}
                             <span>{{ form.accept_terms.label }}</span>
                         </label>
                         {% if form.accept_terms.errors %}
-                        <div class="field-error" role="alert">
-                            {% for error in form.accept_terms.errors %}
-                            <p>{{ error }}</p>
-                            {% endfor %}
-                        </div>
+                        {% for error in form.accept_terms.errors %}
+                        <p class="field-error">{{ error }}</p>
+                        {% endfor %}
                         {% endif %}
                     </div>
-                    <button type="submit" class="btn btn-primary auth-submit">Créer mon compte</button>
+
+                    <button type="submit" class="auth-submit">
+                        Créer mon compte gratuit <span class="btn-hint">(30 secondes)</span>
+                    </button>
+
+                    <p class="auth-trust-badge">
+                        ✓ Gratuit · ✓ Sans engagement · ✓ Accès immédiat
+                    </p>
                 </form>
+
                 <div class="auth-footer">
-                    <p>Déjà client&nbsp;?</p>
-                    <a href="{% url 'accounts:login' %}" class="btn btn-secondary">Se connecter</a>
+                    <p>Vous avez déjà un compte ?</p>
+                    <a href="{% url 'accounts:login' %}" class="btn btn-secondary">Connectez-vous →</a>
                 </div>
             </div>
-            <aside class="auth-aside">
-                <h2>Votre espace client</h2>
-                <ul>
-                    <li>Suivi en ligne de vos soumissions et commandes</li>
-                    <li>Consultation de vos factures en quelques clics</li>
-                    <li>Canal direct avec l’équipe d’ITF</li>
-                </ul>
-                <p class="aside-note">
-                    Votre compte est créé instantanément. Vous pourrez mettre à jour vos renseignements dès votre
-                    première connexion.
-                </p>
-            </aside>
+
+            <!-- Inline Benefits Marketing -->
+            <div class="auth-benefits-inline">
+                <span>Plus besoin d'appeler pour un suivi</span>
+                <span>Factures toujours accessibles</span>
+                <span>Réponse équipe < 24h</span>
+            </div>
         </div>
     </section>
 </main>
