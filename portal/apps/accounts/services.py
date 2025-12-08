@@ -940,6 +940,7 @@ class PortalOrderService:
         client_reference: Optional[str],
         shipping_date: date,
         shipping_address_id: int,
+        invoice_address_id: int,
         lines: Sequence[PortalOrderLineInput],
         instructions: Optional[str] = None,
     ) -> PortalOrderSubmissionResult:
@@ -952,6 +953,8 @@ class PortalOrderService:
         address_ids = {address.id for address in addresses}
         if shipping_address_id not in address_ids:
             raise PortalOrderServiceError("Adresse de livraison invalide. Rechargez la page pour actualiser la liste.")
+        if invoice_address_id not in address_ids:
+            raise PortalOrderServiceError("Adresse de facturation invalide. Rechargez la page pour actualiser la liste.")
 
         product_ids = {line.product_id for line in lines}
         products = self._read_products(product_ids)
@@ -984,6 +987,7 @@ class PortalOrderService:
             "currency": self._resolve_currency_id(),
             "party": party_id,
             "shipment_address": shipping_address_id,
+            "invoice_address": invoice_address_id,
             "lines": [("create", payload_lines)],
             "state": "draft",
         }

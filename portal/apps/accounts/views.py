@@ -344,6 +344,7 @@ class OrderCreateView(LoginRequiredMixin, TemplateView):
                     client_reference=form.cleaned_data.get("client_reference"),
                     shipping_date=form.cleaned_data["shipping_date"],
                     shipping_address_id=form.cleaned_data["shipping_address"],
+                    invoice_address_id=form.cleaned_data["invoice_address"],
                     lines=lines,
                     instructions=form.cleaned_data.get("notes"),
                 )

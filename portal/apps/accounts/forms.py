@@ -387,6 +387,11 @@ class OrderDraftForm(forms.Form):
         choices=(),
         widget=forms.Select(attrs={"class": "form-input"}),
     )
+    invoice_address = forms.ChoiceField(
+        label="Adresse de facturation",
+        choices=(),
+        widget=forms.Select(attrs={"class": "form-input"}),
+    )
     notes = forms.CharField(
         label="Instructions supplémentaires",
         required=False,
@@ -403,6 +408,7 @@ class OrderDraftForm(forms.Form):
         super().__init__(*args, **kwargs)
         choices = address_choices or []
         self.fields["shipping_address"].choices = choices
+        self.fields["invoice_address"].choices = choices
 
     def clean_client_reference(self):
         value = (self.cleaned_data.get("client_reference") or "").strip()
@@ -420,6 +426,15 @@ class OrderDraftForm(forms.Form):
             return int(value)
         except (TypeError, ValueError):
             raise forms.ValidationError("Adresse de livraison invalide.")
+
+    def clean_invoice_address(self):
+        value = self.cleaned_data.get("invoice_address")
+        if value in ("", None):
+            raise forms.ValidationError("Sélectionnez une adresse de facturation.")
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            raise forms.ValidationError("Adresse de facturation invalide.")
 
 
 class OrderLineForm(forms.Form):
