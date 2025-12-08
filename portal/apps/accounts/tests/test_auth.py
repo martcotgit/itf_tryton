@@ -94,14 +94,13 @@ class ClientAuthTests(TestCase):
         self.assertEqual(user.email, "client@example.com")
         self.assertEqual(user.first_name, "client@example.com")
         self.assertEqual(user.last_name, "")
-    def test_dashboard_requires_authentication(self):
+    def test_unauthenticated_user_sees_landing_page(self):
         response = self.client.get(self.dashboard_url)
 
-        self.assertRedirects(
-            response,
-            f"{self.login_url}?next={self.dashboard_url}",
-            fetch_redirect_response=False,
-        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "core/home.html")
+        self.assertContains(response, "Vos palettes livrées demain")
+        self.assertNotContains(response, "Bienvenue,")
 
     def test_authenticated_user_skips_login(self):
         user = self.UserModel.objects.create_user(username="client@example.com")
