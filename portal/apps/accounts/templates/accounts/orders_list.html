@@ -25,10 +25,15 @@
                 <!-- Période Select -->
                 <div class="filter-select-wrapper">
                     <select name="periode" class="filter-select-inline" onchange="this.form.submit()">
+                        {% if period_options %}
                         {% for option in period_options %}
-                        <option value="{{ option.value }}" {% if option.selected %}selected{% endif %}>{{ option.label
-                            }}</option>
+                        <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>
                         {% endfor %}
+                        {% else %}
+                        <option value="30">Derniers 30 jours</option>
+                        <option value="90" selected>Derniers 90 jours</option>
+                        <option value="180">Derniers 180 jours</option>
+                        {% endif %}
                     </select>
                     <svg class="filter-select-arrow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
