@@ -22,175 +22,106 @@
 {% endblock %}
 
 {% block content %}
-<main id="contenu-principal" class="products-main" role="main">
-    <section class="product-hero" aria-labelledby="products-title">
-        <div class="container hero-layout">
-            <div class="hero-copy">
-
-                <h1 id="products-title">Palettes en inventaire réel</h1>
-                <p class="hero-intro">
-                    Stock synchronisé en temps réel. Zéro mauvaise surprise. Obtenez une soumission en 24h.
-                </p>
-                <div class="hero-cta">
-                    <a class="btn btn-gold" href="{% url 'accounts:login' %}">Obtenir mon prix →</a>
-                    <a class="btn btn-secondary" href="tel:+1-418-671-2814">📞 418-671-2814</a>
-                </div>
-                <ul class="hero-highlights" aria-label="Avantages principaux">
-                    <li><span class="highlight-icon">✓</span> Qualité inspectée grade A/B</li>
-                    <li><span class="highlight-icon">✓</span> Stock mis à jour chaque jour</li>
-                    <li><span class="highlight-icon">✓</span> Livraison régionale SLSJ</li>
-                    <li><span class="highlight-icon">✓</span> Consigne & récupération</li>
-                </ul>
+<main class="products-main" role="main">
+    <!-- Sticky Header Bar -->
+    <div class="page-header-bar">
+        <div class="page-header-container">
+            <div class="page-header-left">
+                <nav class="breadcrumb" aria-label="Breadcrumb">
+                    <a href="{% url 'core:home' %}">Accueil</a>
+                    <span class="separator">/</span>
+                    <span class="current">Produits</span>
+                </nav>
+                <h1>Catalogue de palettes</h1>
             </div>
-            <div class="hero-gallery" aria-hidden="true">
-                <div class="hero-photo hero-photo--primary"></div>
-                <div class="hero-photo hero-photo--secondary"></div>
-                <div class="hero-photo hero-photo--accent"></div>
+            <div class="page-header-right">
+                <div class="filter-group">
+                    <select class="filter-select" aria-label="Filtrer par dimension">
+                        <option>Toutes les dimensions</option>
+                        <option>48 x 40 po</option>
+                        <option>48 x 45 po</option>
+                    </select>
+                    <select class="sort-select" aria-label="Trier les produits">
+                        <option>Trier par prix</option>
+                        <option>Trier par nom</option>
+                    </select>
+                </div>
             </div>
         </div>
-    </section>
+    </div>
 
-    {% if category_facets %}
-    <section class="product-categories" aria-labelledby="categories-title">
-        <div class="container">
-            <h2 id="categories-title">Familles de palettes en vedette</h2>
-            <div class="category-grid" role="list">
-                {% for category in category_facets %}
-                <article class="category-card category-card--{{ forloop.counter }}" role="listitem">
-                    <div class="category-visual"></div>
-                    <div class="category-body">
-                        <span class="category-pill">{{ category.count }} types</span>
-                        <h3>{{ category.name }}</h3>
-                        <p>Palettes {{ category.name|lower }} livrées au rythme de vos opérations, stock vérifié en
-                            direct.</p>
-                    </div>
-                </article>
-                {% endfor %}
-            </div>
-        </div>
-    </section>
-    {% endif %}
+    <div class="product-container">
+        {% if products %}
+        <ul class="product-grid" role="list">
+            {% for product in products %}
+            <li class="product-card-compact" role="listitem">
+                <div class="product-card-header">
+                    <span class="product-sku">{{ product.code|default:"SKU" }}</span>
+                    {% if product.quantity_available and product.quantity_available > 0 %}
+                    <span class="product-stock in-stock">
+                        <svg class="stock-icon" viewBox="0 0 12 12">
+                            <circle cx="6" cy="6" r="4" fill="currentColor" />
+                        </svg>
+                        En stock
+                    </span>
+                    {% endif %}
+                </div>
 
-    {% if products %}
-    <section class="product-listing" aria-labelledby="listing-title">
-        <div class="container">
-            <div class="listing-header">
-                <div>
-                    <h2 id="listing-title">Palettes prêtes à être expédiées</h2>
-                    <p class="listing-subtitle">Inventaire synchronisé avec notre ERP. Contactez-nous pour les prix et
-                        la disponibilité exacte.</p>
+                <div class="product-card-body">
+                    <h3 class="product-title">{{ product.name }}</h3>
+                    <p class="product-dimensions">{{ product.description|default:"Dimensions standard"|truncatechars:50
+                        }}</p>
                 </div>
-                <div class="listing-meta">
-                    <span class="badge">{{ products_total }} modèles disponibles</span>
-                </div>
-            </div>
-            <div class="product-grid" role="list" aria-live="polite">
-                {% for product in products %}
-                <article class="product-card" role="listitem">
-                    <div class="product-copy">
-                        <header>
-                            <p class="product-code">{{ product.code|default:"SKU" }}</p>
-                            <h3>{{ product.name }}</h3>
-                        </header>
-                        <p class="product-description">{{ product.description|default:"Contactez-nous pour les
-                            spécifications." }}</p>
-                        <ul class="product-tags" aria-label="Catégories">
-                            {% for category in product.categories %}
-                            <li>{{ category }}</li>
-                            {% empty %}
-                            <li>Palettes</li>
-                            {% endfor %}
-                        </ul>
-                        {% if product.quantity_available and product.quantity_available > 0 %}
-                        <p class="availability">En stock – prêt à expédier</p>
-                        {% endif %}
-                        <div class="product-actions">
-                            <a class="btn btn-gold btn-sm" href="{% url 'accounts:login' %}">Obtenir un prix</a>
-                            <a class="btn btn-ghost" href="tel:+1-418-671-2814">📞 Appeler</a>
+
+                <div class="product-card-footer">
+                    <span class="product-price">Sur devis</span>
+                    <div class="product-actions">
+                        <div class="qty-control">
+                            <button class="qty-btn qty-minus" aria-label="Diminuer">−</button>
+                            <input type="number" value="1" min="1" class="qty-input" aria-label="Quantité">
+                            <button class="qty-btn qty-plus" aria-label="Augmenter">+</button>
                         </div>
+                        <button class="btn btn-primary btn-sm">Ajouter</button>
                     </div>
-                </article>
-                {% endfor %}
-            </div>
-            {% if paginator.num_pages > 1 %}
-            <nav class="product-pagination" aria-label="Pagination des produits">
-                <p class="product-pagination__summary">
-                    Page {{ products.number }} sur {{ paginator.num_pages }} — {{ products_total }} modèles au total
-                </p>
-                <div class="product-pagination__controls">
-                    {% if products.has_previous %}
-                    <a class="product-pagination__nav" href="?page={{ products.previous_page_number }}" rel="prev">←
-                        Précédent</a>
-                    {% else %}
-                    <span class="product-pagination__nav is-disabled" aria-disabled="true">← Précédent</span>
-                    {% endif %}
-
-                    <div class="product-pagination__pages" role="list">
-                        {% for page_num in paginator.page_range %}
-                        {% if page_num == products.number %}
-                        <span role="listitem" class="product-pagination__page is-active" aria-current="page">{{ page_num
-                            }}</span>
-                        {% else %}
-                        <a role="listitem" class="product-pagination__page" href="?page={{ page_num }}">{{ page_num
-                            }}</a>
-                        {% endif %}
-                        {% endfor %}
-                    </div>
-
-                    {% if products.has_next %}
-                    <a class="product-pagination__nav" href="?page={{ products.next_page_number }}" rel="next">Suivant
-                        →</a>
-                    {% else %}
-                    <span class="product-pagination__nav is-disabled" aria-disabled="true">Suivant →</span>
-                    {% endif %}
                 </div>
-            </nav>
-            {% endif %}
-        </div>
-    </section>
-    {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
 
-    <section class="product-faq" aria-labelledby="faq-title">
-        <div class="container">
-            <h2 id="faq-title">Questions fréquentes</h2>
-            <div class="faq-grid">
-                <article class="faq-card">
-                    <h3>Pourquoi pas de prix affichés?</h3>
-                    <p>Les tarifs varient selon le volume et le grade. Nous préparons une soumission personnalisée basée
-                        sur l'inventaire réel.</p>
-                </article>
-                <article class="faq-card">
-                    <h3>L'inventaire est-il fiable?</h3>
-                    <p>Oui! Cette page se synchronise avec Tryton toutes les 15 minutes. Seuls les produits en stock
-                        sont affichés.</p>
-                </article>
-                <article class="faq-card">
-                    <h3>Offrez-vous la consignation?</h3>
-                    <p>Absolument. Indiquez vos besoins et notre équipe gère les échanges et le suivi dans notre
-                        système.</p>
-                </article>
-                <article class="faq-card">
-                    <h3>Des fiches produits à venir?</h3>
-                    <p>Bientôt! Une page dédiée par SKU sera disponible pour faciliter le partage et le référencement.
-                    </p>
-                </article>
-            </div>
-        </div>
-    </section>
+        {% if paginator.num_pages > 1 %}
+        <nav class="product-pagination" aria-label="Pagination des produits"
+            style="margin-top: 2rem; display: flex; justify-content: center;">
+            <div class="product-pagination__controls">
+                {% if products.has_previous %}
+                <a class="btn btn-ghost btn-sm" href="?page={{ products.previous_page_number }}" rel="prev">←
+                    Précédent</a>
+                {% endif %}
 
-    <section class="product-cta" aria-labelledby="cta-title">
-        <div class="container">
-            <div class="cta-content">
-                <p class="cta-eyebrow">Prêt à commander?</p>
-                <h2 id="cta-title">Réponse garantie en moins de 24h ouvrables</h2>
-                <p>Partagez vos besoins — on s'occupe du reste. Soumission en français, livrée par courriel.</p>
-                <div class="cta-buttons">
-                    <a class="btn btn-gold btn-lg" href="{% url 'accounts:login' %}">Obtenir ma soumission →</a>
-                    <a class="btn btn-white" href="tel:+1-418-671-2814">📞 418-671-2814</a>
-                </div>
+                <span style="margin: 0 1rem; align-self: center;">Page {{ products.number }} sur {{ paginator.num_pages
+                    }}</span>
+
+                {% if products.has_next %}
+                <a class="btn btn-ghost btn-sm" href="?page={{ products.next_page_number }}" rel="next">Suivant →</a>
+                {% endif %}
             </div>
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <!-- Empty State -->
+        <div class="empty-state">
+            <svg class="empty-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.5">
+                <path d="M20 12V22H4V12" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M22 7H2V12H22V7Z" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M12 22V7" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <h3>Aucun produit disponible</h3>
+            <p>Le catalogue est actuellement vide. Contactez notre équipe pour plus d'informations.</p>
+            <a href="{% url 'core:home' %}#contact" class="btn btn-primary">Nous contacter</a>
         </div>
-    </section>
+        {% endif %}
+    </div>
 </main>
 
 <footer class="footer" role="contentinfo">
