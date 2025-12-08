@@ -390,6 +390,7 @@ class OrderDraftForm(forms.Form):
     invoice_address = forms.ChoiceField(
         label="Adresse de facturation",
         choices=(),
+        required=False,
         widget=forms.Select(attrs={"class": "form-input"}),
     )
     notes = forms.CharField(
@@ -430,11 +431,19 @@ class OrderDraftForm(forms.Form):
     def clean_invoice_address(self):
         value = self.cleaned_data.get("invoice_address")
         if value in ("", None):
-            raise forms.ValidationError("Sélectionnez une adresse de facturation.")
+            return None
         try:
             return int(value)
         except (TypeError, ValueError):
             raise forms.ValidationError("Adresse de facturation invalide.")
+
+    def clean(self):
+        cleaned = super().clean()
+        shipping_id = cleaned.get("shipping_address")
+        invoice_id = cleaned.get("invoice_address")
+        if invoice_id in (None, "") and isinstance(shipping_id, int):
+            cleaned["invoice_address"] = shipping_id
+        return cleaned
 
 
 class OrderLineForm(forms.Form):
