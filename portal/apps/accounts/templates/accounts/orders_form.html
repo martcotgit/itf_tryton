@@ -4,139 +4,131 @@
 {% block title %}Nouvelle commande – Portail ITF{% endblock %}
 
 {% block content %}
-<main id="contenu-principal" class="main order-main" role="main">
-    <section class="order-section">
-        <div class="container order-container">
-            <nav class="breadcrumb-nav" aria-label="Fil d'Ariane">
-                <a href="{% url 'core:home' %}">Accueil</a>
-                <span aria-hidden="true">/</span>
-                <span aria-current="page">Nouvelle commande</span>
-            </nav>
-            <header class="profile-hero dashboard-hero">
-                <div class="profile-hero-info">
-                    <div>
-                        <p class="profile-hero-eyebrow">Commandes</p>
-                        <div class="hero-header-group">
-                            <h1 style="margin-bottom: 0;">Nouvelle commande</h1>
+<main class="main order-main" role="main">
+    <div class="order-form-container">
+        <h1 class="order-form-title">Nouvelle commande</h1>
+
+        <form method="post" novalidate class="order-form">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="message message-error" role="alert" style="margin-bottom: 2rem;">
+                {% for error in form.non_field_errors %}
+                <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Section 1: Informations générales -->
+            <section class="form-section">
+                <h2 class="form-section-title visually-hidden">Informations générales</h2>
+
+                <div class="form-grid">
+                    <!-- Reference -->
+                    <div class="form-field">
+                        <label for="{{ form.client_reference.id_for_label }}" class="form-label">Numéro interne ou
+                            référence achat</label>
+                        {{ form.client_reference }}
+                        {% if form.client_reference.errors %}
+                        <div class="field-error" role="alert">
+                            {% for error in form.client_reference.errors %}<p>{{ error }}</p>{% endfor %}
                         </div>
-                        <p class="profile-hero-description">Soumettez une commande en brouillon synchronisée avec
-                            Tryton.</p>
-                    </div>
-                </div>
-            </header>
-            <div class="order-card">
-                <form method="post" novalidate class="order-form">
-                    {% csrf_token %}
-                    {% if form.non_field_errors %}
-                    <div class="form-errors" role="alert">
-                        {% for error in form.non_field_errors %}
-                        <p>{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                    <h2>Informations générales</h2>
-                    <div class="form-row two-columns">
-                        <div class="form-group">
-                            <label for="{{ form.client_reference.id_for_label }}">Numéro interne ou référence
-                                achat</label>
-                            {{ form.client_reference }}
-                            {% if form.client_reference.errors %}
-                            <div class="field-error" role="alert">
-                                {% for error in form.client_reference.errors %}<p>{{ error }}</p>{% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                        <div class="form-group">
-                            <label for="{{ form.shipping_date.id_for_label }}">Date de livraison souhaitée</label>
-                            {{ form.shipping_date }}
-                            {% if form.shipping_date.errors %}
-                            <div class="field-error" role="alert">
-                                {% for error in form.shipping_date.errors %}<p>{{ error }}</p>{% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="{{ form.shipping_address.id_for_label }}">Adresse de livraison</label>
-                            {{ form.shipping_address }}
-                            {% if form.shipping_address.errors %}
-                            <div class="field-error" role="alert">
-                                {% for error in form.shipping_address.errors %}<p>{{ error }}</p>{% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="{{ form.notes.id_for_label }}">{{ form.notes.label }}</label>
-                            {{ form.notes }}
-                            {% if form.notes.errors %}
-                            <div class="field-error" role="alert">
-                                {% for error in form.notes.errors %}<p>{{ error }}</p>{% endfor %}
-                            </div>
-                            {% endif %}
-                            <small class="form-help">Laisser vide si aucune instruction spéciale n'est requise.</small>
-                        </div>
+                        {% endif %}
                     </div>
 
-                    <h2>Lignes de commande</h2>
-                    <p class="form-help">Ajoutez des lignes au fur et à mesure avec le bouton « Ajouter une ligne »
-                        (maximum de 10 lignes). Chaque ligne affiche ses champs sur une seule rangée pour faciliter
-                        l’édition.</p>
-                    {% if line_formset.non_form_errors %}
-                    <div class="form-errors" role="alert">
-                        {% for error in line_formset.non_form_errors %}
-                        <p>{{ error }}</p>
-                        {% endfor %}
+                    <!-- Date de livraison -->
+                    <div class="form-field">
+                        <label for="{{ form.shipping_date.id_for_label }}" class="form-label form-label-required">Date
+                            de livraison souhaitée</label>
+                        {{ form.shipping_date }}
+                        {% if form.shipping_date.errors %}
+                        <div class="field-error" role="alert">
+                            {% for error in form.shipping_date.errors %}<p>{{ error }}</p>{% endfor %}
+                        </div>
+                        {% endif %}
                     </div>
-                    {% endif %}
-                    <div class="order-lines-inline" data-order-line-formset data-prefix="{{ line_formset.prefix }}"
-                        data-max-forms="{{ line_formset.max_num|default:'' }}">
-                        {{ line_formset.management_form }}
-                        <div class="order-lines-table-wrapper">
-                            <table class="order-lines-table">
-                                <thead>
-                                    <tr>
-                                        <th scope="col" style="width: 60px;">#</th>
-                                        <th scope="col" style="width: 40%;">Produit</th>
-                                        <th scope="col" style="width: 15%;">Quantité</th>
-                                        <th scope="col">Notes</th>
-                                        <th scope="col" class="order-line-actions">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody data-formset-body>
-                                    {% for line_form in line_formset %}
-                                    {% include "accounts/includes/order_line_row.html" with line_form=line_form %}
-                                    {% empty %}
-                                    {% include "accounts/includes/order_line_row.html" with
-                                    line_form=line_formset.empty_form %}
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+
+                    <!-- Adresse (Full width) -->
+                    <div class="form-field form-grid-full">
+                        <label for="{{ form.shipping_address.id_for_label }}"
+                            class="form-label form-label-required">Adresse de livraison</label>
+                        {{ form.shipping_address }}
+                        {% if form.shipping_address.errors %}
+                        <div class="field-error" role="alert">
+                            {% for error in form.shipping_address.errors %}<p>{{ error }}</p>{% endfor %}
                         </div>
-                        <div class="order-lines-actions">
-                            <button type="button" class="btn btn-secondary btn-sm" data-formset-add>
-                                <svg class="icon" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-                                    fill="none">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                                </svg>
-                                Ajouter une ligne
-                            </button>
+                        {% endif %}
+                    </div>
+
+                    <!-- Instructions (Full width) -->
+                    <div class="form-field form-grid-full">
+                        <label for="{{ form.notes.id_for_label }}" class="form-label">Instructions de livraison</label>
+                        {{ form.notes }}
+                        {% if form.notes.errors %}
+                        <div class="field-error" role="alert">
+                            {% for error in form.notes.errors %}<p>{{ error }}</p>{% endfor %}
                         </div>
-                        <template data-formset-template>
+                        {% endif %}
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 2: Lignes de commande -->
+            <section class="form-section">
+                <h2 class="form-section-title">Lignes de commande</h2>
+
+                {% if line_formset.non_form_errors %}
+                <div class="form-errors" role="alert">
+                    {% for error in line_formset.non_form_errors %}
+                    <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="order-lines-inline" data-order-line-formset data-prefix="{{ line_formset.prefix }}"
+                    data-max-forms="{{ line_formset.max_num|default:'' }}">
+                    {{ line_formset.management_form }}
+
+                    <table class="order-lines-table">
+                        <thead>
+                            <tr>
+                                <th class="col-product">Produit</th>
+                                <th class="col-quantity">Quantité</th>
+                                <th class="col-notes">Notes</th>
+                                <th class="col-actions"></th>
+                            </tr>
+                        </thead>
+                        <tbody data-formset-body>
+                            {% for line_form in line_formset %}
+                            {% include "accounts/includes/order_line_row.html" with line_form=line_form %}
+                            {% empty %}
                             {% include "accounts/includes/order_line_row.html" with line_form=line_formset.empty_form %}
-                        </template>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    <div class="order-lines-header" style="text-align: left;">
+                        <button type="button" class="btn-add-line" data-formset-add>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                            </svg>
+                            Ajouter une ligne
+                        </button>
                     </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">Soumettre la commande</button>
-                        <a href="{% url 'core:home' %}" class="btn btn-secondary">Annuler</a>
-                    </div>
-                </form>
+
+                    <template data-formset-template>
+                        {% include "accounts/includes/order_line_row.html" with line_form=line_formset.empty_form %}
+                    </template>
+                </div>
+            </section>
+
+            <!-- Actions -->
+            <div class="form-actions">
+                <button type="submit" class="btn-submit-order">Envoyer la commande</button>
             </div>
-            {% include "accounts/includes/product_catalog_panel.html" with catalog_url=catalog_url %}
-        </div>
-    </section>
+        </form>
+    </div>
 </main>
 {% endblock %}
 
