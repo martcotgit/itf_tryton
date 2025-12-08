@@ -69,238 +69,6 @@ class ClientLogoutView(LogoutView):
         return super().dispatch(request, *args, **kwargs)
 
 
-class ClientDashboardView(LoginRequiredMixin, TemplateView):
-    template_name = "accounts/dashboard.html"
-    login_url = reverse_lazy("accounts:login")
-    invoice_service_class = PortalInvoiceService
-    order_service_class = PortalOrderService
-    recent_limit = 5
-    order_period_days = PortalOrderService.DEFAULT_PERIOD_DAYS
-
-    def setup(self, request, *args, **kwargs):
-        super().setup(request, *args, **kwargs)
-        self.invoice_service = self.invoice_service_class()
-        self.order_service = self.order_service_class()
-
-    def get(self, request, *args, **kwargs):
-        login = self._current_login()
-        invoices_result = self._safe_load_invoices(login)
-        orders_result = self._safe_load_orders(login)
-
-        summary = self._build_summary(invoices_result, login)
-        activity = self._build_activity_feed(
-            invoices=invoices_result.invoices if invoices_result else [],
-            orders=orders_result.orders if orders_result else [],
-        )
-
-        return self.render_to_response(
-            self.get_context_data(
-                greeting_name=self._greeting_name(),
-                summary=summary,
-                recent_invoices=invoices_result.invoices[: self.recent_limit] if invoices_result else [],
-                recent_orders=orders_result.orders if orders_result else [],
-                activity_items=activity,
-            )
-        )
-
-    def _greeting_name(self) -> str:
-        """Return a clean display name for the dashboard hero."""
-        first_name = (getattr(self.request.user, "first_name", "") or "").strip()
-        if first_name and "{{" not in first_name and "}}" not in first_name:
-            return first_name
-        fallback = (getattr(self.request.user, "email", "") or getattr(self.request.user, "username", "") or "").strip()
-        return fallback
-
-    def _safe_load_invoices(self, login: str) -> PortalInvoiceListResult | None:
-        try:
-            return self.invoice_service.list_invoices(
-                login=login,
-                page=1,
-                page_size=self.recent_limit,
-            )
-        except PortalInvoiceServiceError as exc:
-            messages.error(self.request, sanitize_error_message(str(exc)))
-            return None
-
-    def _safe_load_orders(self, login: str) -> PortalOrderListResult | None:
-        try:
-            return self.order_service.list_orders(
-                login=login,
-                period_days=self.order_period_days,
-                page=1,
-                page_size=self.recent_limit,
-            )
-        except PortalOrderServiceError as exc:
-            messages.error(self.request, sanitize_error_message(str(exc)))
-            return None
-
-    def _build_summary(self, invoices_result: PortalInvoiceListResult | None, login: str) -> dict[str, object]:
-        summary: dict[str, object] = {
-            "invoices_due_count": 0,
-            "invoices_due_total": None,
-            "invoices_currency": None,
-            "orders_active_count": 0,
-            "orders_to_complete_count": 0,
-            "orders_to_complete_label": "0 commande",
-            "invoices_breakdown": [],
-            "orders_breakdown": [],
-        }
-
-        # Invoices stats
-        inv_draft = self.invoice_service.count_invoices(login=login, statuses=["draft"])
-        inv_posted = self.invoice_service.count_invoices(login=login, statuses=["posted"])
-        inv_validated = self.invoice_service.count_invoices(login=login, statuses=["validated"])
-        inv_waiting = self.invoice_service.count_invoices(login=login, statuses=["waiting_payment"])
-        summary["invoices_breakdown"] = [
-            {"label": "Brouillon", "count": inv_draft},
-            {"label": "Comptabilisées", "count": inv_posted},
-            {"label": "Validées", "count": inv_validated},
-            {"label": "En attente", "count": inv_waiting},
-        ]
-        summary["invoices_due_count"] = inv_posted + inv_validated + inv_waiting + inv_draft
-
-        # Orders stats
-        ord_draft = self._count_orders(login=login, statuses=("draft",))
-        ord_quotation = self._count_orders(login=login, statuses=("quotation",))
-        ord_confirmed = self._count_orders(login=login, statuses=("confirmed",))
-        ord_processing = self._count_orders(login=login, statuses=("processing", "sent"))
-        summary["orders_breakdown"] = [
-            {"label": "Brouillon", "count": ord_draft},
-            {"label": "Soumission", "count": ord_quotation},
-            {"label": "Confirmées", "count": ord_confirmed},
-            {"label": "En traitement", "count": ord_processing},
-        ]
-        summary["orders_active_count"] = ord_draft + ord_quotation + ord_confirmed + ord_processing
-
-        # Keep total amount from recent list for now (best effort without backend sum)
-        if invoices_result:
-            due_total = Decimal("0")
-            currency = None
-            for invoice in invoices_result.invoices:
-                if invoice.amount_due is not None and invoice.amount_due > 0:
-                    due_total += invoice.amount_due
-                if not currency and invoice.currency_label:
-                    currency = invoice.currency_label
-            summary["invoices_due_total"] = due_total
-            summary["invoices_currency"] = currency
-
-        summary["orders_to_complete_count"] = self._count_orders(
-            login=login,
-            statuses=("draft", "quotation"),
-        )
-        count = summary["orders_to_complete_count"]
-        plural = "s" if count != 1 else ""
-        summary["orders_to_complete_label"] = f"{count} commande{plural}"
-        return summary
-
-    def _count_orders(self, *, login: str, statuses: tuple[str, ...]) -> int:
-        try:
-            result = self.order_service.list_orders(
-                login=login,
-                statuses=statuses,
-                period_days=self.order_period_days,
-                page=1,
-                page_size=1,
-            )
-        except PortalOrderServiceError as exc:
-            messages.error(self.request, sanitize_error_message(str(exc)))
-            return 0
-        return result.pagination.total
-
-    def _build_activity_feed(
-        self,
-        *,
-        invoices: list[PortalInvoiceSummary],
-        orders: list[PortalOrderSummary],
-    ) -> list[dict[str, object]]:
-        items: list[dict[str, object]] = []
-
-        for invoice in invoices:
-            items.append(
-                {
-                    "type": "invoice",
-                    "title": invoice.number or "Facture",
-                    "date": invoice.issue_date or invoice.due_date,
-                    "amount": invoice.amount_due if invoice.amount_due is not None else invoice.total_amount,
-                    "currency": invoice.currency_label,
-                    "status_label": self._status_label("invoice", invoice.state_label, invoice.state),
-                    "status_style": self._status_style("invoice", invoice.state),
-                    "url": reverse("accounts:invoices-list"),
-                }
-            )
-
-        for order in orders:
-            items.append(
-                {
-                    "type": "order",
-                    "title": order.number or order.reference or "Commande",
-                    "date": order.create_date or order.shipping_date,
-                    "amount": order.total_amount,
-                    "currency": order.currency_label,
-                    "status_label": self._status_label("order", order.state_label, order.state),
-                    "status_style": self._status_style("order", order.state),
-                    "url": reverse("accounts:orders-detail", kwargs={"order_id": order.id}),
-                }
-            )
-
-        items.sort(key=lambda item: self._sort_date(item.get("date")), reverse=True)
-        return items[: self.recent_limit]
-
-    @staticmethod
-    def _sort_date(value: date | None) -> date:
-        if isinstance(value, date):
-            return value
-        return date.min
-
-    @staticmethod
-    def _status_label(kind: str, label: str | None, state: str | None) -> str:
-        state_key = unescape((state or "")).strip().lower()
-        mapping = None
-        if "{{" in state_key or "}}" in state_key:
-            state_key = ""
-        if kind == "invoice":
-            from .services import PortalInvoiceService
-
-            mapping = PortalInvoiceService.STATE_LABELS.get(state_key)
-        else:
-            from .services import PortalOrderService
-
-            mapping = PortalOrderService.STATE_LABELS.get(state_key)
-
-        if mapping:
-            return mapping
-
-        value = unescape((label or "").strip())
-        invalid = (not value) or ("{{" in value) or ("}}" in value) or ("item.status_label" in value.lower())
-        if not invalid:
-            return value
-
-        return state_key.capitalize() or "Inconnu"
-
-    @staticmethod
-    def _status_style(kind: str, state: str | None) -> str:
-        normalized = (state or "").strip().lower()
-        if kind == "invoice":
-            if normalized in {"waiting_payment", "validated"}:
-                return "warning"
-            if normalized == "paid":
-                return "success"
-            if normalized in {"cancelled", "draft"}:
-                return "muted"
-            return "info"
-        # Orders
-        if normalized in {"draft", "quotation"}:
-            return "warning"
-        if normalized in {"confirmed", "processing", "sent"}:
-            return "info"
-        if normalized == "done":
-            return "success"
-        if normalized == "cancelled":
-            return "muted"
-        return "info"
-
-    def _current_login(self) -> str:
-        return (self.request.user.username or "").strip().lower()
 
 
 class InvoiceListView(LoginRequiredMixin, TemplateView):
@@ -366,7 +134,7 @@ class InvoiceListView(LoginRequiredMixin, TemplateView):
 class ClientSignupView(FormView):
     template_name = "accounts/signup.html"
     form_class = ClientSignupForm
-    success_url = reverse_lazy("accounts:dashboard")
+    success_url = reverse_lazy("core:home")
     service_class = PortalAccountService
     extra_context = {"page_title": "Créer un compte client"}
 
@@ -414,13 +182,13 @@ class ClientProfileView(LoginRequiredMixin, TemplateView):
     def get(self, request, *args, **kwargs):
         profile = self._load_profile()
         if profile is None:
-            return redirect("accounts:dashboard")
+            return redirect("core:home")
         return self.render_to_response(self.get_context_data(profile=profile))
 
     def post(self, request, *args, **kwargs):
         profile = self._load_profile()
         if profile is None:
-            return redirect("accounts:dashboard")
+            return redirect("core:home")
         action = request.POST.get("form_name")
 
         if action == "profile":
@@ -536,7 +304,7 @@ class OrderCreateView(LoginRequiredMixin, TemplateView):
             return redirect("accounts:profile")
         except PortalOrderServiceError as exc:
             messages.error(request, sanitize_error_message(str(exc)))
-            return redirect("accounts:dashboard")
+            return redirect("core:home")
         return self.render_to_response(
             self.get_context_data(
                 form=form,
@@ -563,7 +331,7 @@ class OrderCreateView(LoginRequiredMixin, TemplateView):
             return redirect("accounts:profile")
         except PortalOrderServiceError as exc:
             messages.error(request, sanitize_error_message(str(exc)))
-            return redirect("accounts:dashboard")
+            return redirect("core:home")
 
         form = self.form_class(request.POST, address_choices=address_choices)
         formset = self._build_line_formset(data=request.POST)
@@ -588,7 +356,7 @@ class OrderCreateView(LoginRequiredMixin, TemplateView):
                 elif result.number:
                     success_message += f" Numéro Tryton: {result.number}."
                 messages.success(request, success_message)
-                return redirect("accounts:dashboard")
+                return redirect("core:home")
 
         return self.render_to_response(
             self.get_context_data(

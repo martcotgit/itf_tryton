@@ -10,7 +10,7 @@ from apps.core.services import TrytonAuthError, TrytonRPCError
 class ClientAuthTests(TestCase):
     def setUp(self):
         self.login_url = reverse("accounts:login")
-        self.dashboard_url = reverse("accounts:dashboard")
+        self.dashboard_url = reverse("core:home")
         self.UserModel = get_user_model()
 
     def test_login_page_renders_with_form(self):

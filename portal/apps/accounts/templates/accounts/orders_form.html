@@ -8,7 +8,7 @@
     <section class="order-section">
         <div class="container order-container">
             <nav class="breadcrumb-nav" aria-label="Fil d'Ariane">
-                <a href="{% url 'accounts:dashboard' %}">Tableau de bord</a>
+                <a href="{% url 'core:home' %}">Accueil</a>
                 <span aria-hidden="true">/</span>
                 <span aria-current="page">Nouvelle commande</span>
             </nav>
@@ -19,7 +19,8 @@
                         <div class="hero-header-group">
                             <h1 style="margin-bottom: 0;">Nouvelle commande</h1>
                         </div>
-                        <p class="profile-hero-description">Soumettez une commande en brouillon synchronisée avec Tryton.</p>
+                        <p class="profile-hero-description">Soumettez une commande en brouillon synchronisée avec
+                            Tryton.</p>
                     </div>
                 </div>
             </header>
@@ -129,7 +130,7 @@
                     </div>
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary">Soumettre la commande</button>
-                        <a href="{% url 'accounts:dashboard' %}" class="btn btn-secondary">Annuler</a>
+                        <a href="{% url 'core:home' %}" class="btn btn-secondary">Annuler</a>
                     </div>
                 </form>
             </div>

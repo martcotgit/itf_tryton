@@ -6,14 +6,15 @@
 {% block content %}
 <main id="contenu-principal" class="main" role="main">
     <div class="container orders-shell">
-        <a href="{% url 'accounts:dashboard' %}" class="back-link">&larr; Retour au tableau de bord</a>
-        
+        <a href="{% url 'core:home' %}" class="back-link">&larr; Retour à l'accueil</a>
+
         <div class="orders-hero">
             <div>
                 <div class="hero-header-group" style="align-items: flex-start; text-align: left;">
                     <h1 style="margin-bottom: 0;">Mes commandes</h1>
                 </div>
-                <p>Consultez vos commandes Tryton récentes, ajustez les filtres et lancez une nouvelle commande en quelques clics.</p>
+                <p>Consultez vos commandes Tryton récentes, ajustez les filtres et lancez une nouvelle commande en
+                    quelques clics.</p>
             </div>
             <div class="orders-cta">
                 <a href="{% url 'accounts:orders-new' %}" class="btn btn-primary">Nouvelle commande</a>
@@ -30,27 +31,30 @@
                         <div class="status-filters-grid">
                             {% for status in status_options %}
                             <label class="checkbox-simple">
-                                <input type="checkbox" name="statut" value="{{ status.value }}" {% if status.selected %}checked{% endif %}>
+                                <input type="checkbox" name="statut" value="{{ status.value }}" {% if status.selected
+                                    %}checked{% endif %}>
                                 <span>{{ status.label }}</span>
                             </label>
                             {% endfor %}
                         </div>
                     </div>
-                    
+
                     <div class="filter-row">
                         <label for="periode" class="filter-label">Période</label>
                         <select id="periode" name="periode" class="form-input">
                             {% for option in period_options %}
-                            <option value="{{ option.value }}" {% if option.selected %}selected{% endif %}>{{ option.label }}</option>
+                            <option value="{{ option.value }}" {% if option.selected %}selected{% endif %}>{{
+                                option.label }}</option>
                             {% endfor %}
                         </select>
                     </div>
-                    
+
                     <div class="filter-row">
                         <label for="recherche" class="filter-label">Recherche</label>
-                        <input type="search" id="recherche" name="recherche" value="{{ filters.search }}" placeholder="Numéro ou référence client" class="form-input">
+                        <input type="search" id="recherche" name="recherche" value="{{ filters.search }}"
+                            placeholder="Numéro ou référence client" class="form-input">
                     </div>
-                    
+
                     <div class="filters-actions">
                         <button type="submit" class="btn-filter-primary">Appliquer les filtres</button>
                         <a href="{% url 'accounts:orders-list' %}" class="btn-filter-reset">Réinitialiser</a>
@@ -62,7 +66,10 @@
             <section class="orders-card">
                 <div class="orders-summary">
                     <div>
-                        <h2 class="results-title">Résultats{% if pagination %}{% with total=pagination.total|default_if_none:0 %} <span style="font-weight: 400; font-size: 0.9em; color: #6B7280; margin-left: 0.5rem;">{{ total }} commande{% if total != 1 %}s{% endif %}</span>{% endwith %}{% endif %}</h2>
+                        <h2 class="results-title">Résultats{% if pagination %}{% with
+                            total=pagination.total|default_if_none:0 %} <span
+                                style="font-weight: 400; font-size: 0.9em; color: #6B7280; margin-left: 0.5rem;">{{
+                                total }} commande{% if total != 1 %}s{% endif %}</span>{% endwith %}{% endif %}</h2>
                     </div>
                 </div>
 
@@ -82,12 +89,18 @@
                         <tbody>
                             {% for order in orders %}
                             <tr>
-                                <td><a href="{% url 'accounts:orders-detail' order.id %}" class="link-contrast" style="font-weight: 600; color: var(--primary-color);">{{ order.number|default:"—" }}</a></td>
+                                <td><a href="{% url 'accounts:orders-detail' order.id %}" class="link-contrast"
+                                        style="font-weight: 600; color: var(--primary-color);">{{
+                                        order.number|default:"—" }}</a></td>
                                 <td>{{ order.reference|default:"—" }}</td>
-                                <td><span class="status-badge state-{{ order.state|default:'indetermine' }}">{{ order.state_label }}</span></td>
-                                <td>{% if order.shipping_date %}{{ order.shipping_date|date:"Y-m-d" }}{% else %}—{% endif %}</td>
-                                <td>{% if order.total_amount %}{{ order.total_amount }}{% if order.currency_label %} {{ order.currency_label }}{% endif %}{% else %}—{% endif %}</td>
-                                <td>{% if order.create_date %}{{ order.create_date|date:"Y-m-d" }}{% else %}—{% endif %}</td>
+                                <td><span class="status-badge state-{{ order.state|default:'indetermine' }}">{{
+                                        order.state_label }}</span></td>
+                                <td>{% if order.shipping_date %}{{ order.shipping_date|date:"Y-m-d" }}{% else %}—{%
+                                    endif %}</td>
+                                <td>{% if order.total_amount %}{{ order.total_amount }}{% if order.currency_label %} {{
+                                    order.currency_label }}{% endif %}{% else %}—{% endif %}</td>
+                                <td>{% if order.create_date %}{{ order.create_date|date:"Y-m-d" }}{% else %}—{% endif %}
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -95,12 +108,17 @@
                 </div>
                 {% else %}
                 <div class="empty-state">
-                    <svg class="empty-state-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                    <svg class="empty-state-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                        </path>
                     </svg>
                     <div class="empty-state-text">Aucune commande trouvée</div>
-                    <div class="empty-state-subtext">Ajustez vos filtres ou créez une nouvelle commande dès maintenant.</div>
-                    <a href="{% url 'accounts:orders-new' %}" class="btn-text" style="color: var(--primary-color); font-weight: 500; font-size: 0.9rem;">Créer une commande</a>
+                    <div class="empty-state-subtext">Ajustez vos filtres ou créez une nouvelle commande dès maintenant.
+                    </div>
+                    <a href="{% url 'accounts:orders-new' %}" class="btn-text"
+                        style="color: var(--primary-color); font-weight: 500; font-size: 0.9rem;">Créer une commande</a>
                 </div>
                 {% endif %}
 
@@ -111,18 +129,26 @@
                     {% endwith %}
                     <div class="pagination-actions">
                         <form method="get" class="pagination-form" style="display:inline;">
-                             {% for status in filters.statuses %}<input type="hidden" name="statut" value="{{ status }}">{% endfor %}
-                            {% if filters.period_days %}<input type="hidden" name="periode" value="{{ filters.period_days }}">{% endif %}
-                            {% if filters.search %}<input type="hidden" name="recherche" value="{{ filters.search }}">{% endif %}
+                            {% for status in filters.statuses %}<input type="hidden" name="statut"
+                                value="{{ status }}">{% endfor %}
+                            {% if filters.period_days %}<input type="hidden" name="periode"
+                                value="{{ filters.period_days }}">{% endif %}
+                            {% if filters.search %}<input type="hidden" name="recherche" value="{{ filters.search }}">{%
+                            endif %}
                             <input type="hidden" name="page" value="{{ pagination.page|add:'-1' }}">
-                            <button type="submit" class="pagination-btn" {% if not pagination.has_previous %}disabled{% endif %}>Précédent</button>
+                            <button type="submit" class="pagination-btn" {% if not pagination.has_previous %}disabled{%
+                                endif %}>Précédent</button>
                         </form>
                         <form method="get" class="pagination-form" style="display:inline;">
-                            {% for status in filters.statuses %}<input type="hidden" name="statut" value="{{ status }}">{% endfor %}
-                            {% if filters.period_days %}<input type="hidden" name="periode" value="{{ filters.period_days }}">{% endif %}
-                            {% if filters.search %}<input type="hidden" name="recherche" value="{{ filters.search }}">{% endif %}
+                            {% for status in filters.statuses %}<input type="hidden" name="statut"
+                                value="{{ status }}">{% endfor %}
+                            {% if filters.period_days %}<input type="hidden" name="periode"
+                                value="{{ filters.period_days }}">{% endif %}
+                            {% if filters.search %}<input type="hidden" name="recherche" value="{{ filters.search }}">{%
+                            endif %}
                             <input type="hidden" name="page" value="{{ pagination.page|add:'1' }}">
-                            <button type="submit" class="pagination-btn" {% if not pagination.has_next %}disabled{% endif %}>Suivant</button>
+                            <button type="submit" class="pagination-btn" {% if not pagination.has_next %}disabled{%
+                                endif %}>Suivant</button>
                         </form>
                     </div>
                 </div>

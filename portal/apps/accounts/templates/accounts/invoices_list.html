@@ -193,7 +193,7 @@
 {% block content %}
 <main id="contenu-principal" class="main" role="main">
     <div class="container invoices-shell">
-        <a class="back-link" href="{% url 'accounts:dashboard' %}">← Retour au tableau de bord</a>
+        <a class="back-link" href="{% url 'core:home' %}">← Retour à l'accueil</a>
         <div class="invoices-hero">
             <div class="hero-header-group" style="align-items: flex-start; text-align: left;">
                 <h1 style="margin-bottom: 0;">Mes factures</h1>
@@ -240,13 +240,16 @@
                             <td data-label="Émise le">{{ invoice.issue_date|date:"Y-m-d"|default:"—" }}</td>
                             <td data-label="Échéance">{{ invoice.due_date|date:"Y-m-d"|default:"—" }}</td>
                             <td data-label="Statut">
-                                <span class="status-badge state-{{ invoice.state|default:'draft' }}">{{ invoice.state_label }}</span>
+                                <span class="status-badge state-{{ invoice.state|default:'draft' }}">{{
+                                    invoice.state_label }}</span>
                             </td>
                             <td data-label="Montant dû">
                                 {% if invoice.amount_due %}
-                                {{ invoice.amount_due|floatformat:2 }} {% if invoice.currency_label %}{{ invoice.currency_label }}{% endif %}
+                                {{ invoice.amount_due|floatformat:2 }} {% if invoice.currency_label %}{{
+                                invoice.currency_label }}{% endif %}
                                 {% elif invoice.total_amount %}
-                                {{ invoice.total_amount|floatformat:2 }} {% if invoice.currency_label %}{{ invoice.currency_label }}{% endif %}
+                                {{ invoice.total_amount|floatformat:2 }} {% if invoice.currency_label %}{{
+                                invoice.currency_label }}{% endif %}
                                 {% else %}
                                 —
                                 {% endif %}

@@ -328,7 +328,7 @@ class OrderCreateViewTests(TestCase):
         self.user = self.user_model.objects.create_user(username="client@example.com", password="demo")
         self.client.force_login(self.user)
         self.url = reverse("accounts:orders-new")
-        self.dashboard_url = reverse("accounts:dashboard")
+        self.dashboard_url = reverse("core:home")
 
     @patch("apps.accounts.views.OrderCreateView.service_class")
     def test_get_renders_form_with_products_and_addresses(self, service_cls):

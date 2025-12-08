@@ -349,7 +349,7 @@ class ClientSignupFormTests(TestCase):
 class ClientSignupViewTests(TestCase):
     def setUp(self):
         self.signup_url = reverse("accounts:signup")
-        self.dashboard_url = reverse("accounts:dashboard")
+        self.dashboard_url = reverse("core:home")
         self.login_url = reverse("accounts:login")
         self.original_service_class = ClientSignupView.service_class
         self.addCleanup(self._restore_service_class)
