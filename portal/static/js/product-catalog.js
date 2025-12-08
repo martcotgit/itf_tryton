@@ -92,7 +92,7 @@
             loadProducts();
         }
 
-        function closePanel({shouldReturnFocus = true} = {}) {
+        function closePanel({ shouldReturnFocus = true } = {}) {
             overlay.classList.remove('is-visible');
             overlay.setAttribute('aria-hidden', 'true');
             document.body.classList.remove('catalog-open');
@@ -129,7 +129,7 @@
             }
             let label = providedLabel || '';
             if (!label) {
-                const select = field.querySelector('[data-product-select]');
+                const select = field.querySelector('select');
                 if (select && select.selectedOptions.length) {
                     label = select.selectedOptions[0].textContent.trim();
                 }
@@ -267,12 +267,12 @@
                 fetchController.abort();
             }
             fetchController = new AbortController();
-            fetch(`${catalogUrl}?${params.toString()}`, {signal: fetchController.signal})
+            fetch(`${catalogUrl}?${params.toString()}`, { signal: fetchController.signal })
                 .then((response) => response
                     .json()
                     .catch(() => ({}))
-                    .then((data) => ({ok: response.ok, data})))
-                .then(({ok, data}) => {
+                    .then((data) => ({ ok: response.ok, data })))
+                .then(({ ok, data }) => {
                     if (!ok) {
                         const message = data && data.error ? data.error : 'Catalogue temporairement indisponible.';
                         throw new Error(message);
@@ -378,7 +378,7 @@
             if (!activeField) {
                 return;
             }
-            const select = activeField.querySelector('[data-product-select]');
+            const select = activeField.querySelector('select');
             if (!select) {
                 return;
             }
@@ -389,9 +389,9 @@
                 select.add(option);
             }
             select.value = value;
-            select.dispatchEvent(new Event('change', {bubbles: true}));
+            select.dispatchEvent(new Event('change', { bubbles: true }));
             updateSelectionSummary(activeField, label || option.textContent.trim());
-            closePanel({shouldReturnFocus: false});
+            closePanel({ shouldReturnFocus: false });
             focusNextField(activeField);
         }
 
@@ -407,7 +407,7 @@
         }
 
         document.addEventListener('change', (event) => {
-            const select = event.target.closest('[data-product-select]');
+            const select = event.target.closest('select');
             if (!select) {
                 return;
             }

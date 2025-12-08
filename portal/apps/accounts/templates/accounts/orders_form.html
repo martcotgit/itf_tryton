@@ -129,6 +129,66 @@
             </div>
         </form>
     </div>
+
+    <!-- Product Catalog Overlay -->
+    <div class="product-catalog-overlay" data-product-catalog data-catalog-url="{{ catalog_url }}" aria-hidden="true"
+        role="dialog" aria-modal="true" aria-labelledby="catalog-title">
+        <div class="catalog-panel" tabindex="-1">
+            <!-- Header -->
+            <div class="catalog-header">
+                <h2 id="catalog-title" class="catalog-title">Sélectionner un produit</h2>
+                <button type="button" class="catalog-close" data-catalog-close aria-label="Fermer le catalogue">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Filters & Search -->
+            <div class="catalog-filters">
+                <div class="catalog-search-group">
+                    <input type="search" class="catalog-search" data-catalog-search
+                        placeholder="Rechercher par nom, code..." aria-label="Rechercher un produit">
+                </div>
+                <div class="catalog-filter-group">
+                    <select class="catalog-filter" data-catalog-unit-filter aria-label="Filtrer par unité">
+                        <option value="">Toutes les unités</option>
+                    </select>
+                </div>
+                <button type="button" class="btn-reset-filters" data-catalog-reset disabled>
+                    Réinitialiser
+                </button>
+            </div>
+
+            <!-- Status Message -->
+            <div class="catalog-status" data-catalog-status hidden role="status"></div>
+
+            <!-- Results Grid -->
+            <div class="catalog-results" data-catalog-results></div>
+
+            <!-- Empty State -->
+            <div class="catalog-empty" data-catalog-empty hidden>
+                Recherchez un produit ci-dessus
+            </div>
+
+            <!-- Pagination -->
+            <div class="catalog-pagination" data-catalog-pagination></div>
+
+            <!-- Template pour les cartes produit -->
+            <template data-catalog-item-template>
+                <article class="catalog-card">
+                    <div class="catalog-card-content">
+                        <h3 class="catalog-product-name" data-product-name></h3>
+                        <p class="catalog-product-code" data-product-code></p>
+                        <span class="catalog-product-unit" data-product-unit></span>
+                    </div>
+                    <button type="button" class="btn-select-product" data-catalog-select>
+                        Sélectionner
+                    </button>
+                </article>
+            </template>
+        </div>
+    </div>
 </main>
 {% endblock %}
 

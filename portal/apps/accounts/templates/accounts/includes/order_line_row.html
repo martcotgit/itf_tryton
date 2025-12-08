@@ -1,6 +1,27 @@
 <tr class="order-line-row" data-formset-row>
     <td class="col-product">
-        {{ line_form.product }}
+        <div class="product-field" data-product-field>
+            {# Select Django caché visuellement mais présent dans le DOM #}
+            <div class="visually-hidden-select">
+                {{ line_form.product }}
+            </div>
+
+            {# Résumé de sélection visible #}
+            <div class="product-selection-display is-empty" data-product-selection>
+                Aucun produit sélectionné
+            </div>
+
+            {# Bouton pour ouvrir le catalogue #}
+            <button type="button" class="btn-product-picker" data-product-catalog-trigger aria-haspopup="dialog"
+                title="Ouvrir le catalogue produit">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                </svg>
+                Choisir un produit
+            </button>
+        </div>
+
         {% if line_form.product.errors %}
         <div class="field-error" role="alert">
             {% for error in line_form.product.errors %}<p>{{ error }}</p>{% endfor %}
