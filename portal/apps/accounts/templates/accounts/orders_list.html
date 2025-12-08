@@ -42,8 +42,7 @@
                         <label for="periode" class="filter-label">Période</label>
                         <select id="periode" name="periode" class="form-input">
                             {% for option in period_options %}
-                            <option value="{{ option.value }}" {% if option.selected %}selected{% endif %}>{{
-                                option.label }}</option>
+                            <option value="{{ option.value }}" {% if option.selected %}selected{% endif %}>{{ option.label }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -95,15 +94,12 @@
                             {% for order in orders %}
                             <tr>
                                 <td><a href="{% url 'accounts:orders-detail' order.id %}" class="link-contrast"
-                                        style="font-weight: 600; color: var(--primary-color);">{{
-                                        order.number|default:"—" }}</a></td>
+                                        style="font-weight: 600; color: var(--primary-color);">{{ order.number|default:"—" }}</a></td>
                                 <td>{{ order.reference|default:"—" }}</td>
-                                <td><span class="status-badge state-{{ order.state|default:'indetermine' }}">{{
-                                        order.state_label }}</span></td>
+                                <td><span class="status-badge state-{{ order.state|default:'indetermine' }}">{{ order.state_label }}</span></td>
                                 <td>{% if order.shipping_date %}{{ order.shipping_date|date:"Y-m-d" }}{% else %}—{% endif %}
                                 </td>
-                                <td>{% if order.total_amount %}{{ order.total_amount }}{% if order.currency_label %} {{
-                                        order.currency_label }}{% endif %}{% else %}—{% endif %}</td>
+                                <td>{% if order.total_amount %}{{ order.total_amount }}{% if order.currency_label %} {{ order.currency_label }}{% endif %}{% else %}—{% endif %}</td>
                                 <td>{% if order.create_date %}{{ order.create_date|date:"Y-m-d" }}{% else %}—{% endif %}
                                 </td>
                             </tr>

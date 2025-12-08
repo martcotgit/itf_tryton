@@ -240,16 +240,13 @@
                             <td data-label="Émise le">{{ invoice.issue_date|date:"Y-m-d"|default:"—" }}</td>
                             <td data-label="Échéance">{{ invoice.due_date|date:"Y-m-d"|default:"—" }}</td>
                             <td data-label="Statut">
-                                <span class="status-badge state-{{ invoice.state|default:'draft' }}">{{
-                                    invoice.state_label }}</span>
+                                <span class="status-badge state-{{ invoice.state|default:'draft' }}">{{ invoice.state_label }}</span>
                             </td>
                             <td data-label="Montant dû">
                                 {% if invoice.amount_due %}
-                                {{ invoice.amount_due|floatformat:2 }} {% if invoice.currency_label %}{{
-                                invoice.currency_label }}{% endif %}
+                                {{ invoice.amount_due|floatformat:2 }} {% if invoice.currency_label %}{{ invoice.currency_label }}{% endif %}
                                 {% elif invoice.total_amount %}
-                                {{ invoice.total_amount|floatformat:2 }} {% if invoice.currency_label %}{{
-                                invoice.currency_label }}{% endif %}
+                                {{ invoice.total_amount|floatformat:2 }} {% if invoice.currency_label %}{{ invoice.currency_label }}{% endif %}
                                 {% else %}
                                 —
                                 {% endif %}
