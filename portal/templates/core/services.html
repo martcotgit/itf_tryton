@@ -72,206 +72,154 @@
 {% endblock %}
 
 {% block content %}
+<section class="page-header-compact">
+    <div class="container">
+        <nav class="breadcrumb" aria-label="Fil d'ariane">
+            <a href="{% url 'core:home' %}">Accueil</a>
+            <span class="separator">/</span>
+            <span class="current">Services</span>
+        </nav>
+        <h1>Nos Services</h1>
+    </div>
+</section>
+
 <main id="contenu-principal" class="services-main" role="main">
-    <section class="services-hero" aria-labelledby="services-title">
-        <div class="container services-hero__grid">
-            <div class="services-hero__copy">
-
-                <h1 id="services-title">Gestion complète de vos palettes</h1>
-                <p class="hero-intro">
-                    Du ramassage à la livraison, nous gérons tout : tri, réparation grade A/B et consignation avec une
-                    visibilité totale dans Tryton.
-                    <br><strong>Concentrez-vous sur votre business, on s'occupe du reste.</strong>
+    <div class="container">
+        <div class="services-grid" role="list">
+            <!-- Service 1: Récupération -->
+            <a href="#" class="service-card" role="listitem">
+                <div class="service-card__icon">
+                    <span aria-hidden="true">🚚</span>
+                </div>
+                <h3 class="service-card__title">Récupération planifiée</h3>
+                <p class="service-card__description">
+                    Ramassage récurrent ou ponctuel des palettes usagées ou consignées, avec confirmation des volumes et
+                    photos à l'enlèvement.
                 </p>
-                <div class="hero-actions">
-                    <a class="btn btn-primary btn-lg shadow-lift" href="tel:+1-418-671-2814">📞 Appelez-nous
-                        maintenant</a>
-                    <a class="btn btn-secondary btn-lg" href="mailto:info@paletteitf.ca">Obtenir une soumission</a>
-                </div>
-                <ul class="hero-highlights" aria-label="Forfaits offerts">
-                    <li><span class="check-icon">✓</span> Couverture Saguenay–Lac-Saint-Jean</li>
-                    <li><span class="check-icon">✓</span> Ramassage ou livraison en 48 h</li>
-                    <li><span class="check-icon">✓</span> Rapports de rotation via Tryton</li>
-                    <li><span class="check-icon">✓</span> Équipe certifiée pour réparations</li>
-                </ul>
-            </div>
-            <div class="services-hero__badge-wrapper">
-                <div class="services-hero__badge glass-effect">
-                    <div class="badge-inner" aria-hidden="true">
-                        <span class="badge-icon">♻️</span>
-                        <p>Palettes réutilisées en circuit court</p>
-                        <strong class="badge-stat">Réduction matière 65&nbsp;%</strong>
-                    </div>
-                    <p class="badge-caption">Moins de déchets, plus de palettes remises en circulation pour vos sites.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
+                <p class="service-card__meta">Itinéraires optimisés, escouade locale.</p>
+                <span class="service-card__cta">
+                    Demander ce service
+                    <svg class="arrow-icon" width="16" height="16" viewBox="0 0 16 16">
+                        <path d="M8 3l5 5-5 5M13 8H3" stroke="currentColor" stroke-width="2" fill="none"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </span>
+            </a>
 
-    <section class="services-offers" aria-labelledby="offers-title">
-        <div class="container">
-            <h2 id="offers-title">Nos services experts</h2>
-            <p class="section-lead">
-                Des solutions complètes, tracées dans Tryton pour une transparence totale sur l'état de votre flotte de
-                palettes.
+            <!-- Service 2: Tri et réparation -->
+            <a href="#" class="service-card" role="listitem">
+                <div class="service-card__icon">
+                    <span aria-hidden="true">🛠️</span>
+                </div>
+                <h3 class="service-card__title">Tri et réparation</h3>
+                <p class="service-card__description">
+                    Inspection grade A/B, remplacement de planches et blocs, mise à niveau pour réutilisation immédiate
+                    ou consignation.
+                </p>
+                <p class="service-card__meta">Atelier certifié, contrôle qualité photo.</p>
+                <span class="service-card__cta">
+                    Demander ce service
+                    <svg class="arrow-icon" width="16" height="16" viewBox="0 0 16 16">
+                        <path d="M8 3l5 5-5 5M13 8H3" stroke="currentColor" stroke-width="2" fill="none"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </span>
+            </a>
+
+            <!-- Service 3: Consignation -->
+            <a href="#" class="service-card" role="listitem">
+                <div class="service-card__icon">
+                    <span aria-hidden="true">🔄</span>
+                </div>
+                <h3 class="service-card__title">Consignation et rotation</h3>
+                <p class="service-card__description">
+                    Gestion des comptes consignés, suivi des dépôts et échanges, ajustements selon vos projections
+                    saisonnières.
+                </p>
+                <p class="service-card__meta">Rapports automatisés, niveaux cibles.</p>
+                <span class="service-card__cta">
+                    Demander ce service
+                    <svg class="arrow-icon" width="16" height="16" viewBox="0 0 16 16">
+                        <path d="M8 3l5 5-5 5M13 8H3" stroke="currentColor" stroke-width="2" fill="none"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </span>
+            </a>
+
+            <!-- Service 4: Préparation -->
+            <a href="#" class="service-card" role="listitem">
+                <div class="service-card__icon">
+                    <span aria-hidden="true">📦</span>
+                </div>
+                <h3 class="service-card__title">Préparation et livraison</h3>
+                <p class="service-card__description">
+                    Assemblage de lots, palettisation uniforme et transport vers vos quais selon vos fenêtres de
+                    réception.
+                </p>
+                <p class="service-card__meta">Communication proactive.</p>
+                <span class="service-card__cta">
+                    Demander ce service
+                    <svg class="arrow-icon" width="16" height="16" viewBox="0 0 16 16">
+                        <path d="M8 3l5 5-5 5M13 8H3" stroke="currentColor" stroke-width="2" fill="none"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </span>
+            </a>
+
+            <!-- Service 5: Valorisation -->
+            <a href="#" class="service-card" role="listitem">
+                <div class="service-card__icon">
+                    <span aria-hidden="true">🌱</span>
+                </div>
+                <h3 class="service-card__title">Valorisation responsable</h3>
+                <p class="service-card__description">
+                    Réutilisation maximale, recyclage des rebuts et calcul des économies de matière pour vos rapports
+                    ESG.
+                </p>
+                <p class="service-card__meta">Traçabilité complète, zéro enfouissement.</p>
+                <span class="service-card__cta">
+                    Demander ce service
+                    <svg class="arrow-icon" width="16" height="16" viewBox="0 0 16 16">
+                        <path d="M8 3l5 5-5 5M13 8H3" stroke="currentColor" stroke-width="2" fill="none"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </span>
+            </a>
+
+            <!-- Service 6: Coordination -->
+            <a href="#" class="service-card" role="listitem">
+                <div class="service-card__icon">
+                    <span aria-hidden="true">🧭</span>
+                </div>
+                <h3 class="service-card__title">Coordination projet</h3>
+                <p class="service-card__description">
+                    Point de contact unique pour déménagements, pics saisonniers ou lancements de lignes nécessitant des
+                    palettes dédiées.
+                </p>
+                <p class="service-card__meta">Plan d'action sur mesure.</p>
+                <span class="service-card__cta">
+                    Demander ce service
+                    <svg class="arrow-icon" width="16" height="16" viewBox="0 0 16 16">
+                        <path d="M8 3l5 5-5 5M13 8H3" stroke="currentColor" stroke-width="2" fill="none"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </span>
+            </a>
+        </div>
+
+        <aside class="help-banner-inline">
+            <span class="help-banner-inline__icon" aria-hidden="true">💬</span>
+            <p>Besoin d'un service personnalisé ? <a href="{% url 'core:home' %}#contact">Contactez notre équipe</a>.
             </p>
-            <div class="services-offers__grid" role="list">
-                <article class="offer-card hover-lift border-accent" role="listitem">
-                    <div class="offer-icon-wrapper">
-                        <div class="offer-icon" aria-hidden="true">🚚</div>
-                    </div>
-                    <h3>Récupération planifiée</h3>
-                    <p>Ramassage récurrent ou ponctuel des palettes usagées ou consignées, avec confirmation des volumes
-                        et photos à l'enlèvement.</p>
-                    <p class="offer-meta">Itinéraires optimisés, escouade locale.</p>
-                </article>
-                <article class="offer-card hover-lift border-accent" role="listitem">
-                    <div class="offer-icon-wrapper">
-                        <div class="offer-icon" aria-hidden="true">🛠️</div>
-                    </div>
-                    <h3>Tri et réparation</h3>
-                    <p>Inspection grade A/B, remplacement de planches et blocs, mise à niveau pour réutilisation
-                        immédiate ou consignation.</p>
-                    <p class="offer-meta">Atelier certifié, contrôle qualité photo.</p>
-                </article>
-                <article class="offer-card hover-lift border-accent" role="listitem">
-                    <div class="offer-icon-wrapper">
-                        <div class="offer-icon" aria-hidden="true">🔄</div>
-                    </div>
-                    <h3>Consignation et rotation</h3>
-                    <p>Gestion des comptes consignés, suivi des dépôts et échanges, ajustements selon vos projections
-                        saisonnières.</p>
-                    <p class="offer-meta">Rapports automatisés, niveaux cibles.</p>
-                </article>
-                <article class="offer-card hover-lift border-accent" role="listitem">
-                    <div class="offer-icon-wrapper">
-                        <div class="offer-icon" aria-hidden="true">📦</div>
-                    </div>
-                    <h3>Préparation et livraison</h3>
-                    <p>Assemblage de lots, palettisation uniforme et transport vers vos quais selon vos fenêtres de
-                        réception.</p>
-                    <p class="offer-meta">Communication proactive.</p>
-                </article>
-                <article class="offer-card hover-lift border-accent" role="listitem">
-                    <div class="offer-icon-wrapper">
-                        <div class="offer-icon" aria-hidden="true">🌱</div>
-                    </div>
-                    <h3>Valorisation responsable</h3>
-                    <p>Réutilisation maximale, recyclage des rebuts et calcul des économies de matière pour vos rapports
-                        ESG.</p>
-                    <p class="offer-meta">Traçabilité complète, zéro enfouissement.</p>
-                </article>
-                <article class="offer-card hover-lift border-accent" role="listitem">
-                    <div class="offer-icon-wrapper">
-                        <div class="offer-icon" aria-hidden="true">🧭</div>
-                    </div>
-                    <h3>Coordination projet</h3>
-                    <p>Point de contact unique pour déménagements, pics saisonniers ou lancements de lignes nécessitant
-                        des palettes dédiées.</p>
-                    <p class="offer-meta">Plan d'action sur mesure.</p>
-                </article>
-            </div>
-        </div>
-    </section>
-
-    <section class="services-proof" aria-labelledby="proof-title">
-        <div class="container proof-grid">
-            <div class="proof-content">
-                <h2 id="proof-title">L'avantage Ilnu Transforme</h2>
-                <p class="section-lead">
-                    Une rigueur de grand réseau, la proximité d'un partenaire local.
-                </p>
-                <ul class="proof-list">
-                    <li><span class="check-icon">✓</span> Inventaire et mouvements tracés dans Tryton</li>
-                    <li><span class="check-icon">✓</span> Équipe bilingue, documentation locale</li>
-                    <li><span class="check-icon">✓</span> Priorité aux circuits courts</li>
-                </ul>
-            </div>
-            <div class="proof-stats" role="list">
-                <article class="proof-card stat-card" role="listitem">
-                    <div class="stat-icon">⏱️</div>
-                    <p class="proof-number">48 h</p>
-                    <p class="proof-label">Délais moyens pour un ramassage confirmé</p>
-                </article>
-                <article class="proof-card stat-card" role="listitem">
-                    <div class="stat-icon">♻️</div>
-                    <p class="proof-number">90 %</p>
-                    <p class="proof-label">Palettes réintroduites après réparation</p>
-                </article>
-                <article class="proof-card stat-card" role="listitem">
-                    <div class="stat-icon">🔒</div>
-                    <p class="proof-number">24/7</p>
-                    <p class="proof-label">Suivi des comptes consignés</p>
-                </article>
-            </div>
-        </div>
-    </section>
-
-    <section class="services-process" aria-labelledby="process-title">
-        <div class="container">
-            <h2 id="process-title">Votre intervention en 4 étapes simples</h2>
-            <div class="process-steps" role="list">
-                <div class="process-line" aria-hidden="true"></div>
-                <article class="process-step" role="listitem">
-                    <div class="step-circle">1</div>
-                    <div class="step-content">
-                        <h3>Réception</h3>
-                        <p>Nous validons volumes et horaire. Un numéro d'intervention unique est créé.</p>
-                    </div>
-                </article>
-                <article class="process-step" role="listitem">
-                    <div class="step-circle">2</div>
-                    <div class="step-content">
-                        <h3>Ramassage</h3>
-                        <p>Nos équipes interviennent avec bon de transport. Photos prises à l'arrivée.</p>
-                    </div>
-                </article>
-                <article class="process-step" role="listitem">
-                    <div class="step-circle">3</div>
-                    <div class="step-content">
-                        <h3>Tri & Action</h3>
-                        <p>Inspection, réparation (A/B) ou consignation. Tout est visible en temps réel.</p>
-                    </div>
-                </article>
-                <article class="process-step" role="listitem">
-                    <div class="step-circle">4</div>
-                    <div class="step-content">
-                        <h3>Rapport</h3>
-                        <p>Vous recevez le compte rendu détaillé et la prochaine rotation est planifiée.</p>
-                    </div>
-                </article>
-            </div>
-        </div>
-    </section>
-
-    <section class="services-cta" aria-labelledby="cta-title">
-        <div class="container services-cta__content glass-panel">
-            <div class="cta-text">
-                <p class="cta-eyebrow">Prêt à passer à l'action?</p>
-                <h2 id="cta-title">Réservez votre créneau maintenant.</h2>
-                <p>Réponse garantie en moins de 24h ouvrables.</p>
-            </div>
-            <div class="cta-actions">
-                <a class="btn btn-primary btn-xl shadow-lift" href="tel:+1-418-671-2814">📞 Parler à un expert</a>
-                <a class="btn btn-outline-light btn-xl" href="mailto:info@paletteitf.ca">Planifier par courriel</a>
-            </div>
-        </div>
-    </section>
+        </aside>
+    </div>
 </main>
 
-<footer class="footer" role="contentinfo">
-    <div class="container footer-content">
-        <div>
-            <p>&copy; 2025 Ilnu Transforme – Services de palettes.</p>
-            <p>Ramassage, réparation et consignation opérés au Saguenay–Lac-Saint-Jean.</p>
-        </div>
-        <div class="footer-links">
-            <a href="{% url 'core:home' %}">Accueil</a>
-            <a href="{% url 'core:products' %}">Produits</a>
-            <a href="{% url 'core:services' %}">Services</a>
-            <a href="{% url 'core:home' %}#contact">Contact</a>
-        </div>
+<footer class="footer-minimal" role="contentinfo"
+    style="padding: 24px 0; border-top: 1px solid var(--stone-200); background: var(--stone-50); color: var(--stone-500); font-size: 0.875rem;">
+    <div class="container">
+        <p style="margin: 0;">&copy; 2025 Ilnu Transforme | <a href="#"
+                style="color: inherit; text-decoration: underline;">Mentions légales</a></p>
     </div>
 </footer>
 {% endblock %}
