@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Any, Iterable, Optional
 
@@ -26,8 +26,14 @@ class PublicProduct:
     name: str
     code: Optional[str]
     description: Optional[str]
-    categories: tuple[str, ...]
     quantity_available: Decimal
+    image_url: Optional[str] = None
+    categories: tuple[str, ...] = field(default_factory=tuple)
+
+    @property
+    def display_description(self) -> str:
+        """Texte prêt à afficher avec repli convivial."""
+        return self.description or "Dimensions standard"
 
     def as_schema(self, position: int, canonical_url: str) -> dict[str, Any]:
         """Return a JSON-LD friendly structure for SEO."""

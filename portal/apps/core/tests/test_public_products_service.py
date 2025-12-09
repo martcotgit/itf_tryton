@@ -21,6 +21,7 @@ class PublicProductServiceTest(SimpleTestCase):
         product = products[0]
         self.assertEqual(product.name, "Palette 48x40")
         self.assertEqual(product.code, "PAL-001")
+        self.assertIsNone(product.description)
         self.assertEqual(product.quantity_available, Decimal("12"))
         self.assertTupleEqual(product.categories, ("Palettes neuves",))
 
@@ -36,7 +37,9 @@ class PublicProductServiceTest(SimpleTestCase):
                 if method == "search":
                     return [11, 22]
                 if method == "read":
-                    return [
+                    fields = params[1] if params and len(params) > 1 else []
+                    include_description = "description" in fields
+                    templates = [
                         {
                             "id": 11,
                             "name": "Palette 48x40",
@@ -54,6 +57,10 @@ class PublicProductServiceTest(SimpleTestCase):
                             "categories": [(8, "Consignation")],
                         },
                     ]
+                    if not include_description:
+                        for template in templates:
+                            template.pop("description", None)
+                    return templates
             if service == "model.product.product":
                 return [
                     {"id": 101, "template": (11, "Palette 48x40"), "quantity": "12"},

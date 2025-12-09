@@ -26,6 +26,7 @@ class ProductsViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Palette 48x40")
         self.assertContains(response, "PAL-001")
+        self.assertContains(response, "Palette standard")
         self.assertIn("products_schema", response.context)
         products_page = response.context["products"]
         self.assertEqual(list(products_page), [sample])
@@ -67,3 +68,4 @@ class ProductsViewTest(TestCase):
         self.assertEqual(response_page1.context["products_total"], 15)
         self.assertEqual(response_page2.context["products_total"], 15)
         self.assertContains(response_page2, "Palette 13")
+        self.assertContains(response_page2, "Page 2 sur 2")
