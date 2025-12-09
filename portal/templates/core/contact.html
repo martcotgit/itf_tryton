@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Contactez-nous | Ilnu Transforme{% endblock %}
+
+{% block extra_head %}
+<meta name="description" content="{{ page_description }}">
+<link rel="canonical" href="{{ canonical_url }}">
+{% endblock %}
+
+{% block content %}
+<main class="contact-page">
+    <div class="contact-grid">
+        <!-- Colonne Gauche : Infos -->
+        <aside class="contact-info-panel">
+            <h2>Nos coordonnées</h2>
+
+            <div class="contact-info-item">
+                <div class="contact-info-icon">📍</div>
+                <div class="contact-info-content">
+                    <div class="contact-info-label">Adresse</div>
+                    <div class="contact-info-text">
+                        1665, rue Nishk<br>
+                        Mashteuiatsh, QC G0W 2H0<br>
+                        Canada
+                    </div>
+                </div>
+            </div>
+
+            <div class="contact-info-item">
+                <div class="contact-info-icon">📞</div>
+                <div class="contact-info-content">
+                    <div class="contact-info-label">Téléphone</div>
+                    <div class="contact-info-text">
+                        <a href="tel:+14186712814">418-671-2814</a><br>
+                        Lun-Ven, 8h - 17h
+                    </div>
+                    <div class="response-badge">
+                        ⏱️ Réponse garantie sous 24h
+                    </div>
+                </div>
+            </div>
+
+            <div class="contact-info-item">
+                <div class="contact-info-icon">✉️</div>
+                <div class="contact-info-content">
+                    <div class="contact-info-label">Courriel</div>
+                    <div class="contact-info-text">
+                        <a href="mailto:info@ilnutransforme.ca">info@ilnutransforme.ca</a>
+                    </div>
+                </div>
+            </div>
+
+        </aside>
+
+        <!-- Colonne Droite : Formulaire -->
+        <div class="contact-form-card">
+            {% if success %}
+            <div class="success-message">
+                <div class="success-message-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                </div>
+                <h2>Merci ! Votre message a été envoyé.</h2>
+                <p>Nous vous répondrons sous 24 heures ouvrables.</p>
+                <a href="{% url 'core:home' %}">Retour à l'accueil →</a>
+            </div>
+            {% else %}
+            <h1>Contactez-nous</h1>
+
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="post" action="" novalidate>
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                    <span class="form-error-message">{{ form.name.errors.0 }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.email.id_for_label }}" class="form-label">{{ form.email.label }}</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                    <span class="form-error-message">{{ form.email.errors.0 }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.subject.id_for_label }}" class="form-label">{{ form.subject.label }}</label>
+                    {{ form.subject }}
+                    {% if form.subject.errors %}
+                    <span class="form-error-message">{{ form.subject.errors.0 }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="{{ form.message.id_for_label }}" class="form-label">{{ form.message.label }}</label>
+                    {{ form.message }}
+                    {% if form.message.errors %}
+                    <span class="form-error-message">{{ form.message.errors.0 }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-contact-submit" id="submitBtn">
+                        Envoyer le message →
+                    </button>
+                </div>
+
+                <div class="trust-signal">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="trust-signal-icon">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    <span>Vos données sont confidentielles et ne seront jamais partagées.</span>
+                </div>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</main>
+
+<script>
+    // Simple script to show loading state on submit
+    document.querySelector('form')?.addEventListener('submit', function (e) {
+        if (this.checkValidity()) {
+            const btn = document.getElementById('submitBtn');
+            btn.classList.add('loading');
+            btn.innerHTML = 'Envoi en cours...';
+        }
+    });
+</script>
+{% endblock %}

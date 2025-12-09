@@ -7,6 +7,12 @@ from django.views.generic import TemplateView
 
 from apps.core.services import PublicProductService, PublicProductServiceError, build_products_schema
 from apps.accounts.services import PortalOrderService
+from apps.core.forms import ContactForm
+from django.core.mail import send_mail
+from django.conf import settings
+from django.contrib import messages
+from django.views.generic import FormView
+
 
 
 logger = logging.getLogger(__name__)
@@ -102,3 +108,45 @@ class ProductsView(TemplateView):
             {"name": name, "count": counts[name]} for name in sorted(counts.keys(), key=str.lower)
         ]
         return facets
+
+
+class ContactView(FormView):
+    template_name = "core/contact.html"
+    form_class = ContactForm
+    success_url = "/contact/?sent=True"
+
+    def form_valid(self, form):
+        # Send email
+        subject = f"[Contact Web] {form.cleaned_data['subject']}"
+        message = (
+            f"Message de : {form.cleaned_data['name']} <{form.cleaned_data['email']}>\n\n"
+            f"{form.cleaned_data['message']}"
+        )
+        try:
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [settings.DEFAULT_FROM_EMAIL],  # Send to admin/self for now
+                fail_silently=False,
+            )
+        except Exception as e:
+            logger.error(f"Error sending contact email: {e}")
+            messages.error(self.request, "Une erreur est survenue lors de l'envoi du message. Veuillez réessayer plus tard.")
+            return self.form_invalid(form)
+
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.GET.get("sent"):
+            context["success"] = True
+        
+        # SEO Metadata
+        canonical_url = self.request.build_absolute_uri(self.request.path)
+        context.update({
+            "canonical_url": canonical_url,
+            "page_title": "Contactez Ilnu Transforme | Palettes et Recyclage",
+            "page_description": "Contactez notre équipe pour vos besoins en palettes neuves, usagées ou pour nos services de récupération au Saguenay–Lac-Saint-Jean. Réponse sous 24h.",
+        })
+        return context

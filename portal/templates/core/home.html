@@ -240,7 +240,7 @@
                 récupère les anciennes. Simple, rapide, écologique.</p>
             <div class="cta-buttons">
                 <a href="{% url 'core:products' %}" class="btn btn-primary">Voir nos produits →</a>
-                <a href="#contact" class="btn btn-secondary">Demander un devis</a>
+                <a href="{% url 'core:contact' %}" class="btn btn-secondary">Demander un devis</a>
             </div>
         </div>
     </section>
@@ -271,46 +271,7 @@
         </div>
     </section>
 
-    <section class="contact" id="contact" aria-labelledby="contact-title">
-        <div class="container">
-            <h2 class="section-title" id="contact-title">Contactez-nous</h2>
-            <div class="contact-content">
-                <div class="contact-info">
-                    <div class="contact-item address-item">
-                        <div class="contact-icon" aria-hidden="true">📍</div>
-                        <div class="contact-details">
-                            <h3>Adresse</h3>
-                            <address>
-                                1665, rue Nishk<br>
-                                Mashteuiatsh, QC G0W 2H0<br>
-                                Canada
-                            </address>
-                        </div>
-                    </div>
-                    <div class="contact-item phone-item">
-                        <div class="contact-icon" aria-hidden="true">📞</div>
-                        <div class="contact-details">
-                            <h3>Téléphone</h3>
-                            <p><a href="tel:+1-418-671-2814" aria-label="Appeler le 418-671-2814">418-671-2814</a></p>
-                        </div>
-                    </div>
-                </div>
-                <div class="contact-cta">
-                    <div class="contact-message">
-                        <h3>Prêt à commander ? On livre dès demain.</h3>
-                        <p>Communiquez avec nous dès aujourd'hui. Service rapide et professionnel dans la région du
-                            Saguenay-Lac-Saint-Jean.</p>
-                        <div class="cta-buttons">
-                            <a href="tel:+1-418-671-2814" class="btn btn-primary" aria-label="Appeler maintenant">
-                                <span class="btn-icon">📞</span>
-                                Parler à un conseiller
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+    {% comment %} Contact section moved to /contact/ {% endcomment %}
     {% endif %}
 </main>
 
