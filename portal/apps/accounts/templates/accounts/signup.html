@@ -105,7 +105,11 @@
                     <div class="form-group form-group-checkbox">
                         <label class="checkbox-label">
                             {{ form.accept_terms }}
-                            <span>{{ form.accept_terms.label }}</span>
+                            <span>J’accepte les <a href="{% url 'core:terms_of_service' %}"
+                                    onclick="window.open(this.href); return false;">conditions d’utilisation</a> et la
+                                <a href="{% url 'core:privacy_policy' %}"
+                                    onclick="window.open(this.href); return false;">politique de
+                                    confidentialité</a></span>
                         </label>
                         {% if form.accept_terms.errors %}
                         {% for error in form.accept_terms.errors %}

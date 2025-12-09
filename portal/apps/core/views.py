@@ -150,3 +150,9 @@ class ContactView(FormView):
             "page_description": "Contactez notre équipe pour vos besoins en palettes neuves, usagées ou pour nos services de récupération au Saguenay–Lac-Saint-Jean. Réponse sous 24h.",
         })
         return context
+
+class TermsOfServiceView(TemplateView):
+    template_name = "core/legal/terms_of_service.html"
+
+class PrivacyPolicyView(TemplateView):
+    template_name = "core/legal/privacy_policy.html"
