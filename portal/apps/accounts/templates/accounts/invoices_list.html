@@ -3,282 +3,89 @@
 {% block title %}Mes factures – Portail ITF{% endblock %}
 
 {% block extra_head %}
-<style>
-    .invoices-shell {
-        max-width: 1100px;
-        margin: 0 auto;
-        padding: 1.5rem 0 3rem;
-    }
-
-    .invoices-hero {
-        background: linear-gradient(120deg, var(--primary-color), #3f7c3c);
-        color: var(--white);
-        border-radius: 18px;
-        border: none;
-        padding: 2rem;
-        margin-bottom: 1.5rem;
-        box-shadow: var(--shadow);
-    }
-
-    .invoices-hero h1 {
-        margin-bottom: 0.3rem;
-        color: var(--white);
-    }
-
-    .invoices-hero p {
-        color: rgba(255, 255, 255, 0.92);
-        max-width: 720px;
-    }
-
-    .invoices-hero .hero-icon-wrapper {
-        background: rgba(255, 255, 255, 0.2);
-        color: var(--white);
-        box-shadow: none;
-    }
-
-    .invoices-hero .icon-xl {
-        color: var(--white);
-    }
-
-    .invoices-summary {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-        margin-top: 1.25rem;
-    }
-
-    .summary-card {
-        flex: 1 1 220px;
-        background: #fff;
-        border: 1px solid #e6ece7;
-        border-radius: 14px;
-        padding: 1rem 1.2rem;
-        box-shadow: var(--shadow-light);
-    }
-
-    .summary-card span {
-        color: var(--text-dark);
-        opacity: 0.85;
-        font-size: 0.9rem;
-    }
-
-    .summary-card strong {
-        font-size: 1.35rem;
-        display: block;
-        margin-top: 0.2rem;
-        color: inherit;
-    }
-
-    .invoices-panel {
-        background: #fff;
-        border: 1px solid #e6ece7;
-        border-radius: 16px;
-        padding: 1.25rem;
-        box-shadow: var(--shadow-light);
-    }
-
-    .invoices-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .invoices-table th,
-    .invoices-table td {
-        padding: 0.65rem 0.75rem;
-        text-align: left;
-        font-size: 0.95rem;
-    }
-
-    .invoices-table thead th {
-        color: var(--text-light);
-        font-weight: 600;
-        border-bottom: 1px solid #edf0ed;
-    }
-
-    .invoices-table tbody tr {
-        border-bottom: 1px solid #f2f4f2;
-    }
-
-    .invoices-table tbody tr:hover {
-        background: #f8fbf8;
-    }
-
-    .status-badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.2rem 0.6rem;
-        border-radius: 999px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        background: #eef5ef;
-        color: var(--primary-color);
-    }
-
-    .status-badge.state-paid {
-        background: #e9f6ec;
-        color: #1b6b3a;
-    }
-
-    .status-badge.state-cancelled {
-        background: #fff2f2;
-        color: #b00020;
-    }
-
-    .status-badge.state-draft {
-        background: #fdf4e5;
-        color: #a35b00;
-    }
-
-    .status-badge.state-posted {
-        background: #f3f6ff;
-        color: #3451b2;
-    }
-
-    .invoices-empty {
-        padding: 1.5rem;
-        border: 1px dashed #dfe8e0;
-        border-radius: 14px;
-        background: #f8fbf8;
-        text-align: center;
-        color: var(--text-light);
-    }
-
-    .pagination-bar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        margin-top: 1.2rem;
-    }
-
-    .pagination-actions {
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .back-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-        margin-bottom: 1rem;
-        color: var(--primary-color);
-    }
-
-    @media (max-width: 720px) {
-        .invoices-table thead {
-            display: none;
-        }
-
-        .invoices-table tbody tr {
-            display: grid;
-            padding: 0.75rem 0;
-        }
-
-        .invoices-table td {
-            display: flex;
-            justify-content: space-between;
-            border: none;
-        }
-
-        .invoices-table td::before {
-            content: attr(data-label);
-            font-weight: 600;
-            color: var(--text-light);
-        }
-    }
-</style>
+<!-- Styles specific to invoices list are now in style.css or use global classes -->
 {% endblock %}
 
 {% block content %}
-<main id="contenu-principal" class="main" role="main">
-    <div class="container invoices-shell">
-        <a class="back-link" href="{% url 'core:home' %}">← Retour à l'accueil</a>
-        <div class="invoices-hero">
-            <div class="hero-header-group" style="align-items: flex-start; text-align: left;">
-                <h1 style="margin-bottom: 0;">Mes factures</h1>
-            </div>
-            <p>Consultez vos factures clientes, vérifiez rapidement les montants encore dus et gardez un historique
-                clair de vos paiements.</p>
-            {% if summary %}
-            <div class="invoices-summary">
-                <div class="summary-card card-accent-top card-accent-info">
-                    <span>Factures visibles</span>
-                    <strong>{{ summary.count }}</strong>
-                </div>
-                <div class="summary-card card-accent-top card-accent-warning">
-                    <span>Total dû estimé</span>
-                    <strong>
-                        {% if summary.due_total %}
-                        {{ summary.due_total|floatformat:2 }} {% if summary.currency %}{{ summary.currency }}{% endif %}
-                        {% else %}
-                        0,00 {% if summary.currency %}{{ summary.currency }}{% endif %}
-                        {% endif %}
-                    </strong>
-                </div>
-            </div>
-            {% endif %}
-        </div>
-
-        {% if invoices %}
-        <section class="invoices-panel">
-            <div class="table-responsive">
-                <table class="invoices-table">
-                    <thead>
-                        <tr>
-                            <th scope="col">Numéro</th>
-                            <th scope="col">Émise le</th>
-                            <th scope="col">Échéance</th>
-                            <th scope="col">Statut</th>
-                            <th scope="col">Montant dû</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for invoice in invoices %}
-                        <tr>
-                            <td data-label="Numéro">{{ invoice.number|default:"—" }}</td>
-                            <td data-label="Émise le">{{ invoice.issue_date|date:"Y-m-d"|default:"—" }}</td>
-                            <td data-label="Échéance">{{ invoice.due_date|date:"Y-m-d"|default:"—" }}</td>
-                            <td data-label="Statut">
-                                <span class="status-badge state-{{ invoice.state|default:'draft' }}">{{ invoice.state_label }}</span>
-                            </td>
-                            <td data-label="Montant dû">
-                                {% if invoice.amount_due %}
-                                {{ invoice.amount_due|floatformat:2 }} {% if invoice.currency_label %}{{ invoice.currency_label }}{% endif %}
-                                {% elif invoice.total_amount %}
-                                {{ invoice.total_amount|floatformat:2 }} {% if invoice.currency_label %}{{ invoice.currency_label }}{% endif %}
-                                {% else %}
-                                —
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% if pagination and pagination.pages > 1 %}
-            <div class="pagination-bar">
-                <span>Page {{ pagination.page }} sur {{ pagination.pages }}</span>
-                <div class="pagination-actions">
-                    {% if pagination.has_previous %}
-                    <a class="btn btn-secondary" href="?page={{ pagination.page|add:-1 }}">Page précédente</a>
-                    {% else %}
-                    <span class="btn btn-secondary disabled">Page précédente</span>
-                    {% endif %}
-                    {% if pagination.has_next %}
-                    <a class="btn btn-secondary" href="?page={{ pagination.page|add:1 }}">Page suivante</a>
-                    {% else %}
-                    <span class="btn btn-secondary disabled">Page suivante</span>
-                    {% endif %}
-                </div>
-            </div>
-            {% endif %}
-        </section>
-        {% else %}
-        <div class="invoices-empty">
-            Aucune facture n’est disponible pour votre compte pour le moment.
-        </div>
-        {% endif %}
+<main class="invoices-page container" style="max-width: 1200px; margin: 0 auto; padding: 24px 32px;">
+    <!-- Toolbar -->
+    <div class="page-toolbar">
+        <h1>Mes factures</h1>
+        <!-- Optionnel: filtres/actions -->
     </div>
+
+    <!-- Tableau -->
+    <div class="table-responsive">
+        <table class="invoices-table">
+            <thead>
+                <tr>
+                    <th>N° Facture</th>
+                    <th>Date</th>
+                    <th>À payer avant</th>
+                    <th>Statut</th>
+                    <th style="text-align: right;">Montant</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for invoice in invoices %}
+                <!-- Removed onclick since detail view might not be ready, kept hover effect in CSS -->
+                <tr>
+                    <td data-label="N° Facture">
+                        <a href="{% url 'accounts:invoices-detail' invoice.id %}"
+                            style="font-weight: 600; color: var(--primary-600); text-decoration: none;">
+                            {{ invoice.number|default:"Non disponible" }}
+                        </a>
+                    </td>
+                    <td data-label="Date">{{ invoice.issue_date|date:"d/m/Y"|default:"Non disponible" }}</td>
+                    <td data-label="À payer avant">{{ invoice.due_date|date:"d/m/Y"|default:"Non disponible" }}</td>
+                    <td data-label="Statut">
+                        <span class="status-badge status-badge--{{ invoice.state|default:'draft' }}">
+                            {{ invoice.state_label }}
+                        </span>
+                    </td>
+                    <td class="cell-amount" data-label="Montant">
+                        {% if invoice.amount_due %}
+                        {{ invoice.amount_due|floatformat:2 }} $
+                        {% elif invoice.total_amount %}
+                        {{ invoice.total_amount|floatformat:2 }} $
+                        {% else %}
+                        0,00 $
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5">
+                        <div class="empty-state">
+                            <div class="empty-state__icon" style="font-size: 3rem; margin-bottom: 1rem;">📄</div>
+                            <h3 class="empty-state__title">Aucune facture pour le moment</h3>
+                            <p class="empty-state__description">
+                                Vos factures apparaîtront ici dès leur émission par notre équipe.
+                            </p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if pagination and pagination.pages > 1 %}
+    <div class="pagination-bar">
+        <span>Page {{ pagination.page }} sur {{ pagination.pages }}</span>
+        <div class="pagination-actions">
+            {% if pagination.has_previous %}
+            <a class="btn btn-secondary" href="?page={{ pagination.page|add:-1 }}">Page précédente</a>
+            {% else %}
+            <span class="btn btn-secondary disabled">Page précédente</span>
+            {% endif %}
+            {% if pagination.has_next %}
+            <a class="btn btn-secondary" href="?page={{ pagination.page|add:1 }}">Page suivante</a>
+            {% else %}
+            <span class="btn btn-secondary disabled">Page suivante</span>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
 </main>
 {% endblock %}

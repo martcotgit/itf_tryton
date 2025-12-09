@@ -131,6 +131,47 @@ class InvoiceListView(LoginRequiredMixin, TemplateView):
         }
 
 
+class InvoiceDetailView(LoginRequiredMixin, TemplateView):
+    template_name = "accounts/invoice_detail.html"
+    login_url = reverse_lazy("accounts:login")
+    service_class = PortalInvoiceService
+
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        self.invoice_service = self.service_class()
+
+    def get(self, request, *args, **kwargs):
+        invoice_id = kwargs.get("invoice_id")
+        detail = None
+        try:
+            detail = self.invoice_service.get_invoice_detail(
+                login=self._current_login(),
+                invoice_id=invoice_id,
+            )
+        except PortalInvoiceServiceError as exc:
+            messages.error(request, "Nous n'avons pas pu charger votre facture pour le moment. Veuillez réessayer dans quelques instants.")
+            return redirect("accounts:invoices-list")
+
+        if detail is None:
+            messages.error(request, "Impossible de charger cette facture. Elle n'existe peut-être plus ou vous n'y avez pas accès.")
+            return redirect("accounts:invoices-list")
+
+        return self.render_to_response(
+            self.get_context_data(
+                invoice=detail,
+            )
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["today"] = date.today()
+        return context
+
+    def _current_login(self) -> str:
+
+        return (self.request.user.username or "").strip().lower()
+
+
 class ClientSignupView(FormView):
     template_name = "accounts/signup.html"
     form_class = ClientSignupForm

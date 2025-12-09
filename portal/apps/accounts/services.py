@@ -165,6 +165,26 @@ class PortalInvoiceSummary:
 
 
 @dataclass
+class PortalInvoiceLineDetail:
+    id: int
+    product_code: Optional[str]
+    product_name: Optional[str]
+    description: Optional[str]
+    quantity: Decimal
+    unit: Optional[str]
+    unit_price: Decimal
+    amount: Decimal
+
+
+@dataclass
+class PortalInvoiceDetail(PortalInvoiceSummary):
+    untaxed_amount: Optional[Decimal] = None
+    tax_amount: Optional[Decimal] = None
+    paid_amount: Optional[Decimal] = None
+    lines: list[PortalInvoiceLineDetail] = None
+
+
+@dataclass
 class PortalInvoicePagination:
     page: int
     pages: int
@@ -1540,12 +1560,12 @@ class PortalInvoiceService:
     """Service dédié à la consultation des factures client dans le portail."""
 
     STATE_LABELS: dict[str, str] = {
-        "draft": "Brouillon",
-        "validated": "Validée",
-        "posted": "Comptabilisée",
+        "draft": "En préparation",
+        "validated": "Confirmée",
+        "posted": "Finalisée",
         "paid": "Payée",
         "cancelled": "Annulée",
-        "waiting_payment": "En attente",
+        "waiting_payment": "En attente de paiement",
     }
     DEFAULT_PAGE_SIZE = 20
 
@@ -1675,6 +1695,124 @@ class PortalInvoiceService:
             has_previous=current_page > 1,
         )
         return PortalInvoiceListResult(invoices=invoices, pagination=pagination)
+
+    def get_invoice_detail(self, *, login: str, invoice_id: int) -> PortalInvoiceDetail:
+        """Récupère les détails complets d'une facture pour un client donné."""
+        profile = self.account_service.fetch_client_profile(login=login)
+        context = self._rpc_context()
+        
+        # 1. Recherche sécurisée de la facture (doit appartenir au client)
+        domain = [
+            ("id", "=", invoice_id),
+            ("party", "=", profile.party_id),
+            ("type", "=", "out"),
+        ]
+        
+        try:
+            invoice_ids = self.client.call(
+                "model.account.invoice",
+                "search",
+                [domain, 0, 1, None, context],
+            )
+        except TrytonRPCError as exc:
+            logger.exception("Erreur lors de la recherche de la facture %s pour party=%s", invoice_id, profile.party_id)
+            raise PortalInvoiceServiceError("Impossible de vérifier l'accès à cette facture.") from exc
+
+        if not invoice_ids:
+            return None
+
+        # 2. Lecture des données de la facture
+        fields = [
+            "id", "number", "invoice_date", "payment_term_date", "state",
+            "total_amount", "untaxed_amount", "tax_amount", "amount_to_pay",
+            "currency", "lines"
+        ]
+        
+        try:
+            invoice_data = self.client.call(
+                "model.account.invoice",
+                "read",
+                [[invoice_ids[0]], fields, context],
+            )[0]
+        except TrytonRPCError as exc:
+            logger.exception("Erreur lors de la lecture de la facture %s", invoice_ids[0])
+            raise PortalInvoiceServiceError("Impossible de lire les détails de la facture.") from exc
+
+        # 3. Lecture des lignes de la facture
+        line_ids = invoice_data.get("lines", [])
+        lines = []
+        if line_ids:
+            line_fields = [
+                "product", "description", "quantity", "unit", "unit_price", "amount"
+            ]
+            try:
+                lines_data = self.client.call(
+                    "model.account.invoice.line",
+                    "read",
+                    [line_ids, line_fields, context],
+                )
+                
+                # Récupération des noms/codes produits et unités si nécessaire (optimisation possible)
+                # Note: 'read' retourne souvent des tuples (id, name) pour les Many2One en JSON-RPC Tryton si le contexte le permet,
+                # sinon il faut faire des appels séparés. On suppose ici que le client Tryton gère proprement ou que ce sont des IDs.
+                # Pour simplifier et assurer les données, on va traiter les champs relationnels.
+                
+                for line in lines_data:
+                    lines.append(self._parse_invoice_line(line))
+                    
+            except TrytonRPCError as exc:
+                logger.warning("Erreur lors de la lecture des lignes pour la facture %s: %s", invoice_id, exc)
+                # On continue même si les lignes échouent partiellement, mais c'est critique quand même.
+
+        # 4. Construction de l'objet réponse
+        summary = self._parse_invoice_record(invoice_data)
+        
+        # Calcul du montant payé
+        paid_amount = (summary.total_amount or Decimal(0)) - (summary.amount_due or Decimal(0))
+        if paid_amount < 0: paid_amount = Decimal(0)
+
+        return PortalInvoiceDetail(
+            **summary.__dict__,
+            untaxed_amount=self._to_decimal(invoice_data.get("untaxed_amount")),
+            tax_amount=self._to_decimal(invoice_data.get("tax_amount")),
+            paid_amount=paid_amount,
+            lines=lines
+        )
+
+    def _parse_invoice_line(self, line_data: dict[str, Any]) -> PortalInvoiceLineDetail:
+        product_code = None
+        product_name = None
+        
+        product_field = line_data.get("product")
+        if product_field:
+            # Si le client Tryton retourne un tuple/list (id, name)
+            if isinstance(product_field, (list, tuple)) and len(product_field) > 1:
+                product_name = product_field[1]
+                # Le code n'est pas toujours dans le rec_name, on laisse None ou on le mettrait si on faisait un read produit séparé.
+            elif isinstance(product_field, dict):
+                 product_name = product_field.get("rec_name")
+        
+        # Fallback description si pas de produit
+        description = line_data.get("description")
+        
+        unit_name = None
+        unit_field = line_data.get("unit")
+        if isinstance(unit_field, (list, tuple)) and len(unit_field) > 1:
+            unit_name = unit_field[1]
+        elif isinstance(unit_field, dict):
+            unit_name = unit_field.get("rec_name")
+
+        return PortalInvoiceLineDetail(
+            id=line_data.get("id"),
+            product_code=product_code, # Tryton n'envoie pas le code par défaut dans le invoice.line read du product
+            product_name=product_name,
+            description=description,
+            quantity=self._to_decimal(line_data.get("quantity")) or Decimal(0),
+            unit=unit_name,
+            unit_price=self._to_decimal(line_data.get("unit_price")) or Decimal(0),
+            amount=self._to_decimal(line_data.get("amount")) or Decimal(0),
+        )
+
 
     def _parse_invoice_record(self, record: dict[str, Any]) -> PortalInvoiceSummary:
         invoice_id = PortalAccountService._extract_id(record.get("id")) or 0

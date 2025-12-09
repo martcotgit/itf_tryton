@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Facture #{{ invoice.number|default:"Non disponible" }} – Portail ITF{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/invoice-detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="invoice-detail-page">
+    <!-- Toolbar Sticky -->
+    <div class="invoice-toolbar">
+        <div class="breadcrumbs-container" style="margin-bottom: 0.5rem;">
+            <nav class="breadcrumb">
+                <a href="{% url 'accounts:invoices-list' %}" class="breadcrumb-link">Mes factures</a>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-current">Facture #{{ invoice.number|default:"Non disponible" }}</span>
+            </nav>
+        </div>
+        <div>
+            <a href="{% url 'accounts:invoices-list' %}" class="btn-back">
+                ← Retour
+            </a>
+        </div>
+    </div>
+
+    <!-- Container Principal -->
+    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 var(--space-8);">
+
+        <!-- Hero Section -->
+        <section class="invoice-hero">
+            <div class="invoice-hero__title">
+                <h1>Facture #{{ invoice.number|default:"Non disponible" }}</h1>
+                <span class="status-badge status-badge--{{ invoice.state }}">
+                    {{ invoice.state_label }}
+                </span>
+                {% if invoice.state != 'paid' and invoice.state != 'cancelled' and invoice.due_date and invoice.due_date < today %}
+                <span class="status-badge status-badge--overdue">En retard</span>
+                {% endif %}
+            </div>
+            <div class="invoice-hero__actions">
+                <button class="btn btn-secondary">
+                    Télécharger la facture (PDF)
+                </button>
+                {% if invoice.amount_due > 0 %}
+                <button class="btn btn-primary">
+                    Payer {{ invoice.amount_due|floatformat:2 }} $
+                </button>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- Alerte Conditionnelle -->
+        {% if invoice.state != 'paid' and invoice.state != 'cancelled' and invoice.due_date and invoice.due_date < today %}
+        <div class="alert alert--danger">
+            <div class="alert__icon">⚠️</div>
+            <div class="alert__content">
+                <h4 class="alert__title">Paiement en retard depuis le {{ invoice.due_date|date:"d/m/Y" }}</h4>
+                <p class="alert__message">Montant à régler : <strong>{{ invoice.amount_due|floatformat:2 }} $</strong>
+                </p>
+            </div>
+            <div class="alert__actions">
+                <button class="btn btn-danger btn-sm">Payer maintenant</button>
+            </div>
+        </div>
+        {% endif %}
+
+    <!-- Grille Info -->
+    <div class="info-grid">
+        <div class="info-card">
+            <span class="info-card__label">Émise le</span>
+            <span class="info-card__value">{{ invoice.issue_date|date:"d/m/Y" }}</span>
+        </div>
+        <div class="info-card">
+            <span class="info-card__label">À payer avant le</span>
+            <span class="info-card__value {% if invoice.due_date < today and invoice.state != 'paid' %}info-card__value--danger{% endif %}">{{ invoice.due_date|date:"d/m/Y"|default:"-" }}</span>
+        </div>
+        <div class="info-card">
+            <span class="info-card__label">Total de la facture</span>
+            <span class="info-card__value">{{ invoice.total_amount|floatformat:2 }} $</span>
+        </div>
+        <div class="info-card">
+            <span class="info-card__label">Déjà payé</span>
+            <span class="info-card__value">{{ invoice.paid_amount|floatformat:2 }} $</span>
+        </div>
+        <div class="info-card">
+            <span class="info-card__label">Reste à payer</span>
+            <span class="info-card__value info-card__value--highlight {% if invoice.amount_due > 0 %}info-card__value--due{% endif %}">{{ invoice.amount_due|floatformat:2 }} $</span>
+        </div>
+    </div>
+
+    <!-- Layout 2 Colonnes (Desktop) -->
+    <div class="invoice-content-layout">
+        <!-- Colonne Gauche : Lignes -->
+        <div class="invoice-lines">
+            <h3 class="invoice-lines__header">Détails de la facture</h3>
+
+            <!-- Desktop Table -->
+            <table class="invoice-table">
+                <thead>
+                    <tr>
+                        <th>Article</th>
+                        <th>Détails</th>
+                        <th>Quantité</th>
+                        <th>Unité</th>
+                        <th style="text-align: right;">Prix unitaire</th>
+                        <th style="text-align: right;">Montant</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for line in invoice.lines %}
+                    <tr>
+                        <td>{{ line.product_code|default:"-" }}</td>
+                        <td>
+                            <strong>{{ line.product_name|default:line.description }}</strong>
+                            {% if line.product_name and line.description and line.product_name != line.description %}
+                            <br><span style="color: var(--gray-600); font-size: 0.85em;">{{ line.description }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ line.quantity|floatformat:0 }}</td>
+                        <td>{{ line.unit|default:"" }}</td>
+                        <td style="text-align: right;">{{ line.unit_price|floatformat:2 }} $</td>
+                        <td style="text-align: right;">{{ line.amount|floatformat:2 }} $</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 2rem;">
+                            Cette facture ne contient aucun article pour le moment.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Mobile Cards (Visible only on mobile via CSS media queries) -->
+            <div class="invoice-lines-mobile">
+                {% for line in invoice.lines %}
+                <div class="invoice-line-card">
+                    <div class="invoice-line-card__header">
+                        {{ line.product_name|default:line.description }}
+                    </div>
+                    <div class="invoice-line-card__row">
+                        <span class="invoice-line-card__label">Article</span>
+                        <span class="invoice-line-card__value">{{ line.product_code|default:"-" }}</span>
+                    </div>
+                    <div class="invoice-line-card__row">
+                        <span class="invoice-line-card__label">Qté</span>
+                        <span class="invoice-line-card__value">{{ line.quantity|floatformat:0 }} {{ line.unit|default:"" }}</span>
+                    </div>
+                    <div class="invoice-line-card__row">
+                        <span class="invoice-line-card__label">Prix Unit.</span>
+                        <span class="invoice-line-card__value">{{ line.unit_price|floatformat:2 }} $</span>
+                    </div>
+                    <div class="invoice-line-card__row"
+                        style="border-top: 1px solid var(--gray-100); margin-top: 8px; padding-top: 8px;">
+                        <span class="invoice-line-card__label">Montant</span>
+                        <span class="invoice-line-card__value" style="font-weight: 700;">{{ line.amount|floatformat:2 }} $</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+        </div>
+
+        <!-- Colonne Droite : Résumé Sticky -->
+        <aside class="financial-summary">
+            <h3 class="financial-summary__title">Résumé</h3>
+
+            <div class="financial-summary__row">
+                <span class="financial-summary__label">Sous-total (avant taxes)</span>
+                <span class="financial-summary__value">{{ invoice.untaxed_amount|floatformat:2 }} $</span>
+            </div>
+            <div class="financial-summary__row">
+                <span class="financial-summary__label">Taxes (TPS + TVQ)</span>
+                <span class="financial-summary__value">{{ invoice.tax_amount|floatformat:2 }} $</span>
+            </div>
+
+            <div class="financial-summary__row financial-summary__row--total">
+                <span class="financial-summary__label">Total à payer</span>
+                <span class="financial-summary__value financial-summary__value--total">{{ invoice.total_amount|floatformat:2 }} $</span>
+            </div>
+            <div class="financial-summary__row">
+                <span class="financial-summary__label">Déjà payé</span>
+                <span class="financial-summary__value">{{ invoice.paid_amount|floatformat:2 }} $</span>
+            </div>
+            <div class="financial-summary__row">
+                <span class="financial-summary__label" style="font-weight: 600;">Reste à payer</span>
+                <span class="financial-summary__value financial-summary__value--due">{{ invoice.amount_due|floatformat:2 }} $</span>
+            </div>
+        </aside>
+    </div>
+    </div>
+
+    <!-- Sticky Footer Mobile -->
+    {% if invoice.amount_due > 0 %}
+    <div class="sticky-footer">
+        <button class="btn btn-primary">
+            Payer {{ invoice.amount_due|floatformat:2 }} $
+        </button>
+    </div>
+    {% endif %}
+</main>
+{% endblock %}
