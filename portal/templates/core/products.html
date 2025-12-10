@@ -75,8 +75,7 @@
                     </div>
                     <div class="category-card__overlay">
                         <h3 class="category-card__title">{{ category.name }}</h3>
-                        <span class="category-card__count">{{ category.product_count }} produit{{
-                            category.product_count|pluralize }}</span>
+                        <span class="category-card__count">{{ category.product_count }} produit{{ category.product_count|pluralize }}</span>
                     </div>
                 </a>
             </li>
@@ -112,8 +111,7 @@
         <!-- Product List View (Filtered by Category) -->
         {% if products %}
         <div class="category-intro">
-            <p class="lead">{{ products_total }} produit{{ products_total|pluralize }} disponible{{
-                products_total|pluralize }} dans cette catégorie.</p>
+            <p class="lead">{{ products_total }} produit{{ products_total|pluralize }} disponible{{ products_total|pluralize }} dans cette catégorie.</p>
         </div>
 
         <ul class="product-grid" role="list">
