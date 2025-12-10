@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Palettes neuves et usagées | Catalogue public Ilnu Transforme{% endblock %}
+{% block title %}{{ page_title|default:"Catalogue de palettes | Ilnu Transforme" }}{% endblock %}
 
 {% block extra_head %}
 <meta name="description" content="{{ page_description }}">
@@ -9,12 +9,12 @@
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="{{ canonical_url }}">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Palettes disponibles – Ilnu Transforme">
+<meta property="og:title" content="{{ page_title|default:'Catalogue de palettes – Ilnu Transforme' }}">
 <meta property="og:description" content="{{ page_description }}">
 <meta property="og:url" content="{{ canonical_url }}">
 <meta property="og:locale" content="fr_CA">
 <meta property="twitter:card" content="summary_large_image">
-<meta property="twitter:title" content="Catalogue de palettes – Ilnu Transforme">
+<meta property="twitter:title" content="{{ page_title|default:'Catalogue de palettes – Ilnu Transforme' }}">
 <meta property="twitter:description" content="{{ page_description }}">
 {% if products_schema %}
 <script type="application/ld+json">{{ products_schema|safe }}</script>
@@ -30,28 +30,92 @@
                 <nav class="breadcrumb" aria-label="Breadcrumb">
                     <a href="{% url 'core:home' %}">Accueil</a>
                     <span class="separator">/</span>
+                    {% if view_mode == 'categories' %}
                     <span class="current">Produits</span>
+                    {% else %}
+                    <a href="{% url 'core:products' %}">Produits</a>
+                    <span class="separator">/</span>
+                    <span class="current">{{ current_category.name|default:"Catégorie" }}</span>
+                    {% endif %}
                 </nav>
-                <h1>Catalogue de palettes</h1>
+                <h1>
+                    {% if view_mode == 'categories' %}
+                    Nos Familles de Produits
+                    {% else %}
+                    {{ current_category.name|default:"Produits" }}
+                    {% endif %}
+                </h1>
             </div>
+            {% if view_mode == 'products' %}
             <div class="page-header-right">
-                <div class="filter-group">
-                    <select class="filter-select" aria-label="Filtrer par dimension">
-                        <option>Toutes les dimensions</option>
-                        <option>48 x 40 po</option>
-                        <option>48 x 45 po</option>
-                    </select>
-                    <select class="sort-select" aria-label="Trier les produits">
-                        <option>Trier par prix</option>
-                        <option>Trier par nom</option>
-                    </select>
-                </div>
+                <a href="{% url 'core:products' %}" class="btn btn-ghost btn-sm">
+                    ← Toutes les catégories
+                </a>
             </div>
+            {% endif %}
         </div>
     </div>
 
     <div class="product-container">
+        {% if view_mode == 'categories' %}
+        <!-- Category Grid View -->
+        {% if categories %}
+        <div class="category-intro">
+            <p class="lead">Cliquez sur une catégorie pour découvrir nos produits.</p>
+        </div>
+
+        <ul class="category-grid" role="list">
+            {% for category in categories %}
+            <li role="listitem">
+                <a href="{% url 'core:products_by_category' category.category_id %}" class="category-card">
+                    <div class="category-card__image" {% if category.image_data_uri %}
+                        style="background-image: url('{{ category.image_data_uri }}');" {% else %}
+                        style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));"
+                        {% endif %}>
+                    </div>
+                    <div class="category-card__overlay">
+                        <h3 class="category-card__title">{{ category.name }}</h3>
+                        <span class="category-card__count">{{ category.product_count }} produit{{
+                            category.product_count|pluralize }}</span>
+                    </div>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <!-- Global CTA Banner -->
+        <section class="catalog-cta-banner">
+            <div class="catalog-cta-banner__content">
+                <span class="catalog-cta-banner__icon">💬</span>
+                <p>Vous avez des questions ou besoin d'un volume important ? <strong>Contactez-nous pour un devis
+                        personnalisé.</strong></p>
+            </div>
+            <a href="{% url 'core:contact' %}" class="btn btn-primary">Demander un devis →</a>
+        </section>
+
+        {% else %}
+        <!-- Empty State for Categories -->
+        <div class="empty-state">
+            <svg class="empty-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="1.5">
+                <path d="M20 12V22H4V12" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M22 7H2V12H22V7Z" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M12 22V7" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <h3>Aucune catégorie disponible</h3>
+            <p>Le catalogue est temporairement vide. Contactez notre équipe pour connaître les options disponibles.</p>
+            <a href="{% url 'core:contact' %}" class="btn btn-primary">Nous contacter</a>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <!-- Product List View (Filtered by Category) -->
         {% if products %}
+        <div class="category-intro">
+            <p class="lead">{{ products_total }} produit{{ products_total|pluralize }} disponible{{
+                products_total|pluralize }} dans cette catégorie.</p>
+        </div>
+
         <ul class="product-grid" role="list">
             {% for product in products %}
             <li class="product-card-compact" role="listitem">
@@ -60,7 +124,8 @@
                     {% if product.image_url %}
                     <img src="{{ product.image_url }}" alt="{{ product.name }}" loading="lazy">
                     {% else %}
-                    <img src="{% static 'img/palette-bois.jpg' %}" alt="{{ product.name }}" loading="lazy" class="product-placeholder-image">
+                    <img src="{% static 'img/palette-bois.jpg' %}" alt="{{ product.name }}" loading="lazy"
+                        class="product-placeholder-image">
                     {% endif %}
                 </div>
 
@@ -99,7 +164,8 @@
                     Précédent</a>
                 {% endif %}
 
-                <span style="margin: 0 1rem; align-self: center;">Page {{ products.number }} sur {{ products.paginator.num_pages }}</span>
+                <span style="margin: 0 1rem; align-self: center;">Page {{ products.number }} sur {{
+                    products.paginator.num_pages }}</span>
 
                 {% if products.has_next %}
                 <a class="btn btn-ghost btn-sm" href="?page={{ products.next_page_number }}" rel="next">Suivant →</a>
@@ -119,7 +185,7 @@
         </section>
 
         {% else %}
-        <!-- Empty State -->
+        <!-- Empty State for Products -->
         <div class="empty-state">
             <svg class="empty-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="1.5">
@@ -127,26 +193,12 @@
                 <path d="M22 7H2V12H22V7Z" stroke-linecap="round" stroke-linejoin="round" />
                 <path d="M12 22V7" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
-            <h3>Aucun produit n'est présentement disponible</h3>
-            <p>Le catalogue public est temporairement vide. Contactez notre équipe pour connaître les options de
-                palettes en stock.</p>
-            <a href="{% url 'core:home' %}#contact" class="btn btn-primary">Nous contacter</a>
+            <h3>Aucun produit dans cette catégorie</h3>
+            <p>Cette catégorie ne contient actuellement aucun produit disponible.</p>
+            <a href="{% url 'core:products' %}" class="btn btn-primary">← Voir toutes les catégories</a>
         </div>
+        {% endif %}
         {% endif %}
     </div>
 </main>
-
-<footer class="footer" role="contentinfo">
-    <div class="container footer-content">
-        <div>
-            <p>&copy; 2025 Ilnu Transforme – Récupération et vente de palettes.</p>
-            <p>Site propulsé par Tryton + Django. Catalogue synchronisé automatiquement.</p>
-        </div>
-        <div class="footer-links">
-            <a href="{% url 'core:home' %}">Accueil</a>
-            <a href="{% url 'core:products' %}">Produits</a>
-            <a href="{% url 'core:home' %}#contact">Contact</a>
-        </div>
-    </div>
-</footer>
 {% endblock %}
