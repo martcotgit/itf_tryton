@@ -21,6 +21,28 @@ class PublicProductServiceError(RuntimeError):
 
 
 @dataclass(frozen=True)
+class PublicCategory:
+    """Represents a product category with its cover image."""
+    category_id: int
+    name: str
+    product_count: int
+    image_data_uri: Optional[str] = None
+
+    @property
+    def slug(self) -> str:
+        """Generate a URL-friendly slug from the category name."""
+        import re
+        slug = self.name.lower()
+        slug = re.sub(r'[àâä]', 'a', slug)
+        slug = re.sub(r'[éèêë]', 'e', slug)
+        slug = re.sub(r'[îï]', 'i', slug)
+        slug = re.sub(r'[ôö]', 'o', slug)
+        slug = re.sub(r'[ùûü]', 'u', slug)
+        slug = re.sub(r'[^a-z0-9]+', '-', slug)
+        return slug.strip('-')
+
+
+@dataclass(frozen=True)
 class PublicProduct:
     template_id: int
     name: str
@@ -29,6 +51,7 @@ class PublicProduct:
     quantity_available: Decimal
     image_url: Optional[str] = None
     categories: tuple[str, ...] = field(default_factory=tuple)
+    category_ids: tuple[int, ...] = field(default_factory=tuple)
 
     @property
     def display_description(self) -> str:
@@ -81,20 +104,57 @@ class PublicProductService:
         language = getattr(settings, "LANGUAGE_CODE", "fr")
         self._base_context: dict[str, Any] = {"language": language}
 
-    def list_available_products(self, *, use_cache: bool = True) -> list[PublicProduct]:
-        """Return all salable Tryton templates that currently have a positive quantity."""
+    def list_available_products(self, *, category_id: Optional[int] = None, use_cache: bool = True) -> list[PublicProduct]:
+        """Return all salable Tryton templates that currently have a positive quantity.
+        
+        Args:
+            category_id: If provided, filter products by this category ID
+            use_cache: Whether to use cached results
+        """
+        cache_key = self.CATALOG_CACHE_KEY
+        if category_id is not None:
+            cache_key = f"{self.CATALOG_CACHE_KEY}.category.{category_id}"
+        
         if use_cache:
-            cached = cache.get(self.CATALOG_CACHE_KEY)
+            cached = cache.get(cache_key)
             if cached is not None:
                 return cached
-        products = self._fetch_catalog()
-        cache.set(self.CATALOG_CACHE_KEY, products, self.cache_timeout)
+        
+        products = self._fetch_catalog(category_id=category_id)
+        cache.set(cache_key, products, self.cache_timeout)
         return products
 
-    def invalidate_cache(self) -> None:
-        cache.delete(self.CATALOG_CACHE_KEY)
+    def list_categories(self, *, use_cache: bool = True) -> list[PublicCategory]:
+        """Return all product categories that contain salable products with their cover images.
+        
+        Categories are fetched from Tryton and enriched with:
+        - Product count
+        - Cover image (from ir.attachment with name 'web_cover')
+        """
+        cache_key = "core.products.categories.v1"
+        if use_cache:
+            cached = cache.get(cache_key)
+            if cached is not None:
+                return cached
+        
+        categories = self._fetch_categories()
+        cache.set(cache_key, categories, self.cache_timeout)
+        return categories
 
-    def _fetch_catalog(self) -> list[PublicProduct]:
+    def invalidate_cache(self) -> None:
+        """Invalidate all product and category caches."""
+        cache.delete(self.CATALOG_CACHE_KEY)
+        cache.delete("core.products.categories.v1")
+        # Also clear category-specific caches
+        cache.delete_pattern("core.products.catalog.v2.category.*")
+
+
+    def _fetch_catalog(self, *, category_id: Optional[int] = None) -> list[PublicProduct]:
+        """Fetch product catalog from Tryton, optionally filtered by category.
+        
+        Args:
+            category_id: If provided, only return products in this category
+        """
         context = self._rpc_context()
         variant_ids = self._search_variants(context)
         if not variant_ids:
@@ -119,6 +179,14 @@ class PublicProductService:
             template_id = self._extract_id(record.get("id"))
             if template_id is None or template_id not in positive_set:
                 continue
+            
+            # Extract category IDs for filtering
+            category_ids_list = self._extract_category_ids(record.get("categories"))
+            
+            # Skip if filtering by category and this product doesn't match
+            if category_id is not None and category_id not in category_ids_list:
+                continue
+            
             quantity = template_quantities.get(template_id, Decimal("0"))
             categories = self._extract_category_names(record.get("categories"))
             description = self._sanitize_description(record.get("description"))
@@ -129,6 +197,7 @@ class PublicProductService:
                     code=self._safe_str(record.get("code")),
                     description=description,
                     categories=tuple(categories),
+                    category_ids=tuple(category_ids_list),
                     quantity_available=quantity,
                 )
             )
@@ -303,6 +372,168 @@ class PublicProductService:
             elif isinstance(entry, str):
                 names.append(entry)
         return names
+
+    @staticmethod
+    def _extract_category_ids(value: Any) -> list[int]:
+        """Extract category IDs from Tryton category field."""
+        ids: list[int] = []
+        if value is None:
+            return ids
+        entries = value if isinstance(value, (list, tuple)) else []
+        for entry in entries:
+            if isinstance(entry, (list, tuple)) and len(entry) > 0:
+                cat_id = entry[0] if isinstance(entry[0], int) else None
+                if cat_id:
+                    ids.append(cat_id)
+            elif isinstance(entry, dict) and entry.get("id"):
+                cat_id = entry.get("id")
+                if isinstance(cat_id, int):
+                    ids.append(cat_id)
+            elif isinstance(entry, int):
+                ids.append(entry)
+        return ids
+
+    def _fetch_categories(self) -> list[PublicCategory]:
+        """Fetch all product categories that contain salable products.
+        
+        Returns categories with:
+        - Product count
+        - Cover image (base64 data URI from ir.attachment)
+        """
+        context = self._rpc_context()
+        
+        # Get all products to count by category
+        all_products = self._fetch_catalog()
+        
+        # Count products per category ID
+        category_counts: dict[int, int] = {}
+        for product in all_products:
+            for cat_id in product.category_ids:
+                category_counts[cat_id] = category_counts.get(cat_id, 0) + 1
+        
+        # Fetch all categories from Tryton
+        try:
+            category_ids = self.client.call(
+                "model.product.category",
+                "search",
+                [[], 0, None, [("name", "ASC")], context],
+            )
+        except TrytonRPCError as exc:
+            logger.exception("Failed to fetch product categories from Tryton")
+            return []
+        
+        if not category_ids:
+            return []
+        
+        # Read category details
+        try:
+            category_records = self.client.call(
+                "model.product.category",
+                "read",
+                [category_ids, ["id", "name"], context],
+            )
+        except TrytonRPCError as exc:
+            logger.exception("Failed to read category details")
+            return []
+        
+        # Build final category list
+        categories: list[PublicCategory] = []
+        for record in category_records:
+            cat_id = self._extract_id(record.get("id"))
+            cat_name = record.get("name", "")
+            
+            if not cat_id or not cat_name:
+                continue
+            
+            # Get count by ID
+            count = category_counts.get(cat_id, 0)
+            
+            # Skip categories with no products
+            if count == 0:
+                continue
+            
+            # Fetch cover image
+            image_data_uri = self._fetch_category_image(cat_id, context)
+            
+            categories.append(
+                PublicCategory(
+                    category_id=cat_id,
+                    name=cat_name,
+                    product_count=count,
+                    image_data_uri=image_data_uri,
+                )
+            )
+        
+        return categories
+
+    def _fetch_category_image(self, category_id: int, context: dict[str, Any]) -> Optional[str]:
+        """Fetch category cover image from ir.attachment.
+        
+        Looks for an attachment with:
+        - resource = 'product.category,{category_id}'
+        - name = 'web_cover'
+        
+        Returns a base64 data URI or None.
+        """
+        resource_name = f"product.category,{category_id}"
+        
+        try:
+            # Search for the attachment
+            attachment_ids = self.client.call(
+                "model.ir.attachment",
+                "search",
+                [
+                    [
+                        ("resource", "=", resource_name),
+                        ("name", "=", "web_cover"),
+                    ],
+                    0,
+                    1,
+                    [],
+                    context,
+                ],
+            )
+        except TrytonRPCError as exc:
+            logger.warning("Failed to search for category %s cover image: %s", category_id, exc)
+            return None
+        
+        if not attachment_ids:
+            return None
+        
+        attachment_id = self._extract_id(attachment_ids[0]) if attachment_ids else None
+        if not attachment_id:
+            return None
+        
+        try:
+            # Read the attachment data
+            attachments = self.client.call(
+                "model.ir.attachment",
+                "read",
+                [[attachment_id], ["data", "type"], context],
+            )
+        except TrytonRPCError as exc:
+            logger.warning("Failed to read attachment %s: %s", attachment_id, exc)
+            return None
+        
+        if not attachments:
+            return None
+        
+        attachment = attachments[0]
+        data = attachment.get("data")
+        file_type = attachment.get("type", "image/jpeg")
+        
+        if not data:
+            return None
+        
+        # Data is already base64 encoded by Tryton
+        # Create a data URI
+        import base64
+        if isinstance(data, bytes):
+            data_b64 = base64.b64encode(data).decode("ascii")
+        else:
+            data_b64 = data
+        
+        return f"data:{file_type};base64,{data_b64}"
 
     @staticmethod
     def _to_decimal(value: Any) -> Optional[Decimal]:
