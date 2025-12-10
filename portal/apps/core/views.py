@@ -65,6 +65,7 @@ class ServicesView(TemplateView):
 
 
 class ProductsView(TemplateView):
+    """Display either category list or products filtered by category."""
     template_name = "core/products.html"
     service_class = PublicProductService
     per_page = 12
@@ -72,33 +73,70 @@ class ProductsView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         service = self.service_class()
-        try:
-            products = service.list_available_products()
-        except PublicProductServiceError as exc:
-            logger.warning("Catalogue Tryton indisponible pour la page Produits: %s", exc)
-            products = []
-        paginator = Paginator(products, self.per_page)
-        page_obj = paginator.get_page(self.request.GET.get("page"))
-        canonical_url = self.request.build_absolute_uri(self.request.path)
-        context.update(
-            {
-                "products": page_obj,
-                "page_obj": page_obj,
-                "paginator": paginator,
-                "products_total": paginator.count,
-                "category_facets": self._build_category_facets(products),
-                "canonical_url": canonical_url,
-                "products_schema": build_products_schema(list(page_obj), canonical_url) if products else None,
-                "page_description": (
-                    "Catalogue complet de palettes neuves, recyclées et consignées disponibles au Saguenay–Lac-Saint-Jean."
+        category_id = kwargs.get('category_id')
+        
+        # Determine view mode
+        if category_id is None:
+            # Category list view
+            context['view_mode'] = 'categories'
+            try:
+                categories = service.list_categories()
+            except PublicProductServiceError as exc:
+                logger.warning("Catalogue Tryton indisponible pour la page Produits: %s", exc)
+                categories = []
+            
+            canonical_url = self.request.build_absolute_uri(self.request.path)
+            context.update({
+                'categories': categories,
+                'canonical_url': canonical_url,
+                'page_title': 'Nos Familles de Produits',
+                'page_description': (
+                    'Découvrez notre gamme complète de palettes neuves, recyclées et consignées '
+                    'disponibles au Saguenay–Lac-Saint-Jean.'
                 ),
-                "page_keywords": "palettes neuves, palettes usagées, palettes consignées, récupération de palettes",
-            }
-        )
+                'page_keywords': 'palettes neuves, palettes usagées, palettes consignées, catégories palettes',
+            })
+        else:
+            # Product list view (filtered by category)
+            context['view_mode'] = 'products'
+            try:
+                products = service.list_available_products(category_id=category_id)
+                # Get category name for display
+                categories = service.list_categories()
+                current_category = next((c for c in categories if c.category_id == category_id), None)
+            except PublicProductServiceError as exc:
+                logger.warning("Catalogue Tryton indisponible pour la page Produits: %s", exc)
+                products = []
+                current_category = None
+            
+            paginator = Paginator(products, self.per_page)
+            page_obj = paginator.get_page(self.request.GET.get("page"))
+            canonical_url = self.request.build_absolute_uri(self.request.path)
+            
+            category_name = current_category.name if current_category else "Produits"
+            
+            context.update({
+                'products': page_obj,
+                'page_obj': page_obj,
+                'paginator': paginator,
+                'products_total': paginator.count,
+                'current_category': current_category,
+                'category_id': category_id,
+                'canonical_url': canonical_url,
+                'products_schema': build_products_schema(list(page_obj), canonical_url) if products else None,
+                'page_title': f'{category_name} | Catalogue Ilnu Transforme',
+                'page_description': (
+                    f'{paginator.count} produit(s) disponible(s) dans la catégorie {category_name} '
+                    f'au Saguenay–Lac-Saint-Jean.'
+                ),
+                'page_keywords': f'{category_name}, palettes, Saguenay Lac Saint Jean',
+            })
+        
         return context
 
     @staticmethod
     def _build_category_facets(products):
+        """Legacy method - kept for backward compatibility but not used in new design."""
         counts: dict[str, int] = {}
         for product in products:
             categories = product.categories or ("Palettes",)

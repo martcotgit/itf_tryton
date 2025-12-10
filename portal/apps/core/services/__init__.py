@@ -7,7 +7,7 @@ the `CoreConfig` application configuration.
 
 from django.apps import apps
 
-from .products import PublicProduct, PublicProductService, PublicProductServiceError, build_products_schema
+from .products import PublicCategory, PublicProduct, PublicProductService, PublicProductServiceError, build_products_schema
 from .tryton_client import TrytonAuthError, TrytonClient, TrytonRPCError
 
 
@@ -21,6 +21,7 @@ def get_tryton_client() -> TrytonClient:
 
 
 __all__ = [
+    "PublicCategory",
     "PublicProduct",
     "PublicProductService",
     "PublicProductServiceError",
