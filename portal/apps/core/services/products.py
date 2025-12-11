@@ -161,8 +161,9 @@ class PublicProductService:
             return []
         variant_records = self._read_variant_records(variant_ids, context)
         template_quantities = self._aggregate_template_quantities(variant_records)
+        # On inclut tous les produits trouvés, même ceux avec stock 0 (affichés "Sur commande")
         positive_template_ids = sorted(
-            tid for tid, qty in template_quantities.items() if qty is not None and qty > 0
+            tid for tid in template_quantities.keys()
         )
         if not positive_template_ids:
             logger.warning(
@@ -173,6 +174,9 @@ class PublicProductService:
             return []
         templates = self._read_templates(positive_template_ids, context)
         positive_set = set(positive_template_ids)
+
+        # Batch fetch images for all relevant templates
+        images_map = self._fetch_product_images(positive_template_ids, context)
 
         catalog: list[PublicProduct] = []
         for record in templates:
@@ -190,6 +194,10 @@ class PublicProductService:
             quantity = template_quantities.get(template_id, Decimal("0"))
             categories = self._extract_category_names(record.get("categories"))
             description = self._sanitize_description(record.get("description"))
+            
+            # Get image URL if available
+            image_url = images_map.get(template_id)
+
             catalog.append(
                 PublicProduct(
                     template_id=template_id,
@@ -199,6 +207,7 @@ class PublicProductService:
                     categories=tuple(categories),
                     category_ids=tuple(category_ids_list),
                     quantity_available=quantity,
+                    image_url=image_url,
                 )
             )
         return catalog
@@ -248,18 +257,101 @@ class PublicProductService:
     def _read_templates(self, template_ids: Iterable[int], context: dict[str, Any]) -> list[dict[str, Any]]:
         ids_list = [tid for tid in template_ids if tid is not None]
         templates: list[dict[str, Any]] = []
-        for template_id in ids_list:
+        
+        # We fetch in batches for performance
+        # We removed 'description' because it's not a standard field in Tryton product.template
+        # and caused 500 errors.
+        fields = ["name", "code", "categories"]
+        
+        for batch in self._chunked(ids_list, 40):
             try:
                 result = self.client.call(
                     "model.product.template",
                     "read",
-                    [[template_id], ["name", "code", "categories"], context],
+                    [batch, fields, context],
                 ) or []
             except TrytonRPCError as exc:
-                logger.warning("Gabarit produit %s illisible, il sera ignoré (erreur: %s)", template_id, exc)
+                logger.warning("Impossible de lire les gabarits produits %s: %s", batch, exc)
                 continue
             templates.extend(result)
         return templates
+
+    def _fetch_product_images(self, template_ids: list[int], context: dict[str, Any]) -> dict[int, str]:
+        """Fetch cover images for the given product templates."""
+        if not template_ids:
+            return {}
+
+        resources = [f"product.template,{tid}" for tid in template_ids]
+        
+        # Search for all attachments linked to these templates
+        # We prioritize 'web_image' but accept others as fallback
+        domain = [("resource", "in", resources)]
+        try:
+            attachment_ids = self.client.call(
+                "model.ir.attachment",
+                "search",
+                [domain, 0, None, [("name", "ASC")], context],  # sort by name to put web_image potentially first or predictable
+            )
+        except TrytonRPCError:
+            logger.warning("Failed to search product images")
+            return {}
+
+        if not attachment_ids:
+            return {}
+
+        try:
+            attachments = self.client.call(
+                "model.ir.attachment",
+                "read",
+                [attachment_ids, ["resource", "data", "type", "name"], context],
+            )
+        except TrytonRPCError:
+            logger.warning("Failed to read product images content")
+            return {}
+
+        import base64
+        images: dict[int, str] = {}
+        
+        # Process attachments. 
+        # Since we sorted by name ASC, strict 'web_image' matching logic:
+        # 1. Fill map with any image found.
+        # 2. If we find 'web_image', overwrite whatever is there (it takes precedence).
+        
+        for att in attachments:
+            resource = att.get("resource")
+            if not resource or "," not in resource:
+                continue
+            
+            try:
+                model, tid_str = resource.split(",")
+                template_id = int(tid_str)
+            except (ValueError, IndexError):
+                continue
+                
+            data = att.get("data")
+            if not data:
+                continue
+                
+            # Construct Data URI
+            file_type = att.get("type", "image/jpeg")
+            if isinstance(data, bytes):
+                data_b64 = base64.b64encode(data).decode("ascii")
+            else:
+                data_b64 = data
+            
+            data_uri = f"data:{file_type};base64,{data_b64}"
+            
+            # Logic: If we already have an image, only overwrite if current one IS 'web_image'
+            # or if the current one is NOT 'web_image' and new one IS.
+            
+            is_web_image = att.get("name") == "web_image"
+            
+            if template_id not in images:
+                images[template_id] = data_uri
+            elif is_web_image:
+                images[template_id] = data_uri
+
+        return images
 
     def _fallback_template_ids(self, context: dict[str, Any]) -> list[int]:
         domain = [

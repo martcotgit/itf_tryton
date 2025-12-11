@@ -13,17 +13,23 @@ class PublicProductServiceTest(SimpleTestCase):
         self.client = MagicMock()
         self.service = PublicProductService(client=self.client, cache_timeout=1)
 
-    def test_list_available_products_filters_zero_quantity(self) -> None:
+    def test_list_available_products_includes_zero_quantity(self) -> None:
         with patch.object(PublicProductService, "_resolve_company_id", return_value=1):
             self._mock_template_calls()
             products = self.service.list_available_products(use_cache=False)
-        self.assertEqual(len(products), 1)
-        product = products[0]
-        self.assertEqual(product.name, "Palette 48x40")
-        self.assertEqual(product.code, "PAL-001")
-        self.assertIsNone(product.description)
-        self.assertEqual(product.quantity_available, Decimal("12"))
-        self.assertTupleEqual(product.categories, ("Palettes neuves",))
+        self.assertEqual(len(products), 2)
+        
+        # Verify first product (in stock)
+        product_1 = products[0]
+        self.assertEqual(product_1.name, "Palette 48x40")
+        self.assertEqual(product_1.quantity_available, Decimal("12"))
+        
+        # Verify second product (out of stock)
+        product_2 = products[1]
+        self.assertEqual(product_2.name, "Palette CHEP")
+        self.assertEqual(product_2.code, "PAL-002")
+        self.assertEqual(product_2.quantity_available, Decimal("0"))
+        self.assertTupleEqual(product_2.categories, ("Consignation",))
 
     def test_error_when_tryton_fails(self) -> None:
         with patch.object(PublicProductService, "_resolve_company_id", return_value=1):
@@ -60,7 +66,9 @@ class PublicProductServiceTest(SimpleTestCase):
                     if not include_description:
                         for template in templates:
                             template.pop("description", None)
-                    return templates
+                    
+                    requested_ids = params[0] if params else []
+                    return [t for t in templates if t["id"] in requested_ids]
             if service == "model.product.product":
                 return [
                     {"id": 101, "template": (11, "Palette 48x40"), "quantity": "12"},
