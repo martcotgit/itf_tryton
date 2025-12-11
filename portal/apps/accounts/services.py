@@ -953,6 +953,107 @@ class PortalOrderService:
         addresses = self._fetch_party_addresses(profile.party_id)
         return profile.party_id, addresses
 
+    def create_custom_order(
+        self,
+        *,
+        client_reference: Optional[str],
+        shipping_date: Optional[date],
+        shipping_address_id: int,
+        invoice_address_id: Optional[int],
+        notes: Optional[str],
+        specs_description: str,
+        quantity: int,
+        login: str,
+    ) -> PortalOrderSubmissionResult:
+        """Create a draft order for a custom pallet request."""
+        profile = self.account_service.fetch_client_profile(login=login)
+        self._ensure_company_context()
+
+        # 1. Fetch Generic Custom Product
+        custom_product_code = getattr(settings, "TRYTON_CUSTOM_PRODUCT_CODE", "PROD-CUSTOM")
+        context = self._rpc_context()
+        try:
+            products = self.client.call(
+                "model.product.product",
+                "search_read",
+                [[("code", "=", custom_product_code)], 0, 1, None, ["id", "sale_uom", "default_uom"], context],
+            )
+        except TrytonRPCError as exc:
+            logger.exception("Failed to find custom product '%s'.", custom_product_code)
+            raise PortalOrderServiceError("Impossible de trouver le produit 'Sur Mesure' dans le système.") from exc
+
+        if not products:
+            # Fallback or error? For now error.
+            raise PortalOrderServiceError(
+                f"Le produit générique '{custom_product_code}' n'est pas configuré dans Tryton. Contactez l'administrateur."
+            )
+        
+        product_data = products[0]
+        product_id = product_data["id"]
+        product_uom_id = product_data.get("sale_uom") or product_data.get("default_uom")
+
+        # 2. Build Order Payload
+        # We put the specs in the line description.
+        order_lines = [
+            ("create", [{
+                "product": product_id,
+                "unit": product_uom_id,
+                "quantity": quantity,
+                "description": specs_description,
+                "type": "line",
+                "unit_price": 0.0,
+                # No unit_price here, defaults to list_price (0) or will be set by admin
+            }])
+        ]
+
+        payload = {
+            "party": profile.party_id,
+            "invoice_address": invoice_address_id or shipping_address_id,
+            "shipment_address": shipping_address_id,
+            "company": self._base_context["company"],
+            "lines": order_lines,
+        }
+        if client_reference:
+            payload["reference"] = client_reference
+        if shipping_date:
+            payload["shipping_date"] = shipping_date
+        if notes:
+             # Notes can go to comment or a specific field. 
+             # Standard Tryton sale key for comments is 'comment'
+            payload["comment"] = notes
+
+        # 3. Create Order
+        try:
+            order_ids = self.client.call(
+                "model.sale.sale",
+                "create",
+                [[payload], context],
+            )
+        except TrytonRPCError as exc:
+            logger.exception("Failed to create custom sale order for %s.", login)
+            message = PortalAccountService._extract_tryton_error_message(exc, "Impossible de créer la demande de devis.")
+            raise PortalOrderServiceError(message) from exc
+
+        if not order_ids:
+            raise PortalOrderServiceError("Tryton n'a retourné aucun ID pour la commande.")
+        
+        # 4. Read back number
+        try:
+            order_data = self.client.call(
+                "model.sale.sale",
+                "read",
+                [[order_ids[0]], ["number", "reference"], context],
+            )[0]
+        except (TrytonRPCError, IndexError):
+            # Not critical
+            order_data = {}
+
+        return PortalOrderSubmissionResult(
+            order_id=order_ids[0],
+            number=order_data.get("number"),
+            portal_reference=client_reference,
+        )
+
     def create_draft_order(
         self,
         *,

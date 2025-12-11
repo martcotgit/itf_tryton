@@ -581,3 +581,86 @@ OrderLineFormSet = formset_factory(
 )
 
 ORDER_LINES_FORMSET_PREFIX = "order_lines"
+
+
+class CustomOrderStep1Form(forms.Form):
+    length = forms.IntegerField(
+        label="Longueur (en pouces) *",
+        min_value=1,
+        widget=forms.NumberInput(attrs={"class": "wizard-form-input", "placeholder": "48"}),
+    )
+    width = forms.IntegerField(
+        label="Largeur (en pouces) *",
+        min_value=1,
+        widget=forms.NumberInput(attrs={"class": "wizard-form-input", "placeholder": "40"}),
+    )
+    quantity = forms.IntegerField(
+        label="Combien de palettes vous faut-il ? *",
+        min_value=1,
+        widget=forms.NumberInput(attrs={"class": "wizard-form-input", "placeholder": "Ex: 500"}),
+        help_text="💡 Bon à savoir : Plus vous commandez, meilleur sera le prix unitaire.",
+    )
+
+    def clean_quantity(self):
+        qty = self.cleaned_data.get("quantity")
+        if qty is None or qty < 1:
+            raise forms.ValidationError("Indiquez au moins 1 palette.")
+        return qty
+
+
+class CustomOrderStep2Form(forms.Form):
+    ENTRY_CHOICES = [
+        ("4_way", "4 entrées — Chariot élévateur peut soulever de tous les côtés"),
+        ("2_way", "2 entrées — Chariot élévateur sur 2 côtés seulement (plus économique)"),
+    ]
+    entry_type = forms.ChoiceField(
+        label="Accès pour chariot élévateur *",
+        choices=ENTRY_CHOICES,
+        widget=forms.RadioSelect(attrs={"class": "wizard-radio-option"}),
+    )
+    
+    # Options facultatives
+    is_heat_treated = forms.BooleanField(
+        label="Traitement thermique NIMP-15 — Requis pour l'exportation internationale",
+        required=False,
+        widget=forms.CheckboxInput(attrs={"class": "wizard-checkbox-option"}),
+    )
+    is_hardwood = forms.BooleanField(
+        label="Bois franc premium — Érable ou chêne pour une durabilité maximale",
+        required=False,
+        widget=forms.CheckboxInput(attrs={"class": "wizard-checkbox-option"}),
+    )
+    is_reversible = forms.BooleanField(
+        label="Palette réversible — Utilisable des deux côtés",
+        required=False,
+        widget=forms.CheckboxInput(attrs={"class": "wizard-checkbox-option"}),
+    )
+
+
+class CustomOrderStep3Form(forms.Form):
+    shipping_address = forms.ChoiceField(
+        label="Où souhaitez-vous recevoir vos palettes ? *",
+        choices=(),
+        widget=forms.Select(attrs={"class": "wizard-form-input"}),
+    )
+    shipping_date = forms.DateField(
+        label="Date de livraison souhaitée (optionnel)",
+        required=False,
+        widget=forms.DateInput(attrs={"type": "date", "class": "wizard-form-input"}),
+    )
+    notes = forms.CharField(
+        label="Informations complémentaires pour notre équipe (optionnel)",
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                "class": "wizard-form-input",
+                "rows": 3,
+                "placeholder": "Ex : Besoin d'une livraison en matinée, accès restreint pour camion...",
+            }
+        ),
+    )
+
+    def __init__(self, *args, address_choices: list[tuple[int, str]] | None = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if address_choices:
+            self.fields["shipping_address"].choices = address_choices

@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Nouvelle commande – Portail ITF{% endblock %}
+
+{% block content %}
+<main id="contenu-principal" class="main" role="main">
+    <div class="container" style="max-width: 900px; margin: 0 auto; padding: 2rem 1rem;">
+
+        <!-- Breadcrumb -->
+        <nav class="breadcrumb" style="margin-bottom: 2rem;">
+            <a href="{% url 'accounts:orders-list' %}"
+                style="display: inline-flex; align-items: center; gap: 0.5rem; color: var(--stone-600); text-decoration: none; font-size: 0.875rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+                Mes commandes
+            </a>
+        </nav>
+
+        <!-- Header -->
+        <header style="margin-bottom: 2.5rem;">
+            <h1 style="font-size: 1.875rem; font-weight: 700; color: var(--stone-900); margin: 0 0 0.5rem 0;">
+                Que souhaitez-vous commander ?
+            </h1>
+            <p style="font-size: 1rem; color: var(--stone-600); margin: 0; max-width: 600px;">
+                Sélectionnez le type de commande adapté à vos besoins. Pour des produits hors catalogue, optez pour la
+                personnalisation.
+            </p>
+        </header>
+
+        <!-- Choice Cards -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+
+            <!-- Standard Order Card -->
+            <a href="{% url 'accounts:orders-create' %}" class="card"
+                style="display: flex; flex-direction: column; padding: 2rem; text-decoration: none; border: 1.5px solid var(--stone-200); border-radius: 16px; background: var(--white); transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+                <span style="font-size: 2.5rem; margin-bottom: 1rem;">📦</span>
+                <h3 style="font-size: 1.25rem; font-weight: 600; color: var(--stone-900); margin: 0 0 0.75rem 0;">
+                    Commander depuis le catalogue
+                </h3>
+                <p
+                    style="font-size: 0.9375rem; color: var(--stone-600); margin: 0 0 1.5rem 0; line-height: 1.6; flex-grow: 1;">
+                    Sélectionnez vos produits habituels et recevez-les rapidement. Idéal pour le réassort de palettes
+                    standards.
+                </p>
+                <span
+                    style="display: inline-flex; align-items: center; gap: 0.5rem; color: var(--brand-primary); font-weight: 500; font-size: 0.9375rem;">
+                    Voir le catalogue
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                </span>
+            </a>
+
+            <!-- Custom Order Card -->
+            <a href="{% url 'accounts:custom-order-start' %}" class="card"
+                style="display: flex; flex-direction: column; padding: 2rem; text-decoration: none; border: 1.5px solid #d4a853; border-radius: 16px; background: linear-gradient(170deg, #fff 0%, #fef9eb 100%); transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.04); position: relative;">
+                <!-- Badge -->
+                <span
+                    style="position: absolute; top: 1rem; right: 1rem; background: #d4a853; color: white; font-size: 0.6875rem; font-weight: 600; padding: 0.25rem 0.75rem; border-radius: 999px; letter-spacing: 0.05em; text-transform: uppercase;">
+                    PERSONNALISÉ
+                </span>
+                <span style="font-size: 2.5rem; margin-bottom: 1rem;">🛠️</span>
+                <h3 style="font-size: 1.25rem; font-weight: 600; color: var(--stone-900); margin: 0 0 0.75rem 0;">
+                    Créer une palette personnalisée
+                </h3>
+                <p
+                    style="font-size: 0.9375rem; color: var(--stone-700); margin: 0 0 1.5rem 0; line-height: 1.6; flex-grow: 1;">
+                    Concevez une palette adaptée à vos besoins précis (dimensions, matériaux). Nous vous enverrons un
+                    prix sous 48h.
+                </p>
+                <span
+                    style="display: inline-flex; align-items: center; gap: 0.5rem; color: var(--brand-primary); font-weight: 600; font-size: 0.9375rem;">
+                    Démarrer la conception
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                </span>
+            </a>
+
+        </div>
+
+    </div>
+</main>
+
+<style>
+    .card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    }
+</style>
+{% endblock %}

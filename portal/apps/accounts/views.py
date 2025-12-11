@@ -21,6 +21,9 @@ from .forms import (
     OrderDraftForm,
     OrderLineFormSet,
     ORDER_LINES_FORMSET_PREFIX,
+    CustomOrderStep1Form,
+    CustomOrderStep2Form,
+    CustomOrderStep3Form,
 )
 from .services import (
     PortalAccountService,
@@ -318,6 +321,173 @@ class ClientProfileView(LoginRequiredMixin, TemplateView):
 
     def _current_login(self) -> str:
         return (self.request.user.username or "").strip().lower()
+
+
+
+class CustomOrderWizardView(LoginRequiredMixin, TemplateView):
+    template_name = "accounts/custom_order_wizard.html"
+    login_url = reverse_lazy("accounts:login")
+    service_class = PortalOrderService
+    _addresses_cache: list[tuple[int, str]] | None = None
+
+    MAX_WIZARD_STEPS = 3
+    FORMS = {
+        1: CustomOrderStep1Form,
+        2: CustomOrderStep2Form,
+        3: CustomOrderStep3Form,
+    }
+
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        self.order_service = self.service_class()
+
+    def get(self, request, *args, **kwargs):
+        step = kwargs.get("step", 1)
+        if step < 1 or step > self.MAX_WIZARD_STEPS:
+            return redirect("accounts:custom-order-wizard", step=1)
+        
+        # Check previous steps? For now simple flow.
+        
+        form_class = self.FORMS[step]
+        initial = {}
+        
+        # Load from session if exists
+        wizard_data = request.session.get("custom_order_wizard", {})
+        step_data = wizard_data.get(str(step), {})
+        if step_data:
+            initial = step_data
+
+        form = form_class(initial=initial)
+        if step == 3:
+             # Need to populate addresses
+             try:
+                 form.fields["shipping_address"].choices = self._address_choices()
+             except MissingAddressError:
+                 messages.warning(request, "Veuillez configurer une adresse de livraison.")
+                 return redirect("accounts:profile")
+        
+        return self.render_to_response(self.get_context_data(form=form, step=step))
+
+    def post(self, request, *args, **kwargs):
+        step = kwargs.get("step", 1)
+        form_class = self.FORMS[step]
+        
+        # Handling dependencies
+        form = form_class(request.POST)
+        if step == 3:
+             try:
+                 form.fields["shipping_address"].choices = self._address_choices()
+             except MissingAddressError:
+                 return redirect("accounts:profile")
+
+        if form.is_valid():
+             # Save to session
+             wizard_data = request.session.get("custom_order_wizard", {})
+             wizard_data[str(step)] = form.cleaned_data
+             # Serialize dates properly if any? form.cleaned_data has real objects. 
+             # Django session serializer handles dates usually if using Pickle serializer, but creating JSON session might fail.
+             # Safest is to let Django handle it or convert. 
+             # Let's simple serialize manually what is needed if complex types exist.
+             # Here we have Date objects in Step 3.
+             if step == 3 and "shipping_date" in wizard_data[str(step)]:
+                  val = wizard_data[str(step)]["shipping_date"]
+                  if val:
+                      wizard_data[str(step)]["shipping_date"] = val.isoformat()
+             
+             request.session["custom_order_wizard"] = wizard_data
+             
+             if step < self.MAX_WIZARD_STEPS:
+                 return redirect("accounts:custom-order-wizard", step=step + 1)
+             else:
+                 # Final Step -> Submit
+                 return self._submit_order(request, wizard_data)
+        
+        return self.render_to_response(self.get_context_data(form=form, step=step))
+
+    def _submit_order(self, request, wizard_data):
+        step1 = wizard_data.get("1", {})
+        step2 = wizard_data.get("2", {})
+        step3 = wizard_data.get("3", {})
+        
+        # Construct Description
+        specs = [
+            f"Dimensions: {step1.get('length')}po x {step1.get('width')}po",
+            f"Entrées: {'4 entrées' if step2.get('entry_type') == '4_way' else '2 entrées'}",
+        ]
+        if step2.get("is_heat_treated"): specs.append("Traitement NIMP-15")
+        if step2.get("is_hardwood"): specs.append("Bois franc")
+        if step2.get("is_reversible"): specs.append("Réversible")
+        
+        description = " | ".join(specs)
+        
+        shipping_date = None
+        if step3.get("shipping_date"):
+            try:
+                shipping_date = date.fromisoformat(step3.get("shipping_date"))
+            except ValueError:
+                pass
+        
+        try:
+            result = self.order_service.create_custom_order(
+                login=self._current_login(),
+                client_reference=None, # Not asked in wizard?
+                shipping_date=shipping_date,
+                shipping_address_id=int(step3.get("shipping_address")),
+                invoice_address_id=None, # Default to shipping
+                quantity=int(step1.get("quantity")),
+                specs_description=description,
+                notes=step3.get("notes")
+            )
+            # Clear session
+            del request.session["custom_order_wizard"]
+            return redirect("accounts:custom-order-confirmation", order_id=result.order_id)
+            
+        except PortalOrderServiceError as exc:
+            messages.error(request, str(exc))
+            return redirect("accounts:custom-order-wizard", step=3)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        wizard_data = self.request.session.get("custom_order_wizard", {})
+        context["wizard_data"] = wizard_data 
+        # Helper to show summary in step 3
+        return context
+
+    def _address_choices(self) -> list[tuple[int, str]]:
+        if self._addresses_cache is None:
+            _, addresses = self.order_service.list_shipment_addresses(login=self._current_login())
+            if not addresses:
+                raise MissingAddressError()
+            self._addresses_cache = [(addr.id, addr.label) for addr in addresses]
+        return self._addresses_cache
+
+    def _current_login(self) -> str:
+        return (self.request.user.username or "").strip().lower()
+
+
+class CustomOrderConfirmationView(LoginRequiredMixin, TemplateView):
+    template_name = "accounts/custom_order_confirmation.html"
+    service_class = PortalOrderService
+
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        self.order_service = self.service_class()
+
+    def get(self, request, *args, **kwargs):
+        order_id = kwargs.get("order_id")
+        try:
+            order = self.order_service.get_order_detail(
+                login=self.request.user.username,
+                order_id=order_id
+            )
+        except PortalOrderServiceError:
+            return redirect("accounts:orders-list")
+            
+        return self.render_to_response(self.get_context_data(order=order))
+
+
+class CustomOrderChoiceView(LoginRequiredMixin, TemplateView):
+    template_name = "accounts/custom_order_choice.html"
 
 
 class OrderCreateView(LoginRequiredMixin, TemplateView):

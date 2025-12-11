@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Palette sur mesure – Étape {{ step }} – Portail ITF{% endblock %}
+
+{% block content %}
+<main id="contenu-principal" class="main" role="main">
+    <div style="max-width: 700px; margin: 0 auto; padding: 2rem 1rem;">
+
+        <!-- Top Bar -->
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
+            <a href="{% if step == 1 %}{% url 'accounts:orders-new' %}{% else %}{% url 'accounts:custom-order-wizard' step=step|add:'-1' %}{% endif %}"
+                style="display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.875rem; color: var(--stone-500); text-decoration: none;">
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+                {% if step == 1 %}Annuler{% else %}Retour{% endif %}
+            </a>
+            <span
+                style="font-size: 0.75rem; font-weight: 600; color: var(--stone-900); letter-spacing: 0.05em; text-transform: uppercase;">
+                {% if step == 1 %}Création{% elif step == 2 %}Options{% else %}Validation{% endif %}
+            </span>
+        </div>
+
+        <!-- Stepper -->
+        <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 2rem;">
+            <!-- Step 1 -->
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <div
+                    style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; {% if step == 1 %}background: var(--brand-primary); color: white;{% elif step > 1 %}background: var(--brand-primary); color: white;{% else %}background: var(--stone-200); color: var(--stone-500);{% endif %}">
+                    1
+                </div>
+                <span
+                    style="font-size: 0.875rem; font-weight: 500; color: {% if step >= 1 %}var(--stone-900){% else %}var(--stone-400){% endif %};">Dimensions</span>
+            </div>
+            <div
+                style="width: 40px; height: 2px; background: {% if step > 1 %}var(--brand-primary){% else %}var(--stone-200){% endif %};">
+            </div>
+
+            <!-- Step 2 -->
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <div
+                    style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; {% if step == 2 %}background: var(--brand-primary); color: white;{% elif step > 2 %}background: var(--brand-primary); color: white;{% else %}background: var(--stone-200); color: var(--stone-500);{% endif %}">
+                    2
+                </div>
+                <span
+                    style="font-size: 0.875rem; font-weight: 500; color: {% if step >= 2 %}var(--stone-900){% else %}var(--stone-400){% endif %};">Options</span>
+            </div>
+            <div
+                style="width: 40px; height: 2px; background: {% if step > 2 %}var(--brand-primary){% else %}var(--stone-200){% endif %};">
+            </div>
+
+            <!-- Step 3 -->
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <div
+                    style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; {% if step == 3 %}background: var(--brand-primary); color: white;{% else %}background: var(--stone-200); color: var(--stone-500);{% endif %}">
+                    3
+                </div>
+                <span
+                    style="font-size: 0.875rem; font-weight: 500; color: {% if step >= 3 %}var(--stone-900){% else %}var(--stone-400){% endif %};">Résumé</span>
+            </div>
+        </div>
+
+        <!-- Title -->
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <h1 style="font-size: 1.75rem; font-weight: 700; color: var(--stone-900); margin: 0 0 0.5rem 0;">
+                {% if step == 1 %}Créez votre palette personnalisée{% endif %}
+                {% if step == 2 %}Comment voulez-vous votre palette ?{% endif %}
+                {% if step == 3 %}Vérifiez votre commande avant envoi{% endif %}
+            </h1>
+            <p style="font-size: 1rem; color: var(--stone-500); margin: 0;">
+                {% if step == 1 %}Indiquez les dimensions et la quantité souhaitée.{% endif %}
+                {% if step == 2 %}Sélectionnez les caractéristiques techniques.{% endif %}
+                {% if step == 3 %}Une dernière vérification et c'est parti !{% endif %}
+            </p>
+        </div>
+
+        <!-- Form -->
+        <form method="post" style="padding-bottom: 6rem;">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div
+                style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 1rem; margin-bottom: 1.5rem; border-radius: 4px;">
+                <p style="margin: 0; color: #b91c1c; font-size: 0.875rem;">{{ form.non_field_errors.0 }}</p>
+            </div>
+            {% endif %}
+
+            {% if step == 3 %}
+            <!-- Summary Card -->
+            <div
+                style="background: var(--white); border: 1px solid var(--stone-200); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span style="font-size: 1rem; font-weight: 600; color: var(--stone-900);">Votre palette
+                            personnalisée</span>
+                        <span
+                            style="background: #d4a853; color: white; font-size: 0.625rem; font-weight: 600; padding: 0.25rem 0.5rem; border-radius: 999px; text-transform: uppercase;">Sur
+                            Mesure</span>
+                    </div>
+                    <a href="{% url 'accounts:custom-order-wizard' step=1 %}"
+                        style="display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; color: var(--brand-primary); text-decoration: none;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                        </svg>
+                        Modifier
+                    </a>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <span
+                            style="display: block; font-size: 0.6875rem; color: var(--stone-500); text-transform: uppercase; letter-spacing: 0.05em;">Dimensions</span>
+                        <span style="font-size: 1rem; font-weight: 600; color: var(--stone-900);">{{
+                            wizard_data.1.length }}" x {{ wizard_data.1.width }}"</span>
+                    </div>
+                    <div>
+                        <span
+                            style="display: block; font-size: 0.6875rem; color: var(--stone-500); text-transform: uppercase; letter-spacing: 0.05em;">Quantité</span>
+                        <span style="font-size: 1rem; font-weight: 600; color: var(--stone-900);">{{
+                            wizard_data.1.quantity }} unités</span>
+                    </div>
+                </div>
+                <div
+                    style="background: var(--stone-50); padding: 0.75rem; border-radius: 6px; font-size: 0.875rem; color: var(--stone-600);">
+                    <strong style="color: var(--stone-900);">Options :</strong>
+                    {% if wizard_data.2.entry_type == '4_way' %}4 entrées{% else %}2 entrées{% endif %}
+                    {% if wizard_data.2.is_heat_treated %}, Traitement NIMP-15{% endif %}
+                    {% if wizard_data.2.is_hardwood %}, Bois franc{% endif %}
+                    {% if wizard_data.2.is_reversible %}, Réversible{% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Form Fields -->
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                {% for field in form %}
+                <div>
+                    <label for="{{ field.id_for_label }}"
+                        style="display: block; font-size: 0.875rem; font-weight: 500; color: var(--stone-700); margin-bottom: 0.5rem;">
+                        {{ field.label }}{% if field.field.required %} <span style="color: #ef4444;">*</span>{% endif %}
+                    </label>
+
+                    {% if field.name == 'entry_type' %}
+                    <!-- Radio Group -->
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        {% for radio in field %}
+                        <label
+                            style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 1rem; background: var(--white); border: 1.5px solid var(--stone-200); border-radius: 10px; cursor: pointer;">
+                            {{ radio.tag }}
+                            <span style="font-size: 0.9375rem; color: var(--stone-700);">{{ radio.choice_label|safe
+                                }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    {% elif field.field.widget.input_type == 'checkbox' %}
+                    <!-- Checkbox -->
+                    <label
+                        style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 1rem; background: var(--white); border: 1.5px solid var(--stone-200); border-radius: 10px; cursor: pointer;">
+                        {{ field }}
+                        <span style="font-size: 0.9375rem; color: var(--stone-700);">{{ field.label }}</span>
+                    </label>
+                    {% else %}
+                    <!-- Standard Inputs -->
+                    {{ field }}
+                    {% endif %}
+
+                    {% if field.help_text %}
+                    <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: var(--stone-500);">{{
+                        field.help_text|safe }}</p>
+                    {% endif %}
+
+                    {% if field.errors %}
+                    <p
+                        style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #ef4444; display: flex; align-items: center; gap: 0.25rem;">
+                        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {{ field.errors.0 }}
+                    </p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            {% if step == 3 %}
+            <div
+                style="margin-top: 2rem; padding: 1rem; background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; display: flex; align-items: flex-start; gap: 0.75rem;">
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#16a34a" stroke-width="2"
+                    style="flex-shrink: 0; margin-top: 2px;">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p style="margin: 0; font-size: 0.875rem; color: #166534;">
+                    <strong>Notre promesse :</strong> Vous recevrez votre prix personnalisé par courriel dans les
+                    <strong>48 heures ouvrables</strong>. Aucun engagement de votre part.
+                </p>
+            </div>
+            {% endif %}
+
+            <!-- Sticky Footer -->
+            <div
+                style="position: fixed; bottom: 0; left: 0; right: 0; background: var(--white); border-top: 1px solid var(--stone-200); padding: 1rem; z-index: 100;">
+                <div
+                    style="max-width: 700px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                    <a href="{% if step > 1 %}{% url 'accounts:custom-order-wizard' step=step|add:'-1' %}{% else %}{% url 'accounts:orders-new' %}{% endif %}"
+                        style="padding: 0.75rem 1.5rem; background: var(--white); border: 1.5px solid var(--stone-300); border-radius: 10px; color: var(--stone-700); font-weight: 500; text-decoration: none; font-size: 0.9375rem;">
+                        {% if step == 1 %}Annuler{% else %}Précédent{% endif %}
+                    </a>
+
+                    <button type="submit"
+                        style="padding: 0.75rem 2rem; background: {% if step == 3 %}#d4a853{% else %}var(--brand-primary){% endif %}; border: none; border-radius: 10px; color: white; font-weight: 600; font-size: 0.9375rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;">
+                        {% if step == 3 %}
+                        Envoyer ma demande
+                        {% else %}
+                        Étape suivante
+                        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        {% endif %}
+                    </button>
+                </div>
+            </div>
+
+        </form>
+    </div>
+</main>
+{% endblock %}

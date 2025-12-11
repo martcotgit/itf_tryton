@@ -27,7 +27,8 @@
                     <select name="periode" class="filter-select-inline" onchange="this.form.submit()">
                         {% if period_options %}
                         {% for option in period_options %}
-                        <option value="{{ option.value }}"{% if option.selected %} selected{% endif %}>{{ option.label }}</option>
+                        <option value="{{ option.value }}" {% if option.selected %} selected{% endif %}>{{ option.label
+                            }}</option>
                         {% endfor %}
                         {% else %}
                         <option value="30">Derniers 30 jours</option>
@@ -99,13 +100,31 @@
                         {% for order in orders %}
                         <tr onclick="window.location='{% url 'accounts:orders-detail' order.id %}'">
                             <td>
-                                <a href="{% url 'accounts:orders-detail' order.id %}" class="link-order">
-                                    {{ order.number|default:"—" }}
-                                </a>
+                                <div class="flex items-center gap-2">
+                                    <a href="{% url 'accounts:orders-detail' order.id %}" class="link-order">
+                                        {{ order.number|default:"—" }}
+                                    </a>
+                                    {% if order.total_amount is None or order.total_amount == 0 %}
+                                    {% if order.state == 'quotation' or order.state == 'draft' %}
+                                    <span class="order-badge order-badge--custom">Personnalisée</span>
+                                    {% endif %}
+                                    {% endif %}
+                                </div>
                             </td>
                             <td>
+                                {% if order.total_amount is None or order.total_amount == 0 %}
+                                {% if order.state == 'quotation' or order.state == 'draft' %}
+                                <span class="status-badge state-quotation order-badge--pending-quote">
+                                    Prix en préparation
+                                </span>
+                                {% else %}
                                 <span class="status-badge state-{{ order.state|default:'draft' }}">
-                                    <!-- Mapping status labels manually if needed, or using view provided label -->
+                                    {{ order.state_label|default:"Brouillon" }}
+                                </span>
+                                {% endif %}
+                                {% else %}
+                                <span class="status-badge state-{{ order.state|default:'draft' }}">
+                                    <!-- Keep existing mappings or rely on label -->
                                     {% if order.state == 'quotation' %}En attente
                                     {% elif order.state == 'processing' %}Confirmée
                                     {% elif order.state == 'done' %}Livrée
@@ -113,6 +132,7 @@
                                     {% else %}{{ order.state_label|default:"Brouillon" }}
                                     {% endif %}
                                 </span>
+                                {% endif %}
                             </td>
                             <td>
                                 {% if order.shipping_date %}
@@ -122,12 +142,12 @@
                                 {% endif %}
                             </td>
                             <td style="font-weight: 500;">
-                                {% if order.total_amount %}
+                                {% if order.total_amount and order.total_amount > 0 %}
                                 {{ order.total_amount }}
                                 <span style="font-size: 0.8em; color: #78716c;">{% if order.currency_label %}{{
                                     order.currency_label }}{% else %}${% endif %}</span>
                                 {% else %}
-                                —
+                                <span class="text-stone-400 italic">En attente</span>
                                 {% endif %}
                             </td>
                             <td style="text-align: right;">
@@ -154,7 +174,6 @@
                 <div class="pagination-actions">
                     <!-- Previous Button -->
                     <form method="get" style="display:inline;">
-                        <!-- Keep filters -->
                         {% for status in filters.statuses %}
                         <input type="hidden" name="statut" value="{{ status }}">
                         {% endfor %}
@@ -166,7 +185,8 @@
                         {% endif %}
 
                         <input type="hidden" name="page" value="{{ pagination.page|add:'-1' }}">
-                        <button type="submit" class="pagination-btn" {% if not pagination.has_previous %}disabled{% endif %}>
+                        <button type="submit" class="pagination-btn" {% if not pagination.has_previous %}disabled{%
+                            endif %}>
                             <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M15 19l-7-7 7-7" />
@@ -177,7 +197,6 @@
 
                     <!-- Next Button -->
                     <form method="get" style="display:inline;">
-                        <!-- Keep filters -->
                         {% for status in filters.statuses %}
                         <input type="hidden" name="statut" value="{{ status }}">
                         {% endfor %}
@@ -189,7 +208,8 @@
                         {% endif %}
 
                         <input type="hidden" name="page" value="{{ pagination.page|add:'1' }}">
-                        <button type="submit" class="pagination-btn" {% if not pagination.has_next %}disabled{% endif %}>
+                        <button type="submit" class="pagination-btn" {% if not pagination.has_next %}disabled{% endif
+                            %}>
                             Suiv.
                             <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
