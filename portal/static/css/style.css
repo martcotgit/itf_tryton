@@ -8509,3 +8509,10 @@ body {
     color: var(--invoice-text-muted);
     max-width: 400px;
 }
+/* Product Pagination Fix */
+.product-pagination__controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}

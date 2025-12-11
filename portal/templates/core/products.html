@@ -165,8 +165,7 @@
                     Précédent</a>
                 {% endif %}
 
-                <span style="margin: 0 1rem; align-self: center;">Page {{ products.number }} sur {{
-                    products.paginator.num_pages }}</span>
+                <span class="pagination-info">Page {{ products.number }} sur {{ products.paginator.num_pages }}</span>
 
                 {% if products.has_next %}
                 <a class="btn btn-ghost btn-sm" href="?page={{ products.next_page_number }}" rel="next">Suivant →</a>
