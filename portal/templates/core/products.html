@@ -40,19 +40,24 @@
                 </nav>
                 <h1>
                     {% if view_mode == 'categories' %}
-                    Nos Familles de Produits
+                    Nos Produits
                     {% else %}
                     {{ current_category.name|default:"Produits" }}
                     {% endif %}
                 </h1>
             </div>
-            {% if view_mode == 'products' %}
+
             <div class="page-header-right">
+                {% if view_mode == 'products' %}
                 <a href="{% url 'core:products' %}" class="btn btn-ghost btn-sm">
                     ← Toutes les catégories
                 </a>
+                {% elif view_mode == 'categories' %}
+                <a href="{% url 'core:contact' %}" class="btn btn-secondary btn-sm">
+                    Obtenir mon devis
+                </a>
+                {% endif %}
             </div>
-            {% endif %}
         </div>
     </div>
 
@@ -60,9 +65,6 @@
         {% if view_mode == 'categories' %}
         <!-- Category Grid View -->
         {% if categories %}
-        <div class="category-intro">
-            <p class="lead">Cliquez sur une catégorie pour découvrir nos produits.</p>
-        </div>
 
         <ul class="category-grid" role="list">
             {% for category in categories %}
@@ -71,14 +73,15 @@
                     <div class="category-card__image-wrapper">
                         <div class="category-card__image" {% if category.image_data_uri %}
                             style="background-image: url('{{ category.image_data_uri }}');" {% else %}
-                            style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));"
+                            style="background: linear-gradient(135deg, var(--brand-primary) 0%, var(--secondary-color) 100%);"
                             {% endif %}>
                         </div>
                         <div class="category-card__overlay"></div>
                     </div>
                     <div class="category-card__content">
                         <h3 class="category-card__title">{{ category.name }}</h3>
-                        <span class="category-card__count">{{ category.product_count }} produit{{ category.product_count|pluralize }}</span>
+                        <span class="category-card__count">{{ category.product_count }}
+                            palette{{category.product_count|pluralize }}</span>
                     </div>
                 </a>
             </li>
@@ -89,10 +92,9 @@
         <section class="catalog-cta-banner">
             <div class="catalog-cta-banner__content">
                 <span class="catalog-cta-banner__icon">💬</span>
-                <p>Vous avez des questions ou besoin d'un volume important ? <strong>Contactez-nous pour un devis
-                        personnalisé.</strong></p>
+                <p>Volume important ou besoin spécifique ? <strong>Obtenez un devis sur mesure en 24h.</strong></p>
             </div>
-            <a href="{% url 'core:contact' %}" class="btn btn-primary">Demander un devis →</a>
+            <a href="{% url 'core:contact' %}" class="btn btn-primary">Obtenir mon devis</a>
         </section>
 
         {% else %}
@@ -100,12 +102,11 @@
         <div class="empty-state">
             <svg class="empty-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="1.5">
-                <path d="M20 12V22H4V12" stroke-linecap="round" stroke-linejoin="round" />
-                <path d="M22 7H2V12H22V7Z" stroke-linecap="round" stroke-linejoin="round" />
-                <path d="M12 22V7" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M20 7L12 3L4 7M20 7L12 11M20 7V17L12 21M12 11L4 7M12 11V21M4 7V17L12 21" stroke-linecap="round"
+                    stroke-linejoin="round" />
             </svg>
-            <h3>Aucune catégorie disponible</h3>
-            <p>Le catalogue est temporairement vide. Contactez notre équipe pour connaître les options disponibles.</p>
+            <h3>Notre catalogue arrive bientôt</h3>
+            <p>Nous mettons à jour nos produits. Contactez-nous pour connaître nos disponibilités actuelles.</p>
             <a href="{% url 'core:contact' %}" class="btn btn-primary">Nous contacter</a>
         </div>
         {% endif %}
@@ -114,7 +115,8 @@
         <!-- Product List View (Filtered by Category) -->
         {% if products %}
         <div class="category-intro">
-            <p class="lead">{{ products_total }} produit{{ products_total|pluralize }} disponible{{ products_total|pluralize }} dans cette catégorie.</p>
+            <p class="lead">{{ products_total }} produit{{ products_total|pluralize }} disponible{{
+                products_total|pluralize }} dans cette catégorie.</p>
         </div>
 
         <ul class="product-grid" role="list">
@@ -125,7 +127,7 @@
                     {% if product.image_url %}
                     <img src="{{ product.image_url }}" alt="{{ product.name }}" loading="lazy">
                     {% else %}
-                    <img src="{% static 'img/palette-bois.jpg' %}" alt="{{ product.name }}" loading="lazy"
+                    <img src="{% static " img/palette-bois.jpg" %}" alt="{{ product.name }}" loading="lazy"
                         class="product-placeholder-image">
                     {% endif %}
                 </div>
@@ -165,7 +167,8 @@
                     Précédent</a>
                 {% endif %}
 
-                <span style="margin: 0 1rem; align-self: center;">Page {{ products.number }} sur {{ products.paginator.num_pages }}</span>
+                <span style="margin: 0 1rem; align-self: center;">Page {{ products.number }} sur {{
+                    products.paginator.num_pages }}</span>
 
                 {% if products.has_next %}
                 <a class="btn btn-ghost btn-sm" href="?page={{ products.next_page_number }}" rel="next">Suivant →</a>

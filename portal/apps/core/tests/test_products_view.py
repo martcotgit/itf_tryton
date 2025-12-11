@@ -47,7 +47,7 @@ class ProductsViewTest(TestCase):
             
         self.assertEqual(response.status_code, 200)
         # Should show empty state for categories
-        self.assertContains(response, "Aucune catégorie disponible")
+        self.assertContains(response, "Notre catalogue arrive bientôt")
         self.assertEqual(list(response.context["categories"]), [])
 
     def test_handles_product_service_failure(self) -> None:
