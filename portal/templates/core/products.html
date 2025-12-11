@@ -80,8 +80,7 @@
                     </div>
                     <div class="category-card__content">
                         <h3 class="category-card__title">{{ category.name }}</h3>
-                        <span class="category-card__count">{{ category.product_count }}
-                            palette{{category.product_count|pluralize }}</span>
+                        <span class="category-card__count">{{ category.product_count }} palette{{ category.product_count|pluralize }}</span>
                     </div>
                 </a>
             </li>
@@ -115,8 +114,7 @@
         <!-- Product List View (Filtered by Category) -->
         {% if products %}
         <div class="category-intro">
-            <p class="lead">{{ products_total }} produit{{ products_total|pluralize }} disponible{{
-                products_total|pluralize }} dans cette catégorie.</p>
+            <p class="lead">{{ products_total }} produit{{ products_total|pluralize }} disponible{{ products_total|pluralize }} dans cette catégorie.</p>
         </div>
 
         <ul class="product-grid" role="list">
@@ -127,7 +125,7 @@
                     {% if product.image_url %}
                     <img src="{{ product.image_url }}" alt="{{ product.name }}" loading="lazy">
                     {% else %}
-                    <img src="{% static " img/palette-bois.jpg" %}" alt="{{ product.name }}" loading="lazy"
+                    <img src="{% static 'img/palette-bois.jpg' %}" alt="{{ product.name }}" loading="lazy"
                         class="product-placeholder-image">
                     {% endif %}
                 </div>
