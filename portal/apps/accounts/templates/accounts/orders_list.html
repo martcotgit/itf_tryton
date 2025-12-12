@@ -185,8 +185,7 @@
                         {% endif %}
 
                         <input type="hidden" name="page" value="{{ pagination.page|add:'-1' }}">
-                        <button type="submit" class="pagination-btn" {% if not pagination.has_previous %}disabled{%
-                            endif %}>
+                        <button type="submit" class="pagination-btn" {% if not pagination.has_previous %}disabled{% endif %}>
                             <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M15 19l-7-7 7-7" />
@@ -208,8 +207,7 @@
                         {% endif %}
 
                         <input type="hidden" name="page" value="{{ pagination.page|add:'1' }}">
-                        <button type="submit" class="pagination-btn" {% if not pagination.has_next %}disabled{% endif
-                            %}>
+                        <button type="submit" class="pagination-btn" {% if not pagination.has_next %}disabled{% endif %}>
                             Suiv.
                             <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
